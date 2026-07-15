@@ -85,8 +85,8 @@ export function FinanceView({
                 <th className="py-4 px-6 font-medium">Tipo</th>
                 <th className="py-4 px-6 font-medium">Valor Base</th>
                 <th className="py-4 px-6 font-medium" title="Valor somado dentro do período selecionado no filtro">Total (No Período)</th>
-                <th className="py-4 px-6 font-medium text-center">Comprovante</th>
-                <th className="py-4 px-6 font-medium text-right">Ações</th>
+                <th className="py-4 px-6 font-medium text-center print:hidden">Comprovante</th>
+                <th className="py-4 px-6 font-medium text-right print:hidden">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -154,7 +154,7 @@ export function FinanceView({
                         {formatCurrency(calculateTotalFixedForPeriod([exp], startMonth, endMonth))}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-center">
+                    <td className="py-4 px-6 text-center print:hidden">
                       {exp.image ? (
                         <button 
                           onClick={() => setPreviewImage(exp.image!)}
@@ -169,7 +169,7 @@ export function FinanceView({
                         </span>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-right">
+                    <td className="py-4 px-6 text-right print:hidden">
                       <div className="flex items-center justify-end gap-2">
                         <button 
                           onClick={() => expandedFixedId === exp.id ? handleCloseEdit(exp) : setExpandedFixedId(exp.id)}

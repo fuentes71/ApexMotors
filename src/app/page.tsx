@@ -4,6 +4,7 @@ import { useData } from "../context/DataContext";
 import { Header } from "../components/Header";
 import { DashboardView } from "../components/DashboardView";
 import { calculateTotalFixedForPeriod } from "../utils";
+import { getPreviousPeriod } from "../utils/period";
 
 export default function DashboardPage() {
   const { vehicles, fixedExpenses, startMonth, endMonth } = useData();
@@ -25,6 +26,27 @@ export default function DashboardPage() {
   }, 0);
 
   const netBalance = totalVehicleProfit - totalFixed;
+
+  // Previous Period Calculations
+  const { prevStart, prevEnd } = getPreviousPeriod(startMonth, endMonth);
+  
+  const prevFilteredVehicles = vehicles.filter(v => {
+    if (v.status === "Vendido" && v.dataVenda) {
+      const vendaMonth = v.dataVenda.substring(0, 7);
+      return vendaMonth >= prevStart && vendaMonth <= prevEnd;
+    }
+    return v.dataEntrada <= `${prevEnd}-31`;
+  });
+
+  const prevTotalFixed = calculateTotalFixedForPeriod(fixedExpenses, prevStart, prevEnd);
+  
+  const prevTotalVehicleProfit = prevFilteredVehicles.reduce((acc, v) => {
+    if (v.status !== 'Vendido') return acc;
+    const expenses = v.despesas.reduce((sum, e) => sum + e.value, 0);
+    return acc + (v.valorVenda - v.valorCompra - expenses);
+  }, 0);
+
+  const prevNetBalance = prevTotalVehicleProfit - prevTotalFixed;
 
   const soldVehiclesCount = filteredVehicles.filter(v => v.status === "Vendido").length;
   const inStockVehiclesCount = filteredVehicles.filter(v => v.status === "Em Estoque").length;
@@ -81,6 +103,9 @@ export default function DashboardPage() {
         netBalance={netBalance}
         totalVehicleProfit={totalVehicleProfit}
         totalFixed={totalFixed}
+        prevNetBalance={prevNetBalance}
+        prevTotalVehicleProfit={prevTotalVehicleProfit}
+        prevTotalFixed={prevTotalFixed}
         soldVehiclesCount={soldVehiclesCount}
         inStockVehiclesCount={inStockVehiclesCount}
         avgProfit={avgProfit}

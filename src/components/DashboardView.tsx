@@ -1,8 +1,14 @@
-import { TrendingUp, Activity, CheckCircle2, BarChart2, PieChart as PieIcon } from "lucide-react";
+import { TrendingUp, Activity, CheckCircle2, BarChart2, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, DollarSign, Wallet, PiggyBank } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { formatCurrency } from "../utils";
 
 interface DashboardViewProps {
+  netBalance: number;
+  totalVehicleProfit: number;
+  totalFixed: number;
+  prevNetBalance: number;
+  prevTotalVehicleProfit: number;
+  prevTotalFixed: number;
   avgProfit: number;
   inStockVehiclesCount: number;
   soldVehiclesCount: number;
@@ -12,10 +18,74 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({
+  netBalance, totalVehicleProfit, totalFixed,
+  prevNetBalance, prevTotalVehicleProfit, prevTotalFixed,
   avgProfit, inStockVehiclesCount, soldVehiclesCount, barData, pieData, pieColors
 }: DashboardViewProps) {
+  
+  const renderIndicator = (current: number, prev: number, invertColors = false) => {
+    if (prev === 0 && current === 0) return null;
+    const diff = current - prev;
+    const isPositive = diff > 0;
+    const isNegative = diff < 0;
+    
+    let colorClass = "text-stone-400 bg-stone-100";
+    if (isPositive) {
+      colorClass = invertColors ? "text-rose-600 bg-rose-50" : "text-emerald-600 bg-emerald-50";
+    } else if (isNegative) {
+      colorClass = invertColors ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50";
+    }
+
+    let Icon = null;
+    if (isPositive) Icon = ArrowUpRight;
+    if (isNegative) Icon = ArrowDownRight;
+
+    return (
+      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wide ${colorClass}`}>
+        {Icon && <Icon size={12} strokeWidth={3} />}
+        {prev === 0 ? "Novo" : `${Math.abs((diff / Math.abs(prev)) * 100).toFixed(1)}%`}
+      </div>
+    );
+  };
+
   return (
     <>
+      {/* Resumo Financeiro */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-stone-900 border border-stone-800 shadow-xl rounded-2xl p-6 flex flex-col relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+            <DollarSign size={80} />
+          </div>
+          <div className="flex justify-between items-start mb-2 relative z-10">
+            <h3 className="font-semibold text-stone-300">Lucro Líquido</h3>
+            {renderIndicator(netBalance, prevNetBalance)}
+          </div>
+          <p className="text-4xl font-bold text-white mt-1 relative z-10">{formatCurrency(netBalance)}</p>
+        </div>
+        
+        <div className="bg-white border border-stone-200 shadow-sm rounded-2xl p-6 flex flex-col">
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center gap-2 text-emerald-600">
+              <PiggyBank size={18} />
+              <h3 className="font-semibold text-stone-700">Lucro Veículos</h3>
+            </div>
+            {renderIndicator(totalVehicleProfit, prevTotalVehicleProfit)}
+          </div>
+          <p className="text-3xl font-bold text-stone-900 mt-1">{formatCurrency(totalVehicleProfit)}</p>
+        </div>
+
+        <div className="bg-white border border-stone-200 shadow-sm rounded-2xl p-6 flex flex-col">
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center gap-2 text-rose-600">
+              <Wallet size={18} />
+              <h3 className="font-semibold text-stone-700">Custo Período</h3>
+            </div>
+            {renderIndicator(totalFixed, prevTotalFixed, true)}
+          </div>
+          <p className="text-3xl font-bold text-stone-900 mt-1">{formatCurrency(totalFixed)}</p>
+        </div>
+      </section>
+
       {/* KPI CARDS */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white border border-stone-200 shadow-sm rounded-2xl p-6 flex flex-col">

@@ -1,6 +1,7 @@
 import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, ImageIcon } from "lucide-react";
 import { formatCurrency, DEFAULT_CAR_IMAGE } from "../utils";
 import { Vehicle } from "../types";
+import { useData } from "../context/DataContext";
 
 interface InventoryViewProps {
   filteredVehicles: Vehicle[];
@@ -13,6 +14,8 @@ interface InventoryViewProps {
 export function InventoryView({
   filteredVehicles, vehicles, setVehicles, setActiveVehicle, handleAddVehicle
 }: InventoryViewProps) {
+  const { fixedExpenses, setFixedExpenses } = useData();
+
   return (
     <section className="w-full">
       <div className="flex justify-between items-center mb-6">
@@ -98,7 +101,11 @@ export function InventoryView({
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            setVehicles(vehicles.filter(ve => ve.id !== v.id));
+                            if (window.confirm("Tem certeza que deseja excluir este veículo? As despesas associadas a ele também serão excluídas.")) {
+                              setVehicles(vehicles.filter(ve => ve.id !== v.id));
+                              // Remove fixed expenses linked to this vehicle
+                              setFixedExpenses(fixedExpenses.filter(exp => exp.linkedVehicleId !== v.id));
+                            }
                           }}
                           className="text-stone-300 hover:text-rose-500 p-2 rounded-lg hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all print:hidden"
                           title="Excluir Veículo"

@@ -93,7 +93,17 @@ export function Header() {
               <Menu size={24} />
             </button>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-stone-900">{getTitle()}</h1>
+          <div className="hidden print:flex items-center gap-4 mb-6 pb-6 border-b border-stone-200">
+            <div className="w-12 h-12 bg-stone-900 rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-sm">
+              AM
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-stone-900">Relatório ApexMotors</h1>
+              <p className="text-stone-500">{getTitle()} • {startMonth === endMonth ? formatMonth(startMonth) : `${formatMonth(startMonth)} a ${formatMonth(endMonth)}`}</p>
+            </div>
+          </div>
+          
+          <h1 className="text-3xl font-bold tracking-tight text-stone-900 print:hidden">{getTitle()}</h1>
           
           {(isDashboard || isFinance) && (
             <>
@@ -123,7 +133,7 @@ export function Header() {
                   )}
                 </div>
                 
-                {isDashboard && (
+                {(isDashboard || isFinance) && (
                   <button 
                     onClick={() => window.print()}
                     className="flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors shadow-sm"
@@ -132,9 +142,6 @@ export function Header() {
                   </button>
                 )}
               </div>
-              <p className="hidden print:block text-stone-500 mt-1 capitalize">
-                Visão Geral • {startMonth === endMonth ? formatMonth(startMonth) : `${formatMonth(startMonth)} a ${formatMonth(endMonth)}`}
-              </p>
             </>
           )}
         </div>
