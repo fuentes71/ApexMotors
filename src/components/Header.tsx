@@ -1,0 +1,159 @@
+"use client";
+
+import { Menu, Filter, Download, ChevronDown, Calendar, Check } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { formatMonth, formatCurrency } from "../utils";
+import { useData } from "../context/DataContext";
+import { useState, useRef, useEffect } from "react";
+
+function CustomSelect({ value, onChange, options, minStr }: { value: string, onChange: (v: string) => void, options: string[], minStr?: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false); };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const filteredOptions = minStr ? options.filter(o => o >= minStr) : options;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-3 bg-transparent py-1.5 pl-3 pr-2 text-sm font-semibold text-stone-700 outline-none cursor-pointer hover:bg-stone-50 transition-colors rounded-md w-full justify-between"
+      >
+        <span>{formatMonth(value)}</span>
+        <ChevronDown size={14} className={`text-stone-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1.5 w-36 max-h-60 overflow-y-auto bg-white border border-stone-200 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-50 animate-in fade-in zoom-in-95 origin-top-left p-1.5 hide-scrollbar">
+          {filteredOptions.map(m => (
+            <button
+              key={m}
+              onClick={() => { onChange(m); setIsOpen(false); }}
+              className={`w-full flex items-center justify-between text-left px-3 py-2 text-sm rounded-lg hover:bg-stone-100 transition-colors ${value === m ? 'bg-stone-50 font-bold text-stone-900' : 'text-stone-600 font-medium'}`}
+            >
+              {formatMonth(m)}
+              {value === m && <Check size={14} className="text-stone-900" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function Header() {
+  const { vehicles, fixedExpenses, setIsMobileMenuOpen, startMonth, setStartMonth, endMonth, setEndMonth } = useData();
+  const pathname = usePathname();
+
+  const getTitle = () => {
+    if (pathname.startsWith('/vehicles')) return 'Inventário de Veículos';
+    if (pathname.startsWith('/finance')) return 'Controle Financeiro';
+    return 'Dashboard';
+  };
+
+  const isDashboard = pathname === '/';
+  const isFinance = pathname.startsWith('/finance');
+
+  // --- Lista Dinâmica de Meses para o Filtro ---
+  const monthOptions = Array.from({length: 12}).map((_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 11 + i);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const filteredVehicles = vehicles.filter(v => {
+    if (v.status === "Vendido" && v.dataVenda) {
+      const vendaMonth = v.dataVenda.substring(0, 7);
+      return vendaMonth >= startMonth && vendaMonth <= endMonth;
+    }
+    return v.dataEntrada <= `${endMonth}-31`;
+  });
+
+  const totalFixed = fixedExpenses.reduce((acc, curr) => acc + curr.value, 0);
+  
+  const totalVehicleProfit = filteredVehicles.reduce((acc, v) => {
+    if (v.status !== 'Vendido') return acc;
+    const expenses = v.despesas.reduce((sum, e) => sum + e.value, 0);
+    return acc + (v.valorVenda - v.valorCompra - expenses);
+  }, 0);
+
+  const netBalance = totalVehicleProfit - totalFixed;
+
+  return (
+    <header className="max-w-5xl mx-auto w-full pt-8 pb-8 px-6 lg:px-10 border-b border-stone-200 mb-8 print:pt-4 flex-shrink-0">
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-2 lg:hidden">
+            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 text-stone-500 hover:bg-stone-100 rounded-lg transition-colors print:hidden">
+              <Menu size={24} />
+            </button>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-stone-900">{getTitle()}</h1>
+          
+          {(isDashboard || isFinance) && (
+            <>
+              <div className="flex flex-wrap items-center gap-3 mt-3 print:hidden">
+                <div className="flex items-center gap-0 bg-white p-1 rounded-lg border border-stone-200 shadow-sm">
+                  <div className="flex items-center pl-3 pr-2 border-r border-stone-100">
+                    <Calendar size={14} className="text-stone-400" />
+                  </div>
+                  
+                  {isDashboard ? (
+                    <>
+                      <CustomSelect value={startMonth} onChange={setStartMonth} options={monthOptions} />
+                      <div className="flex items-center px-2 text-stone-300">
+                        <span className="text-xs font-medium uppercase tracking-wider">Até</span>
+                      </div>
+                      <CustomSelect value={endMonth} onChange={setEndMonth} options={monthOptions} minStr={startMonth} />
+                    </>
+                  ) : (
+                    <CustomSelect 
+                      value={startMonth} 
+                      onChange={(val) => {
+                        setStartMonth(val);
+                        setEndMonth(val);
+                      }} 
+                      options={monthOptions} 
+                    />
+                  )}
+                </div>
+                
+                {isDashboard && (
+                  <button 
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors shadow-sm"
+                  >
+                    <Download size={14} /> Exportar PDF
+                  </button>
+                )}
+              </div>
+              <p className="hidden print:block text-stone-500 mt-1 capitalize">
+                Visão Geral • {startMonth === endMonth ? formatMonth(startMonth) : `${formatMonth(startMonth)} a ${formatMonth(endMonth)}`}
+              </p>
+            </>
+          )}
+        </div>
+
+        {isDashboard && (
+          <div className="flex gap-6 text-right">
+            <div>
+              <p className="text-xs text-stone-500 uppercase tracking-wider font-medium mb-1">Despesas Fixas</p>
+              <p className="text-lg font-semibold text-rose-600">{formatCurrency(totalFixed)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-stone-500 uppercase tracking-wider font-medium mb-1">Balanço Total (Vendas)</p>
+              <p className={`text-lg font-bold ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {formatCurrency(netBalance)}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}

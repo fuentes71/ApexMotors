@@ -1,65 +1,93 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useData } from "../context/DataContext";
+import { Header } from "../components/Header";
+import { DashboardView } from "../components/DashboardView";
+import { calculateTotalFixedForPeriod } from "../utils";
+
+export default function DashboardPage() {
+  const { vehicles, fixedExpenses, startMonth, endMonth } = useData();
+
+  const filteredVehicles = vehicles.filter(v => {
+    if (v.status === "Vendido" && v.dataVenda) {
+      const vendaMonth = v.dataVenda.substring(0, 7);
+      return vendaMonth >= startMonth && vendaMonth <= endMonth;
+    }
+    return v.dataEntrada <= `${endMonth}-31`;
+  });
+
+  const totalFixed = calculateTotalFixedForPeriod(fixedExpenses, startMonth, endMonth);
+  
+  const totalVehicleProfit = filteredVehicles.reduce((acc, v) => {
+    if (v.status !== 'Vendido') return acc;
+    const expenses = v.despesas.reduce((sum, e) => sum + e.value, 0);
+    return acc + (v.valorVenda - v.valorCompra - expenses);
+  }, 0);
+
+  const netBalance = totalVehicleProfit - totalFixed;
+
+  const soldVehiclesCount = filteredVehicles.filter(v => v.status === "Vendido").length;
+  const inStockVehiclesCount = filteredVehicles.filter(v => v.status === "Em Estoque").length;
+  
+  const avgProfit = soldVehiclesCount > 0 
+    ? filteredVehicles.filter(v => v.status === "Vendido").reduce((acc, v) => acc + (v.valorVenda - v.valorCompra - v.despesas.reduce((s, e) => s + e.value, 0)), 0) / soldVehiclesCount
+    : 0;
+
+  const expenseDistribution: Record<string, number> = {
+    "Mecânica": 0,
+    "Funilaria": 0,
+    "Marketing": 0,
+    "Documentação": 0,
+    "Outros": 0,
+    "Fixas": totalFixed
+  };
+
+  filteredVehicles.forEach(v => {
+    v.despesas.forEach(exp => {
+      if (exp.category && expenseDistribution[exp.category] !== undefined) {
+        expenseDistribution[exp.category] += exp.value;
+      } else {
+        expenseDistribution["Outros"] += exp.value;
+      }
+    });
+  });
+
+  const pieData = Object.entries(expenseDistribution)
+    .filter(([_, value]) => value > 0)
+    .map(([name, value]) => ({ name, value }));
+
+  const pieColors: Record<string, string> = {
+    "Mecânica": "#3b82f6",
+    "Funilaria": "#f97316",
+    "Marketing": "#10b981",
+    "Documentação": "#a855f7",
+    "Outros": "#78716c",
+    "Fixas": "#e11d48"
+  };
+
+  const barData = filteredVehicles.map(v => {
+    const expenses = v.despesas.reduce((acc, e) => acc + e.value, 0);
+    return {
+      name: v.name.length > 12 ? v.name.substring(0, 12) + "..." : v.name,
+      Lucro: v.status === 'Vendido' ? (v.valorVenda - v.valorCompra - expenses) : 0,
+      Despesas: expenses
+    };
+  });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="flex-1 flex flex-col min-w-0 pb-20 print:pb-0 h-screen overflow-y-auto">
+      <Header />
+      <DashboardView
+        netBalance={netBalance}
+        totalVehicleProfit={totalVehicleProfit}
+        totalFixed={totalFixed}
+        soldVehiclesCount={soldVehiclesCount}
+        inStockVehiclesCount={inStockVehiclesCount}
+        avgProfit={avgProfit}
+        pieData={pieData}
+        pieColors={pieColors}
+        barData={barData}
+      />
     </div>
   );
 }
