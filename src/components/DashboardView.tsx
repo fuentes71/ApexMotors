@@ -133,7 +133,7 @@ export function DashboardView({
                 <RechartsTooltip 
                   cursor={{fill: '#f5f5f4'}} 
                   contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} 
-                  formatter={(value: number) => formatCurrency(value)}
+                  formatter={(value: any) => formatCurrency(Number(value) || 0)}
                 />
                 <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="circle" />
                 <Bar dataKey="Lucro" name="Lucro Líquido" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />

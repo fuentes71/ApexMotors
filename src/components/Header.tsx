@@ -2,7 +2,8 @@
 
 import { Menu, Filter, Download, ChevronDown, Calendar, Check } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { formatMonth, formatCurrency } from "../utils";
+import { formatMonth, formatCurrency, calculateTotalFixedForPeriod } from "../utils";
+import { generateStructuredPDF } from "../utils/pdfExport";
 import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
 
@@ -74,7 +75,7 @@ export function Header() {
     return v.dataEntrada <= `${endMonth}-31`;
   });
 
-  const totalFixed = fixedExpenses.reduce((acc, curr) => acc + curr.value, 0);
+  const totalFixed = calculateTotalFixedForPeriod(fixedExpenses, startMonth, endMonth);
   
   const totalVehicleProfit = filteredVehicles.reduce((acc, v) => {
     if (v.status !== 'Vendido') return acc;
@@ -83,6 +84,18 @@ export function Header() {
   }, 0);
 
   const netBalance = totalVehicleProfit - totalFixed;
+
+  const handleExportPDF = () => {
+    generateStructuredPDF({
+      startMonth,
+      endMonth,
+      vehicles: filteredVehicles,
+      fixedExpenses,
+      netBalance,
+      totalVehicleProfit,
+      totalFixed
+    });
+  };
 
   return (
     <header className="max-w-5xl mx-auto w-full pt-8 pb-8 px-6 lg:px-10 border-b border-stone-200 mb-8 print:pt-4 flex-shrink-0">
@@ -135,7 +148,7 @@ export function Header() {
                 
                 {(isDashboard || isFinance) && (
                   <button 
-                    onClick={() => window.print()}
+                    onClick={handleExportPDF}
                     className="flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors shadow-sm"
                   >
                     <Download size={14} /> Exportar PDF
