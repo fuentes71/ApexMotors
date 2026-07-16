@@ -1,4 +1,4 @@
-import { Expense, Vehicle } from "../types";
+import { Expense, Vehicle, Client } from "../types";
 
 export const initialFixedExpenses: Expense[] = [
   { id: "fx1", name: "Aluguel Estacionamento", value: 2500, recurrence: 'Mensal', startDate: '2026-01-01' },
@@ -219,5 +219,38 @@ export const initialVehicles: Vehicle[] = [
       { id: "v10_e2", name: "Anúncios Premium", value: 1500, category: "Marketing" }
     ],
     placa: "POR-7180"
+  }
+];
+
+export const mockClients: Client[] = [
+  {
+    id: "cl_1",
+    name: "Roberto Silva",
+    phone: "(11) 98765-4321",
+    email: "roberto@email.com",
+    status: "Lead",
+    interest: "Honda Civic ou Corolla",
+    notes: "Procura carro para família, orçamento até R$ 90.000",
+    createdAt: "2026-07-10"
+  },
+  {
+    id: "cl_2",
+    name: "Amanda Costa",
+    phone: "(11) 91234-5678",
+    email: "amanda@email.com",
+    status: "Negociando",
+    interest: "Ford Ka Titanium 2019",
+    notes: "Vai dar um Celta 2012 na troca",
+    createdAt: "2026-07-14"
+  },
+  {
+    id: "cl_3",
+    name: "Carlos Ferreira",
+    phone: "(21) 99988-7766",
+    email: "carlos.f@email.com",
+    status: "Cliente",
+    interest: "Toyota Hilux",
+    notes: "Comprou a Hilux SRV em março. Pode querer trocar no ano que vem.",
+    createdAt: "2026-03-15"
   }
 ];

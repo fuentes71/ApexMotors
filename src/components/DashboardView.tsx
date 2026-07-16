@@ -1,4 +1,4 @@
-import { TrendingUp, Activity, CheckCircle2, BarChart2, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, DollarSign, Wallet, PiggyBank } from "lucide-react";
+import { TrendingUp, Activity, CheckCircle2, BarChart2, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, DollarSign, Wallet, PiggyBank, Clock, Tag } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { formatCurrency } from "../utils";
 
@@ -15,12 +15,17 @@ interface DashboardViewProps {
   barData: any[];
   pieData: any[];
   pieColors: Record<string, string>;
+  avgTicket: number;
+  prevAvgTicket: number;
+  avgStockDays: number;
+  prevAvgStockDays: number;
 }
 
 export function DashboardView({
   netBalance, totalVehicleProfit, totalFixed,
   prevNetBalance, prevTotalVehicleProfit, prevTotalFixed,
-  avgProfit, inStockVehiclesCount, soldVehiclesCount, barData, pieData, pieColors
+  avgProfit, inStockVehiclesCount, soldVehiclesCount, barData, pieData, pieColors,
+  avgTicket, prevAvgTicket, avgStockDays, prevAvgStockDays
 }: DashboardViewProps) {
   
   const renderIndicator = (current: number, prev: number, invertColors = false) => {
@@ -87,7 +92,7 @@ export function DashboardView({
       </section>
 
       {/* KPI CARDS */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-6 mb-6">
         <div className="bg-white border border-stone-200 shadow-sm rounded-2xl p-6 flex flex-col">
           <div className="flex items-center gap-3 text-emerald-600 mb-2">
             <div className="p-2 bg-emerald-50 rounded-lg"><TrendingUp size={20} /></div>
@@ -113,6 +118,31 @@ export function DashboardView({
           </div>
           <p className="text-3xl font-bold text-stone-900 mt-2">{soldVehiclesCount}</p>
           <p className="text-xs text-stone-400 mt-2">Veículos já finalizados</p>
+        </div>
+        
+        {/* Novas métricas BI */}
+        <div className="bg-white border border-stone-200 shadow-sm rounded-2xl p-6 flex flex-col">
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center gap-3 text-indigo-600">
+              <div className="p-2 bg-indigo-50 rounded-lg"><Tag size={20} /></div>
+              <h3 className="font-semibold text-stone-700">Ticket Médio</h3>
+            </div>
+            {renderIndicator(avgTicket, prevAvgTicket)}
+          </div>
+          <p className="text-3xl font-bold text-stone-900 mt-2">{formatCurrency(avgTicket)}</p>
+          <p className="text-xs text-stone-400 mt-2">Valor médio de venda</p>
+        </div>
+
+        <div className="bg-white border border-stone-200 shadow-sm rounded-2xl p-6 flex flex-col">
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="p-2 bg-rose-50 rounded-lg"><Clock size={20} /></div>
+              <h3 className="font-semibold text-stone-700">Giro de Estoque</h3>
+            </div>
+            {renderIndicator(avgStockDays, prevAvgStockDays, true)}
+          </div>
+          <p className="text-3xl font-bold text-stone-900 mt-2">{avgStockDays.toFixed(0)} dias</p>
+          <p className="text-xs text-stone-400 mt-2">Tempo médio de venda</p>
         </div>
       </section>
 

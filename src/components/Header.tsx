@@ -6,6 +6,7 @@ import { formatMonth, formatCurrency, calculateTotalFixedForPeriod } from "../ut
 import { generateStructuredPDF } from "../utils/pdfExport";
 import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
+import { NotificationsWidget } from "./NotificationsWidget";
 
 function CustomSelect({ value, onChange, options, minStr }: { value: string, onChange: (v: string) => void, options: string[], minStr?: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -154,6 +155,9 @@ export function Header() {
                     <Download size={14} /> Exportar PDF
                   </button>
                 )}
+
+                <div className="hidden sm:block border-l border-stone-200 h-6 mx-2"></div>
+                <NotificationsWidget />
               </div>
             </>
           )}

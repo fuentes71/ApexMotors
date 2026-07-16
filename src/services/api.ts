@@ -1,7 +1,7 @@
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import { initialVehicles, initialFixedExpenses } from './mockData';
-import { Vehicle, Expense } from '../types';
+import { initialVehicles, initialFixedExpenses, mockClients } from './mockData';
+import { Vehicle, Expense, Client } from '../types';
 
 // Create an Axios instance
 const api = axios.create({
@@ -41,6 +41,49 @@ const mock = new MockAdapter(api, { delayResponse: 500 }); // simulate 500ms net
 // Memory storage for our mock data
 let vehicles = [...initialVehicles];
 let fixedExpenses = [...initialFixedExpenses];
+let memoryClients = [...mockClients];
+
+// --- Routes for Clients ---
+
+// GET /clients
+mock.onGet('/clients').reply(() => {
+  return [200, memoryClients];
+});
+
+// POST /clients
+mock.onPost('/clients').reply((config) => {
+  const data = JSON.parse(config.data);
+  const newClient: Client = {
+    ...data,
+    id: `cl_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+    createdAt: data.createdAt || new Date().toISOString().substring(0, 10),
+  };
+  memoryClients.push(newClient);
+  return [201, newClient];
+});
+
+// PUT /clients/:id
+mock.onPut(/\/clients\/.+/).reply((config) => {
+  const id = config.url?.split('/').pop();
+  const data = JSON.parse(config.data);
+  const index = memoryClients.findIndex(c => c.id === id);
+  if (index !== -1) {
+    memoryClients[index] = { ...memoryClients[index], ...data };
+    return [200, memoryClients[index]];
+  }
+  return [404, { message: 'Client not found' }];
+});
+
+// DELETE /clients/:id
+mock.onDelete(/\/clients\/.+/).reply((config) => {
+  const id = config.url?.split('/').pop();
+  const index = memoryClients.findIndex(c => c.id === id);
+  if (index !== -1) {
+    memoryClients.splice(index, 1);
+    return [200, { message: 'Deleted successfully' }];
+  }
+  return [404, { message: 'Client not found' }];
+});
 
 // --- Routes for Vehicles ---
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from "react";
-import { Vehicle, Expense } from "../types";
+import { Vehicle, Expense, Client } from "../types";
 import api from "../services/api";
 
 interface DataContextType {
@@ -21,6 +21,8 @@ interface DataContextType {
   setIsMobileMenuOpen: (open: boolean) => void;
   contractTemplate: string;
   setContractTemplate: (template: string) => void;
+  clients: Client[];
+  setClients: Dispatch<SetStateAction<Client[]>>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -53,11 +55,13 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
 
   const [fixedExpenses, setFixedExpenses] = useState<Expense[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
 
   useEffect(() => {
     // Fetch initial data from mock API
     api.get('/vehicles').then(res => setVehicles(res.data)).catch(console.error);
     api.get('/expenses').then(res => setFixedExpenses(res.data)).catch(console.error);
+    api.get('/clients').then(res => setClients(res.data)).catch(console.error);
   }, []);
 
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
@@ -73,7 +77,10 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
       activeVehicle, setActiveVehicle,
       fullscreenImage, setFullscreenImage,
       isMobileMenuOpen, setIsMobileMenuOpen,
-      contractTemplate, setContractTemplate
+      contractTemplate,
+      setContractTemplate,
+      clients,
+      setClients
     }}>
       {children}
     </DataContext.Provider>

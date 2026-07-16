@@ -15,6 +15,28 @@ export type Expense = {
   addToMonthly?: boolean;
 };
 
+export interface FixedExpense {
+  id: string;
+  name: string;
+  value: number;
+  dueDate: string;
+  isPaid: boolean;
+  category: "Aluguel" | "Salários" | "Impostos" | "Sistemas" | "Marketing" | "Outros";
+  receiptUrl?: string; // NOVO: URL do comprovante (ex: blob:http://...)
+  paymentDate?: string; // NOVO: data em que foi pago
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  status: 'Lead' | 'Negociando' | 'Cliente';
+  interest: string;
+  notes: string;
+  createdAt: string;
+}
+
 export interface VehicleDebt {
   id: string;
   type: 'IPVA' | 'Licenciamento' | 'Multa';

@@ -50,9 +50,32 @@ export default function DashboardPage() {
 
   const soldVehiclesCount = filteredVehicles.filter(v => v.status === "Vendido").length;
   const inStockVehiclesCount = filteredVehicles.filter(v => v.status === "Em Estoque" || v.status === "Manutenção").length;
+  const soldVehicles = filteredVehicles.filter(v => v.status === "Vendido");
+  const prevSoldVehicles = prevFilteredVehicles.filter(v => v.status === "Vendido");
   
   const avgProfit = soldVehiclesCount > 0 
-    ? filteredVehicles.filter(v => v.status === "Vendido").reduce((acc, v) => acc + (v.valorVenda - v.valorCompra - v.despesas.reduce((s, e) => s + e.value, 0)), 0) / soldVehiclesCount
+    ? soldVehicles.reduce((acc, v) => acc + (v.valorVenda - v.valorCompra - v.despesas.reduce((s, e) => s + e.value, 0)), 0) / soldVehiclesCount
+    : 0;
+
+  const avgTicket = soldVehiclesCount > 0
+    ? soldVehicles.reduce((acc, v) => acc + v.valorVenda, 0) / soldVehiclesCount
+    : 0;
+
+  const prevAvgTicket = prevSoldVehicles.length > 0
+    ? prevSoldVehicles.reduce((acc, v) => acc + v.valorVenda, 0) / prevSoldVehicles.length
+    : 0;
+
+  const calculateDays = (entrada: string, venda: string) => {
+    const diff = new Date(venda).getTime() - new Date(entrada).getTime();
+    return Math.max(0, Math.ceil(diff / (1000 * 3600 * 24)));
+  };
+
+  const avgStockDays = soldVehiclesCount > 0
+    ? soldVehicles.reduce((acc, v) => acc + calculateDays(v.dataEntrada, v.dataVenda!), 0) / soldVehiclesCount
+    : 0;
+
+  const prevAvgStockDays = prevSoldVehicles.length > 0
+    ? prevSoldVehicles.reduce((acc, v) => acc + calculateDays(v.dataEntrada, v.dataVenda!), 0) / prevSoldVehicles.length
     : 0;
 
   const expenseDistribution: Record<string, number> = {
@@ -112,6 +135,10 @@ export default function DashboardPage() {
         pieData={pieData}
         pieColors={pieColors}
         barData={barData}
+        avgTicket={avgTicket}
+        prevAvgTicket={prevAvgTicket}
+        avgStockDays={avgStockDays}
+        prevAvgStockDays={prevAvgStockDays}
       />
     </div>
   );

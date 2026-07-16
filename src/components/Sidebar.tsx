@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, CarFront, Wallet, Settings, LogOut, X } from "lucide-react";
+import { LayoutDashboard, CarFront, Wallet, Settings, LogOut, X, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useData } from "../context/DataContext";
@@ -14,6 +14,7 @@ export function Sidebar() {
   const navItems = [
     { id: 'dashboard', href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'veiculos', href: '/vehicles', label: 'Inventário', icon: CarFront },
+    { id: 'clientes', href: '/clients', label: 'Clientes CRM', icon: Users },
     { id: 'financeiro', href: '/finance', label: 'Financeiro', icon: Wallet },
   ];
 
