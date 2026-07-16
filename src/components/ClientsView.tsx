@@ -2,17 +2,15 @@
 
 import { useState } from "react";
 import { useData } from "../context/DataContext";
-import { Plus, Search, Edit2, Trash2, Mail, Phone, Calendar, Loader2, Users } from "lucide-react";
+import { Plus, Search, Trash2, Mail, Phone, Calendar, Loader2, Users, ChevronRight } from "lucide-react";
 import { Client } from "../types";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import { format } from "date-fns";
 import api from "../services/api";
 
 export function ClientsView() {
-  const { clients, setClients } = useData();
+  const { clients, setClients, setActiveClient } = useData();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [isSavingId, setIsSavingId] = useState<string | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   
   const [draftClient, setDraftClient] = useState<Client | null>(null);
@@ -23,50 +21,17 @@ export function ClientsView() {
     c.phone.includes(searchTerm)
   );
 
-  const handleAddClient = async () => {
-    setIsAdding(true);
-    try {
-      const newClient = {
-        name: "Novo Cliente",
-        phone: "",
-        email: "",
-        status: "Lead",
-        interest: "",
-        notes: "",
-        createdAt: new Date().toISOString().substring(0, 10)
-      };
-      
-      const response = await api.post('/clients', newClient);
-      const created = response.data;
-      
-      setClients(prev => [...prev, created]);
-      setEditingId(created.id);
-      setDraftClient(created);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  const startEditing = (client: Client) => {
-    setEditingId(client.id);
-    setDraftClient({ ...client });
-  };
-
-  const saveClient = async () => {
-    if (!draftClient) return;
-    setIsSavingId(draftClient.id);
-    try {
-      const response = await api.put(`/clients/${draftClient.id}`, draftClient);
-      setClients(prev => prev.map(c => c.id === draftClient.id ? response.data : c));
-      setEditingId(null);
-      setDraftClient(null);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsSavingId(null);
-    }
+  const handleAddClient = () => {
+    setActiveClient({
+      id: "new",
+      name: "",
+      phone: "",
+      email: "",
+      status: "Lead",
+      interest: "",
+      notes: "",
+      createdAt: new Date().toISOString().substring(0, 10)
+    });
   };
 
   const deleteClient = async (id: string) => {
@@ -105,7 +70,7 @@ export function ClientsView() {
         </div>
       </div>
 
-      <div className="bg-white border border-stone-200 shadow-sm rounded-2xl overflow-hidden">
+      <div className="bg-white border border-stone-200 shadow-sm rounded-2xl overflow-visible">
         <div className="p-4 border-b border-stone-100 bg-stone-50/50 flex flex-col md:flex-row items-center gap-4">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
@@ -119,172 +84,80 @@ export function ClientsView() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-stone-50/80 border-b border-stone-200 text-stone-500 text-xs uppercase tracking-wider">
-                <th className="p-4 font-semibold whitespace-nowrap">Cliente</th>
-                <th className="p-4 font-semibold whitespace-nowrap hidden sm:table-cell">Contato</th>
-                <th className="p-4 font-semibold whitespace-nowrap">Status</th>
-                <th className="p-4 font-semibold whitespace-nowrap hidden md:table-cell">Interesse</th>
-                <th className="p-4 font-semibold whitespace-nowrap text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100 text-sm">
-              {filteredClients.map((client) => {
-                const isEditing = editingId === client.id;
-                const activeData = isEditing && draftClient ? draftClient : client;
-
-                return (
-                  <tr key={client.id} className="hover:bg-stone-50/50 transition-colors group">
-                    <td className="p-4">
-                      {isEditing ? (
-                        <div className="flex flex-col gap-2">
-                          <input 
-                            type="text" 
-                            value={activeData.name}
-                            onChange={e => setDraftClient({...activeData, name: e.target.value})}
-                            className="px-2 py-1 border border-stone-300 rounded text-sm w-full font-medium"
-                          />
-                          <input 
-                            type="date" 
-                            value={activeData.createdAt}
-                            onChange={e => setDraftClient({...activeData, createdAt: e.target.value})}
-                            className="px-2 py-1 border border-stone-300 rounded text-xs w-full text-stone-500"
-                          />
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="font-semibold text-stone-900">{client.name}</div>
-                          <div className="text-xs text-stone-400 flex items-center gap-1 mt-1">
-                            <Calendar size={12} /> {format(new Date(client.createdAt), 'dd/MM/yyyy')}
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4 hidden sm:table-cell">
-                      {isEditing ? (
-                        <div className="flex flex-col gap-2">
-                          <input 
-                            type="text" 
-                            value={activeData.phone}
-                            placeholder="Telefone"
-                            onChange={e => setDraftClient({...activeData, phone: e.target.value})}
-                            className="px-2 py-1 border border-stone-300 rounded text-sm w-full"
-                          />
-                          <input 
-                            type="email" 
-                            value={activeData.email}
-                            placeholder="E-mail"
-                            onChange={e => setDraftClient({...activeData, email: e.target.value})}
-                            className="px-2 py-1 border border-stone-300 rounded text-sm w-full"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2 text-stone-600">
-                            <Phone size={14} className="text-stone-400" />
-                            {client.phone || <span className="text-stone-300 italic">Não informado</span>}
-                          </div>
-                          <div className="flex items-center gap-2 text-stone-600">
-                            <Mail size={14} className="text-stone-400" />
-                            {client.email || <span className="text-stone-300 italic">Não informado</span>}
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      {isEditing ? (
-                        <select 
-                          value={activeData.status}
-                          onChange={e => setDraftClient({...activeData, status: e.target.value as any})}
-                          className="px-2 py-1 border border-stone-300 rounded text-sm w-full"
-                        >
-                          <option value="Lead">Lead</option>
-                          <option value="Negociando">Negociando</option>
-                          <option value="Cliente">Cliente</option>
-                        </select>
-                      ) : (
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(client.status)}`}>
-                          {client.status}
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4 hidden md:table-cell">
-                      {isEditing ? (
-                        <div className="flex flex-col gap-2">
-                          <input 
-                            type="text" 
-                            value={activeData.interest}
-                            placeholder="Veículo de interesse"
-                            onChange={e => setDraftClient({...activeData, interest: e.target.value})}
-                            className="px-2 py-1 border border-stone-300 rounded text-sm w-full"
-                          />
-                          <textarea 
-                            value={activeData.notes}
-                            placeholder="Observações..."
-                            onChange={e => setDraftClient({...activeData, notes: e.target.value})}
-                            className="px-2 py-1 border border-stone-300 rounded text-sm w-full min-h-[60px]"
-                          />
-                        </div>
-                      ) : (
-                        <div className="max-w-[200px]">
-                          <div className="font-medium text-stone-800 line-clamp-1">{client.interest || "-"}</div>
-                          <div className="text-xs text-stone-500 line-clamp-2 mt-1" title={client.notes}>{client.notes}</div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4 text-right">
-                      {isEditing ? (
-                        <div className="flex items-center justify-end gap-2">
+        <Table>
+          <TableHeader>
+            <TableHead>Cliente</TableHead>
+            <TableHead className="hidden sm:table-cell">Contato</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="hidden md:table-cell">Interesse</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filteredClients.map((client) => {
+              return (
+                <TableRow key={client.id} interactive onClick={() => setActiveClient(client)}>
+                  <TableCell>
+                    <div>
+                      <div className="font-semibold text-stone-900">{client.name || "-"}</div>
+                      <div className="text-xs text-stone-400 flex items-center gap-1 mt-1">
+                        <Calendar size={12} /> {format(new Date(client.createdAt), 'dd/MM/yyyy')}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 text-stone-600">
+                        <Phone size={14} className="text-stone-400" />
+                        {client.phone || <span className="text-stone-300 italic">Não informado</span>}
+                      </div>
+                      <div className="flex items-center gap-2 text-stone-600">
+                        <Mail size={14} className="text-stone-400" />
+                        {client.email || <span className="text-stone-300 italic">Não informado</span>}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(client.status)}`}>
+                      {client.status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <div className="max-w-[200px]">
+                      <div className="font-medium text-stone-800 line-clamp-1">{client.interest || "-"}</div>
+                      <div className="text-xs text-stone-500 line-clamp-2 mt-1" title={client.notes}>{client.notes}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
-                            onClick={() => setEditingId(null)}
-                            className="px-3 py-1.5 text-stone-600 hover:bg-stone-100 rounded-md transition-colors text-xs font-medium"
-                          >
-                            Cancelar
-                          </button>
-                          <button 
-                            onClick={saveClient}
-                            disabled={isSavingId === client.id}
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors text-xs font-medium flex items-center justify-center min-w-[70px] disabled:opacity-70 disabled:cursor-not-allowed"
-                          >
-                            {isSavingId === client.id ? <Loader2 size={14} className="animate-spin" /> : "Salvar"}
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => startEditing(client)}
-                            className="p-1.5 text-stone-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-                            title="Editar cliente"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button 
-                            onClick={() => deleteClient(client.id)}
+                            onClick={(e) => { e.stopPropagation(); deleteClient(client.id); }}
                             disabled={isDeletingId === client.id}
                             className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors disabled:opacity-50"
                             title="Excluir cliente"
                           >
                             {isDeletingId === client.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                           </button>
+                          <button 
+                            className="p-1.5 text-stone-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all"
+                            title="Ver detalhes"
+                          >
+                            <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                          </button>
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-              
-              {filteredClients.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-stone-500">
-                    Nenhum cliente encontrado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            
+            {filteredClients.length === 0 && (
+              <TableRow>
+                <TableCell className="text-center text-stone-500" colSpan={5}>
+                  Nenhum cliente encontrado.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Floating Action Button */}
@@ -292,10 +165,9 @@ export function ClientsView() {
         <div className="relative group">
           <button 
             onClick={handleAddClient}
-            disabled={isAdding}
-            className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg shadow-indigo-600/40 transition-all hover:scale-110 active:scale-95 disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed"
+            className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg shadow-indigo-600/40 transition-all hover:scale-110 active:scale-95"
           >
-            {isAdding ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
+            <Plus size={24} />
           </button>
           <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
             Novo Cliente

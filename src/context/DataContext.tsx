@@ -23,6 +23,10 @@ interface DataContextType {
   setContractTemplate: (template: string) => void;
   clients: Client[];
   setClients: Dispatch<SetStateAction<Client[]>>;
+  activeClient: Client | null;
+  setActiveClient: (c: Client | null) => void;
+  activeExpense: Expense | null;
+  setActiveExpense: (e: Expense | null) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -57,6 +61,10 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
 
+  const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
+  const [activeClient, setActiveClient] = useState<Client | null>(null);
+  const [activeExpense, setActiveExpense] = useState<Expense | null>(null);
+
   useEffect(() => {
     // Fetch initial data from mock API
     api.get('/vehicles').then(res => setVehicles(res.data)).catch(console.error);
@@ -64,7 +72,6 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
     api.get('/clients').then(res => setClients(res.data)).catch(console.error);
   }, []);
 
-  const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -80,7 +87,11 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
       contractTemplate,
       setContractTemplate,
       clients,
-      setClients
+      setClients,
+      activeClient,
+      setActiveClient,
+      activeExpense,
+      setActiveExpense
     }}>
       {children}
     </DataContext.Provider>

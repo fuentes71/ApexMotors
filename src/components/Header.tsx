@@ -6,7 +6,6 @@ import { formatMonth, formatCurrency, calculateTotalFixedForPeriod } from "../ut
 import { generateStructuredPDF } from "../utils/pdfExport";
 import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
-import { NotificationsWidget } from "./NotificationsWidget";
 
 function CustomSelect({ value, onChange, options, minStr }: { value: string, onChange: (v: string) => void, options: string[], minStr?: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -156,25 +155,33 @@ export function Header() {
                   </button>
                 )}
 
-                <div className="hidden sm:block border-l border-stone-200 h-6 mx-2"></div>
-                <NotificationsWidget />
               </div>
             </>
           )}
         </div>
 
-        {isDashboard && (
+        {(isDashboard || isFinance) && (
           <div className="flex gap-6 text-right">
-            <div>
-              <p className="text-xs text-stone-500 uppercase tracking-wider font-medium mb-1">Despesas Fixas</p>
-              <p className="text-lg font-semibold text-rose-600">{formatCurrency(totalFixed)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-stone-500 uppercase tracking-wider font-medium mb-1">Balanço Total (Vendas)</p>
-              <p className={`text-lg font-bold ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                {formatCurrency(netBalance)}
-              </p>
-            </div>
+            {isDashboard && (
+              <>
+                <div>
+                  <p className="text-xs text-stone-500 uppercase tracking-wider font-medium mb-1">Despesas Fixas</p>
+                  <p className="text-lg font-semibold text-rose-600">{formatCurrency(totalFixed)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-stone-500 uppercase tracking-wider font-medium mb-1">Balanço Total (Vendas)</p>
+                  <p className={`text-lg font-bold ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {formatCurrency(netBalance)}
+                  </p>
+                </div>
+              </>
+            )}
+            {isFinance && (
+              <div>
+                <p className="text-xs text-stone-500 uppercase tracking-wider font-medium mb-1">Total no Período</p>
+                <p className="text-lg font-bold text-rose-600">{formatCurrency(totalFixed)}</p>
+              </div>
+            )}
           </div>
         )}
       </div>

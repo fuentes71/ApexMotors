@@ -1,8 +1,9 @@
-import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileText, Download, X, ChevronRight, Pencil, AlertTriangle, Loader2 } from "lucide-react";
+import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileText, Download, X, ChevronRight, Pencil, AlertTriangle, Loader2, TrendingDown } from "lucide-react";
 import { formatCurrency, calculateTotalFixedForPeriod } from "../utils";
 import { Expense } from "../types";
 import { useState, Fragment } from "react";
 import { useData } from "../context/DataContext";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import api from "../services/api";
 
 interface FinanceViewProps {
@@ -14,52 +15,19 @@ interface FinanceViewProps {
 export function FinanceView({
   fixedExpenses, setFixedExpenses, totalFixed
 }: FinanceViewProps) {
-  const { startMonth, endMonth, vehicles } = useData();
-  const [expandedFixedId, setExpandedFixedId] = useState<string | null>(null);
+  const { startMonth, endMonth, vehicles, setActiveExpense } = useData();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
-  const [isSavingId, setIsSavingId] = useState<string | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
-  const handleCloseEdit = async (exp: Expense) => {
-    if (!exp.name.trim() || exp.value <= 0 || !exp.startDate) {
-      alert("A descrição, valor (maior que 0) e data de início são obrigatórios!");
-      return;
-    }
-    setIsSavingId(exp.id);
-    try {
-      const res = await api.put(`/expenses/${exp.id}`, exp);
-      setFixedExpenses(fixedExpenses.map(e => e.id === exp.id ? res.data : e));
-      setExpandedFixedId(null);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSavingId(null);
-    }
-  };
-
-  const handleAddFixedExpense = async () => {
-    setIsAdding(true);
-    const newExpense: Expense = {
-      id: Date.now().toString(),
+  const handleAddFixedExpense = () => {
+    setActiveExpense({
+      id: "new",
       name: '',
       value: 0,
       recurrence: 'Mensal',
       startDate: new Date().toISOString().split('T')[0],
       endDate: ''
-    };
-    try {
-      const res = await api.post('/expenses', newExpense);
-      setFixedExpenses([...fixedExpenses, res.data]);
-      setExpandedFixedId(res.data.id);
-      setTimeout(() => {
-        document.getElementById(`expense-name-${res.data.id}`)?.focus();
-      }, 100);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsAdding(false);
-    }
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -76,13 +44,7 @@ export function FinanceView({
     }
   };
 
-  const handleFixedImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setFixedExpenses(fixedExpenses.map(exp => exp.id === id ? {...exp, image: url} : exp));
-    }
-  };
+
 
   const downloadImage = (imageUrl: string, expenseName: string) => {
     const a = document.createElement('a');
@@ -95,49 +57,45 @@ export function FinanceView({
 
   return (
     <>
-      <div className="w-full max-w-4xl mx-auto bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-stone-200 flex justify-between items-center bg-[#FDFBF7] flex-wrap gap-4">
-          <div className="flex items-center gap-3 text-blue-600">
-             <Wallet size={24} />
-             <h3 className="font-semibold text-xl text-stone-900">Despesas Mensais</h3>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="text-right">
-              <p className="text-xs text-stone-500 uppercase tracking-wider font-semibold">Total Mensal</p>
-              <p className="text-xl font-bold text-rose-600">{formatCurrency(totalFixed)}</p>
-            </div>
-          </div>
+      <div className="w-full max-w-4xl mx-auto flex justify-between items-end mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-stone-900 flex items-center gap-2">
+            <Wallet size={24} className="text-blue-600" />
+            Despesas Mensais
+          </h1>
+          <p className="text-sm text-stone-500 mt-1">
+            Controle os custos fixos e recorrentes do período.
+          </p>
         </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#FAFAFA] border-b border-stone-200 text-xs text-stone-500 uppercase tracking-wider font-semibold">
-                <th className="py-4 px-6 font-medium">Descrição</th>
-                <th className="py-4 px-6 font-medium">Tipo</th>
-                <th className="py-4 px-6 font-medium">Valor Base</th>
-                <th className="py-4 px-6 font-medium" title="Valor somado dentro do período selecionado no filtro">Total (No Período)</th>
-                <th className="py-4 px-6 font-medium text-center print:hidden">Comprovante</th>
-                <th className="py-4 px-6 font-medium text-right print:hidden">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {(() => {
-                const visibleExpenses = fixedExpenses.filter(exp => 
-                  calculateTotalFixedForPeriod([exp], startMonth, endMonth) > 0 || expandedFixedId === exp.id
-                );
-                
-                if (visibleExpenses.length === 0) {
-                  return (
-                    <tr>
-                      <td colSpan={6} className="py-12 text-center text-stone-400 text-sm">
-                        Nenhuma despesa ativa neste período.
-                      </td>
-                    </tr>
-                  );
-                }
+      </div>
 
-                return visibleExpenses.map(exp => {
+      <div className="w-full max-w-4xl mx-auto bg-white border border-stone-200 rounded-2xl shadow-sm overflow-visible flex flex-col">
+        <Table>
+          <TableHeader className="bg-[#FAFAFA]">
+            <TableHead>Descrição</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Valor Base</TableHead>
+            <TableHead title="Valor somado dentro do período selecionado no filtro">Total (No Período)</TableHead>
+            <TableHead className="text-center print:hidden">Comprovante</TableHead>
+            <TableHead className="text-right print:hidden">Ações</TableHead>
+          </TableHeader>
+          <TableBody>
+            {(() => {
+              const visibleExpenses = fixedExpenses.filter(exp => 
+                calculateTotalFixedForPeriod([exp], startMonth, endMonth) > 0
+              );
+              
+              if (visibleExpenses.length === 0) {
+                return (
+                  <TableRow>
+                    <TableCell className="text-center text-stone-400" colSpan={6}>
+                      Nenhuma despesa ativa neste período.
+                    </TableCell>
+                  </TableRow>
+                );
+              }
+
+              return visibleExpenses.map(exp => {
                 const recurrenceColor = {
                   'Única': 'bg-stone-100 text-stone-600',
                   'Diária': 'bg-orange-50 text-orange-600',
@@ -157,11 +115,8 @@ export function FinanceView({
 
                 return (
                 <Fragment key={exp.id}>
-                  {/* MODO VISUALIZAÇÃO */}
-                  <tr 
-                    className={`hover:bg-stone-50 transition-colors group ${expandedFixedId === exp.id ? 'bg-blue-50/30' : ''}`}
-                  >
-                    <td className="py-4 px-6">
+                  <TableRow interactive onClick={() => setActiveExpense(exp)}>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm text-stone-800">
                           {exp.name}
@@ -172,21 +127,21 @@ export function FinanceView({
                           </div>
                         )}
                       </div>
-                    </td>
-                    <td className="py-4 px-6">
+                    </TableCell>
+                    <TableCell>
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider ${recurrenceColor}`}>
                         {exp.recurrence || 'Mensal'}
                       </span>
-                    </td>
-                    <td className="py-4 px-6">
+                    </TableCell>
+                    <TableCell>
                       <span className="font-bold text-sm text-stone-900">{formatCurrency(exp.value)}</span>
-                    </td>
-                    <td className="py-4 px-6">
+                    </TableCell>
+                    <TableCell>
                       <span className="font-medium text-sm text-stone-600">
                         {formatCurrency(calculateTotalFixedForPeriod([exp], startMonth, endMonth))}
                       </span>
-                    </td>
-                    <td className="py-4 px-6 text-center print:hidden">
+                    </TableCell>
+                    <TableCell className="text-center print:hidden">
                       {exp.image ? (
                         <button 
                           onClick={() => setPreviewImage(exp.image!)}
@@ -200,15 +155,14 @@ export function FinanceView({
                           <FileText size={16} />
                         </span>
                       )}
-                    </td>
-                    <td className="py-4 px-6 text-right print:hidden">
+                    </TableCell>
+                    <TableCell className="text-right print:hidden">
                       <div className="flex items-center justify-end gap-2">
                         <button 
-                          onClick={() => expandedFixedId === exp.id ? handleCloseEdit(exp) : setExpandedFixedId(exp.id)}
-                          className={`p-1.5 rounded-lg transition-all ${expandedFixedId === exp.id ? 'bg-blue-100 text-blue-600' : 'text-stone-400 hover:text-blue-600 hover:bg-stone-100'}`}
-                          title={expandedFixedId === exp.id ? "Recolher" : "Editar"}
+                          className="p-1.5 rounded-lg transition-all print:hidden text-stone-300 hover:text-blue-500 hover:bg-blue-50"
+                          title="Ver Detalhes"
                         >
-                          <Pencil size={18} />
+                          <ChevronRight size={18} className="transition-transform duration-200 group-hover:translate-x-0.5" />
                         </button>
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleDelete(exp.id); }}
@@ -219,132 +173,13 @@ export function FinanceView({
                           {isDeletingId === exp.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                         </button>
                       </div>
-                    </td>
-                  </tr>
-
-                  {/* MODO EDIÇÃO (EXPANDIDO) */}
-                  {expandedFixedId === exp.id && (
-                    <tr className="bg-stone-50/50 border-b-2 border-stone-200">
-                      <td colSpan={6} className="p-6 pt-2">
-                        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Detalhes da Despesa</span>
-                            <button disabled={isDeletingId === exp.id} onClick={() => handleDelete(exp.id)} className="text-stone-400 hover:text-rose-500 p-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider disabled:opacity-50" title="Excluir">
-                              {isDeletingId === exp.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Excluir
-                            </button>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-4">
-                              <div>
-                                <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Nome da Despesa</label>
-                                <input 
-                                  id={`expense-name-${exp.id}`}
-                                  value={exp.name} 
-                                  onChange={e => setFixedExpenses(fixedExpenses.map(ex => ex.id === exp.id ? {...ex, name: e.target.value} : ex))}
-                                  className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
-                                  placeholder="Ex: Aluguel, Água..."
-                                />
-                              </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Início</label>
-                                  <input 
-                                    type="date"
-                                    value={exp.startDate || ''} 
-                                    onChange={e => setFixedExpenses(fixedExpenses.map(ex => ex.id === exp.id ? {...ex, startDate: e.target.value} : ex))}
-                                    className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Fim (Opcional)</label>
-                                  <input 
-                                    type="date"
-                                    value={exp.endDate || ''} 
-                                    onChange={e => setFixedExpenses(fixedExpenses.map(ex => ex.id === exp.id ? {...ex, endDate: e.target.value} : ex))}
-                                    className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="space-y-4">
-                              <div className="flex gap-2">
-                                <div className="flex-1">
-                                  <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Valor Bruto</label>
-                                  <input 
-                                    type="number" 
-                                    value={exp.value || ''} 
-                                    onChange={e => setFixedExpenses(fixedExpenses.map(ex => ex.id === exp.id ? {...ex, value: Number(e.target.value)} : ex))}
-                                    className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
-                                    placeholder="R$ 0,00"
-                                  />
-                                </div>
-                                
-                                <div className="flex-1">
-                                  <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Recorrência</label>
-                                  <select 
-                                    value={exp.recurrence || 'Mensal'} 
-                                    onChange={e => setFixedExpenses(fixedExpenses.map(ex => ex.id === exp.id ? {...ex, recurrence: e.target.value as any} : ex))}
-                                    className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm cursor-pointer"
-                                  >
-                                    <option value="Única">Única</option>
-                                    <option value="Diária">Diária</option>
-                                    <option value="Semanal">Semanal</option>
-                                    <option value="Quinzenal">Quinzenal</option>
-                                    <option value="Mensal">Mensal</option>
-                                    <option value="Anual">Anual</option>
-                                  </select>
-                                </div>
-                              </div>
-                              <div>
-                                <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Comprovante</label>
-                                <div className="relative overflow-hidden h-[38px]">
-                                  <button className="w-full h-full px-4 flex items-center justify-center gap-2 bg-white border border-stone-200 text-stone-600 rounded-xl hover:bg-stone-50 hover:border-stone-300 transition-colors text-sm font-medium shadow-sm">
-                                    <Paperclip size={14} /> {exp.image ? 'Trocar Comprovante' : 'Anexar Comprovante'}
-                                  </button>
-                                  <input 
-                                    type="file" 
-                                    accept="image/*" 
-                                    onChange={(e) => handleFixedImageUpload(exp.id, e)} 
-                                    className="absolute inset-0 opacity-0 cursor-pointer" 
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {exp.image && (
-                            <div className="relative w-48 h-32 bg-stone-100 rounded-xl overflow-hidden mt-1 group border border-stone-200 shadow-sm">
-                              <img src={exp.image} alt="Comprovante" className="w-full h-full object-cover" />
-                              <button 
-                                onClick={() => setFixedExpenses(fixedExpenses.map(ex => ex.id === exp.id ? {...ex, image: undefined} : ex))}
-                                className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          )}
-
-                          <div className="mt-2 flex justify-end">
-                            <button 
-                              onClick={() => handleCloseEdit(exp)}
-                              disabled={isSavingId === exp.id}
-                              className="flex items-center gap-2 bg-stone-900 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-stone-800 transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                              {isSavingId === exp.id ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Concluir Edição
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
+                    </TableCell>
+                  </TableRow>
                 </Fragment>
                 );
               })})()}
-            </tbody>
-          </table>
-        </div>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Floating Action Button */}
@@ -352,10 +187,9 @@ export function FinanceView({
         <div className="relative group">
           <button 
             onClick={handleAddFixedExpense}
-            disabled={isAdding}
-            className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg shadow-blue-600/40 transition-all hover:scale-110 active:scale-95 disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed"
+            className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg shadow-blue-600/40 transition-all hover:scale-110 active:scale-95"
           >
-            {isAdding ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
+            <Plus size={24} />
           </button>
           <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
             Nova Despesa

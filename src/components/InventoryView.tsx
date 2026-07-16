@@ -4,6 +4,7 @@ import { Vehicle } from "../types";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { generateContractPDF } from "../utils/pdfExport";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import api from "../services/api";
 
 interface InventoryViewProps {
@@ -81,44 +82,38 @@ export function InventoryView({
         </h2>
       </div>
 
-      <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#FAFAFA] border-b border-stone-200 text-xs text-stone-500 uppercase tracking-wider font-semibold">
-                <th className="py-4 px-6 font-medium">Veículo</th>
-                <th className="py-4 px-6 font-medium w-[180px]">Status</th>
-                <th className="py-4 px-6 font-medium hidden sm:table-cell">Custo Total</th>
-                <th className="py-4 px-6 font-medium">Lucro Líquido</th>
-                <th className="py-4 px-6 font-medium text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {filteredVehicles.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-stone-400 text-sm">
-                    Nenhum veículo movimentado ou em estoque neste mês.
-                  </td>
-                </tr>
-              )}
+      <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-visible">
+        <Table>
+          <TableHeader className="bg-[#FAFAFA]">
+            <TableHead>Veículo</TableHead>
+            <TableHead className="w-[180px]">Status</TableHead>
+            <TableHead className="hidden sm:table-cell">Custo Total</TableHead>
+            <TableHead>Lucro Líquido</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableHeader>
+          <TableBody>
+            {filteredVehicles.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="py-12 text-center text-stone-400 text-sm">
+                  Nenhum veículo movimentado ou em estoque neste mês.
+                </TableCell>
+              </TableRow>
+            )}
               {filteredVehicles.map(v => {
                 const expenses = v.despesas.reduce((acc, e) => acc + e.value, 0);
                 const totalCost = v.valorCompra + expenses;
                 const profit = v.valorVenda - totalCost;
                 
                 return (
-                  <tr 
+                  <TableRow 
                     key={v.id}
                     onClick={() => {
                       if (v.status !== 'Vendido') setActiveVehicle(v);
                     }}
-                    className={`transition-colors group ${
-                      v.status === 'Vendido' 
-                        ? 'bg-stone-100/50' 
-                        : 'hover:bg-stone-50 cursor-pointer'
-                    }`}
+                    interactive={v.status !== 'Vendido'}
+                    className={v.status === 'Vendido' ? 'bg-stone-100/50' : ''}
                   >
-                    <td className="py-4 px-6">
+                    <TableCell>
                       <div className="flex items-center gap-4">
                         {(() => {
                           const hasPhoto = Boolean(v.image || (v.galeria && v.galeria.length > 0));
@@ -164,8 +159,8 @@ export function InventoryView({
                           </p>
                         </div>
                       </div>
-                    </td>
-                    <td className="py-4 px-6 relative">
+                    </TableCell>
+                    <TableCell className="relative">
                       <div className="relative inline-block w-max">
                         <button 
                           onClick={(e) => {
@@ -215,21 +210,28 @@ export function InventoryView({
                           </>
                         )}
                       </div>
-                    </td>
-                    <td className="py-4 px-6 text-sm text-stone-600 hidden sm:table-cell">
-                      {formatCurrency(totalCost)}
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex flex-col">
-                        <span className={`font-semibold text-sm ${profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {formatCurrency(profit)}
-                        </span>
-                        <span className="text-[10px] text-stone-400 uppercase font-medium">
-                          {v.status === 'Vendido' ? 'Realizado' : 'Estimado'}
-                        </span>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-sm text-stone-800">{formatCurrency(totalCost)}</span>
+                        {expenses > 0 && (
+                          <span className="text-[10px] text-rose-500 font-medium">+{formatCurrency(expenses)} desp.</span>
+                        )}
                       </div>
-                    </td>
-                    <td className="py-4 px-6 text-right">
+                    </TableCell>
+                    <TableCell>
+                      {v.status === 'Vendido' ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className={`font-bold text-sm ${profit > 0 ? 'text-emerald-600' : profit < 0 ? 'text-rose-600' : 'text-stone-600'}`}>
+                            {profit > 0 ? '+' : ''}{formatCurrency(profit)}
+                          </span>
+                          <span className="text-[10px] text-stone-500 font-medium">Vendido por {formatCurrency(v.valorVenda)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-medium text-stone-400 italic">Estoque</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button 
                           onClick={async (e) => {
@@ -264,13 +266,12 @@ export function InventoryView({
                           <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Floating Action Button */}

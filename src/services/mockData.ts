@@ -219,6 +219,38 @@ export const initialVehicles: Vehicle[] = [
       { id: "v10_e2", name: "Anúncios Premium", value: 1500, category: "Marketing" }
     ],
     placa: "POR-7180"
+  },
+  {
+    id: "v9",
+    name: "Honda HR-V Touring 1.5 Turbo",
+    description: "Versão topo de linha, teto solar, pacote Honda Sensing. Muito procurado.",
+    image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=800&q=80",
+    galeria: [
+      "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=800&q=80"
+    ],
+    valorCompra: 125000,
+    valorVenda: 145000,
+    status: "Em Estoque",
+    dataEntrada: "2026-07-05",
+    despesas: [
+      { id: "v9_e1", name: "Higienização Interna", value: 350, category: "Funilaria" }
+    ],
+    placa: "HRV-2T22"
+  },
+  {
+    id: "v10",
+    name: "Volkswagen Polo Highline 200 TSI",
+    description: "Painel digital, excelente estado. Recebido como parte do pagamento.",
+    image: "https://images.unsplash.com/photo-1616422285623-14bf929f2710?auto=format&fit=crop&w=800&q=80",
+    galeria: [],
+    valorCompra: 78000,
+    valorVenda: 92000,
+    status: "Oficina",
+    dataEntrada: "2026-07-15",
+    despesas: [
+      { id: "v10_e1", name: "Revisão dos 50 mil km", value: 850, category: "Mecânica" }
+    ],
+    placa: "POL-0H20"
   }
 ];
 
@@ -252,5 +284,25 @@ export const mockClients: Client[] = [
     interest: "Toyota Hilux",
     notes: "Comprou a Hilux SRV em março. Pode querer trocar no ano que vem.",
     createdAt: "2026-03-15"
+  },
+  {
+    id: "cl_4",
+    name: "Fernanda Lima",
+    phone: "(31) 99887-1122",
+    email: "fernanda.lima@email.com",
+    status: "Lead",
+    interest: "SUV Compacto (Tracker ou Renegade)",
+    notes: "Só compra se tiver teto solar. Aceita consórcio.",
+    createdAt: "2026-07-16"
+  },
+  {
+    id: "cl_5",
+    name: "Marcos Vinícius",
+    phone: "(41) 97777-5555",
+    email: "marcos.v@email.com",
+    status: "Frio",
+    interest: "Audi A3",
+    notes: "Achou o valor do Audi A3 muito alto. Manter no radar caso apareça um A3 mais antigo.",
+    createdAt: "2026-06-20"
   }
 ];

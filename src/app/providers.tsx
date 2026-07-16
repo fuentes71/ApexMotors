@@ -3,6 +3,8 @@
 import { DataProvider } from "../context/DataContext";
 import { Sidebar } from "../components/Sidebar";
 import { VehicleModal } from "../components/VehicleModal";
+import { ClientModal } from "../components/ClientModal";
+import { ExpenseModal } from "../components/ExpenseModal";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +13,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <Sidebar />
         {children}
         <VehicleModal />
+        <ClientModal />
+        <ExpenseModal />
       </div>
     </DataProvider>
   );
