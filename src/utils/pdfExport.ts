@@ -118,3 +118,56 @@ export const generateStructuredPDF = ({
   const fileName = `Relatorio_ApexMotors_${startMonth === endMonth ? startMonth : `${startMonth}_a_${endMonth}`}.pdf`;
   doc.save(fileName);
 };
+
+export const generateContractPDF = (vehicle: Vehicle, template: string) => {
+  const doc = new jsPDF();
+  
+  // Título e Estilo
+  doc.setFontSize(22);
+  doc.setTextColor(28, 25, 23);
+  doc.text("ApexMotors", 105, 25, { align: "center" });
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text("RECIBO DE COMPRA E VENDA DE VEÍCULO", 105, 38, { align: "center" });
+
+  // Corpo do Texto
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  
+  const dateStr = vehicle.dataVenda 
+    ? new Date(vehicle.dataVenda).toLocaleDateString('pt-BR') 
+    : new Date().toLocaleDateString('pt-BR');
+
+  const buyerName = vehicle.buyerName || "_________________________________";
+  const buyerDoc = vehicle.buyerDoc || "___________________";
+  const sellerName = "ApexMotors Comércio de Veículos LTDA";
+  const sellerDoc = "00.000.000/0001-00";
+
+  const content = template
+    .replace(/\{\{buyerName\}\}/g, buyerName)
+    .replace(/\{\{buyerDoc\}\}/g, buyerDoc)
+    .replace(/\{\{sellerName\}\}/g, sellerName)
+    .replace(/\{\{sellerDoc\}\}/g, sellerDoc)
+    .replace(/\{\{vehicleName\}\}/g, vehicle.name)
+    .replace(/\{\{vehiclePlaca\}\}/g, vehicle.placa || 'N/A')
+    .replace(/\{\{vehicleRenavam\}\}/g, vehicle.renavam || 'N/A')
+    .replace(/\{\{vehiclePrice\}\}/g, formatCurrency(vehicle.valorVenda));
+
+  const textLines = doc.splitTextToSize(content, 180);
+  doc.text(textLines, 14, 60);
+
+  // Assinaturas
+  doc.setLineWidth(0.5);
+  doc.line(30, 150, 90, 150);
+  doc.line(120, 150, 180, 150);
+
+  doc.setFontSize(10);
+  doc.text("Assinatura do Comprador", 60, 156, { align: "center" });
+  doc.text("Assinatura do Vendedor", 150, 156, { align: "center" });
+
+  doc.setFontSize(10);
+  doc.text(`Local e Data: _______________________, ${dateStr}`, 14, 180);
+
+  doc.save(`Recibo_${vehicle.name.replace(/\s+/g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`);
+};

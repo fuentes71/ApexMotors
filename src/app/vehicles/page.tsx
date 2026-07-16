@@ -4,6 +4,7 @@ import { useData } from "../../context/DataContext";
 import { Header } from "../../components/Header";
 import { InventoryView } from "../../components/InventoryView";
 import { Vehicle } from "../../types";
+import api from "../../services/api";
 
 export default function VeiculosPage() {
   const { vehicles, setVehicles, setActiveVehicle, startMonth, endMonth } = useData();
@@ -16,7 +17,7 @@ export default function VeiculosPage() {
     return v.dataEntrada <= `${endMonth}-31`;
   });
 
-  const handleAddVehicle = () => {
+  const handleAddVehicle = async () => {
     const newV: Vehicle = {
       id: Date.now().toString(),
       name: "Novo Veículo",
@@ -29,8 +30,16 @@ export default function VeiculosPage() {
       status: "Em Estoque",
       dataEntrada: new Date().toISOString().split('T')[0]
     };
-    setVehicles([...vehicles, newV]);
-    setActiveVehicle(newV);
+    try {
+      const res = await api.post('/vehicles', newV);
+      setVehicles([...vehicles, res.data]);
+      setActiveVehicle(res.data);
+    } catch (e) {
+      console.error(e);
+      // Fallback local
+      setVehicles([...vehicles, newV]);
+      setActiveVehicle(newV);
+    }
   };
 
   return (
@@ -46,13 +55,6 @@ export default function VeiculosPage() {
         />
       </div>
 
-      <button
-        onClick={handleAddVehicle}
-        title="Adicionar Veículo"
-        className="fixed bottom-24 right-6 lg:bottom-10 lg:right-10 flex items-center justify-center bg-blue-600 text-white w-14 h-14 rounded-full shadow-lg shadow-blue-600/30 hover:bg-blue-700 hover:-translate-y-1 active:translate-y-0 transition-all print:hidden z-40 group"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-90 transition-transform duration-200"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-      </button>
     </div>
   );
 }

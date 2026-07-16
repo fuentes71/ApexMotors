@@ -1,25 +1,30 @@
-import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle } from "lucide-react";
+import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle, Search, FileWarning, FileText, Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
-import { Expense, Category, Vehicle } from "../types";
+import { Vehicle, Expense, Category } from "../types";
+import api from "../services/api";
 import { formatCurrency, getCategoryColor, getCategoryIcon } from "../utils";
+import { generateContractPDF } from "../utils/pdfExport";
 
 export function VehicleModal() {
   const { 
     activeVehicle, setActiveVehicle, 
     vehicles, setVehicles, 
     fullscreenImage, setFullscreenImage,
-    fixedExpenses, setFixedExpenses
+    fixedExpenses, setFixedExpenses,
+    contractTemplate
   } = useData();
 
   const [draftVehicle, setDraftVehicle] = useState<Vehicle | null>(null);
   const [prevActiveVehicle, setPrevActiveVehicle] = useState<Vehicle | null>(null);
+  const [isConsulting, setIsConsulting] = useState(false);
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpenseValue, setNewExpenseValue] = useState("");
   const [newExpenseCat, setNewExpenseCat] = useState<Category>("Mecânica");
   const [newExpenseRecurrence, setNewExpenseRecurrence] = useState<Expense["recurrence"]>("Única");
   const [newExpenseAddToMonthly, setNewExpenseAddToMonthly] = useState(false);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,12 +38,104 @@ export function VehicleModal() {
     }
   }
 
-  if (!activeVehicle || !draftVehicle) return null;
-
   const isDirty = JSON.stringify(activeVehicle) !== JSON.stringify(draftVehicle);
 
+  const handleSave = async () => {
+    if (!draftVehicle) return;
+    setIsSaving(true);
+    try {
+      const res = await api.put(`/vehicles/${draftVehicle.id}`, draftVehicle);
+      setVehicles(vehicles.map(v => v.id === draftVehicle.id ? res.data : v));
+      setActiveVehicle(null);
+    } catch (e) {
+      console.error(e);
+      // Fallback
+      setVehicles(vehicles.map(v => v.id === draftVehicle.id ? draftVehicle : v));
+      setActiveVehicle(null);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const renderFullscreenGallery = () => {
+    if (!fullscreenImage) return null;
+    
+    let galeria = [fullscreenImage];
+    if (draftVehicle) {
+      galeria = draftVehicle.galeria;
+    } else {
+      const vehicle = vehicles.find(v => v.galeria.includes(fullscreenImage));
+      if (vehicle) galeria = vehicle.galeria;
+    }
+    
+    const currentIndex = Math.max(0, galeria.indexOf(fullscreenImage));
+
+    return (
+      <div className="fixed inset-0 z-[80] bg-black/95 backdrop-blur-sm flex items-center justify-center animate-in fade-in" onClick={() => setFullscreenImage(null)}>
+        <button 
+          onClick={() => setFullscreenImage(null)}
+          className="absolute top-6 right-6 text-white/50 hover:text-white p-3 rounded-full hover:bg-white/10 transition-colors z-10"
+        >
+          <X size={32} />
+        </button>
+
+        {galeria.length > 1 && (
+          <>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                const prevIndex = currentIndex > 0 ? currentIndex - 1 : galeria.length - 1;
+                setFullscreenImage(galeria[prevIndex]);
+              }}
+              className="absolute left-6 text-white/50 hover:text-white p-3 rounded-full hover:bg-white/10 transition-colors z-10"
+            >
+              <ChevronLeft size={48} />
+            </button>
+
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                const nextIndex = currentIndex < galeria.length - 1 ? currentIndex + 1 : 0;
+                setFullscreenImage(galeria[nextIndex]);
+              }}
+              className="absolute right-6 text-white/50 hover:text-white p-3 rounded-full hover:bg-white/10 transition-colors z-10"
+            >
+              <ChevronRight size={48} />
+            </button>
+          </>
+        )}
+
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={fullscreenImage} className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg relative z-0" alt="Preview" />
+      </div>
+    );
+  };
+
+  if (!activeVehicle || !draftVehicle) {
+    return renderFullscreenGallery();
+  }
+
+
+
   const handleUpdate = <K extends keyof Vehicle>(field: K, value: Vehicle[K]) => {
-    setDraftVehicle({ ...draftVehicle, [field]: value });
+    setDraftVehicle(prev => prev ? { ...prev, [field]: value } : null);
+  };
+
+  const handleConsultarDebitos = () => {
+    if (!draftVehicle?.placa) {
+      alert("Preencha a placa primeiro!");
+      return;
+    }
+    setIsConsulting(true);
+    setTimeout(() => {
+      // Mock API call to public/free API (Simulated)
+      const mockDebts = [
+        { id: "d1", type: "IPVA", amount: 1540.50, dueDate: "2026-08-15", description: "IPVA 2026 - Cota Única" },
+        { id: "d2", type: "Multa", amount: 130.16, dueDate: "2026-07-20", description: "Excesso de Velocidade" }
+      ] as Vehicle['debts'];
+      setDraftVehicle({ ...draftVehicle, debts: mockDebts });
+      setIsConsulting(false);
+    }, 1500);
   };
 
   const handleAddExpense = () => {
@@ -88,11 +185,6 @@ export function VehicleModal() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSave = () => {
-    setVehicles(vehicles.map(v => v.id === draftVehicle.id ? draftVehicle : v));
-    setActiveVehicle(null);
-  };
-
   const handleCloseAttempt = () => {
     if (isDirty) {
       setShowConfirmClose(true);
@@ -135,6 +227,25 @@ export function VehicleModal() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
+                  <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Placa</label>
+                  <input 
+                    type="text" 
+                    placeholder="ABC-1234"
+                    value={draftVehicle.placa || ""}
+                    onChange={(e) => handleUpdate("placa", e.target.value.toUpperCase())}
+                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Renavam</label>
+                  <input 
+                    type="text" 
+                    value={draftVehicle.renavam || ""}
+                    onChange={(e) => handleUpdate("renavam", e.target.value)}
+                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all"
+                  />
+                </div>
+                <div>
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Compra (R$)</label>
                   <input 
                     type="number" 
@@ -165,34 +276,121 @@ export function VehicleModal() {
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Status</label>
                   <select 
                     value={draftVehicle.status}
+                    disabled={activeVehicle?.status === 'Vendido'}
                     onChange={(e) => {
-                      const newStatus = e.target.value;
+                      const newStatus = e.target.value as "Em Estoque" | "Manutenção" | "Vendido";
                       if (newStatus === "Vendido") {
                         handleUpdate("status", "Vendido");
                         handleUpdate("dataVenda", new Date().toISOString().split('T')[0]);
                       } else {
-                        handleUpdate("status", "Em Estoque");
+                        handleUpdate("status", newStatus);
                         handleUpdate("dataVenda", undefined);
                       }
                     }}
-                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all cursor-pointer"
+                    className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all ${activeVehicle?.status === 'Vendido' ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <option value="Em Estoque">Em Estoque</option>
+                    <option value="Manutenção">Manutenção</option>
                     <option value="Vendido">Vendido</option>
                   </select>
                 </div>
                 {draftVehicle.status === "Vendido" && (
-                  <div className="md:col-span-2">
-                    <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Data de Venda</label>
-                    <input 
-                      type="date" 
-                      value={draftVehicle.dataVenda || ""}
-                      onChange={(e) => handleUpdate("dataVenda", e.target.value)}
-                      className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all"
-                    />
+                  <div className="md:col-span-2 p-5 bg-emerald-50 rounded-xl border border-emerald-100 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-emerald-800 flex items-center gap-2">
+                        <Check size={16} /> Dados da Venda
+                      </h4>
+                      <button
+                        onClick={() => generateContractPDF(draftVehicle, contractTemplate)}
+                        className="flex items-center gap-2 text-sm bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-all shadow-sm font-medium"
+                      >
+                        <FileText size={14} />
+                        Gerar Recibo PDF
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-xs text-emerald-700 uppercase tracking-wider font-semibold mb-2 block">Data de Venda</label>
+                        <input 
+                          type="date" 
+                          value={draftVehicle.dataVenda || ""}
+                          onChange={(e) => handleUpdate("dataVenda", e.target.value)}
+                          className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-emerald-700 uppercase tracking-wider font-semibold mb-2 block">Nome do Comprador</label>
+                        <input 
+                          type="text" 
+                          placeholder="Ex: João da Silva"
+                          value={draftVehicle.buyerName || ""}
+                          onChange={(e) => handleUpdate("buyerName", e.target.value)}
+                          className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-emerald-700 uppercase tracking-wider font-semibold mb-2 block">CPF/CNPJ</label>
+                        <input 
+                          type="text" 
+                          placeholder="000.000.000-00"
+                          value={draftVehicle.buyerDoc || ""}
+                          onChange={(e) => handleUpdate("buyerDoc", e.target.value)}
+                          className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all"
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Debts & IPVA (Integration Placeholder) */}
+            <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-stone-800 uppercase tracking-wider flex items-center gap-2">
+                  <FileWarning size={16} className="text-amber-500" />
+                  Histórico e Débitos (IPVA/Multas)
+                </h3>
+                <button 
+                  onClick={handleConsultarDebitos}
+                  disabled={isConsulting || !draftVehicle.placa}
+                  className="flex items-center gap-2 text-sm bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-800 disabled:opacity-50 transition-all"
+                >
+                  {isConsulting ? (
+                    <span className="animate-pulse">Consultando Sinesp/Detran...</span>
+                  ) : (
+                    <>
+                      <Search size={14} />
+                      Consultar
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {draftVehicle.debts && draftVehicle.debts.length > 0 ? (
+                <div className="space-y-3">
+                  {draftVehicle.debts.map(debt => (
+                    <div key={debt.id} className="flex justify-between items-center bg-amber-50 border border-amber-200/60 p-3 rounded-xl">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-amber-900 text-sm">{debt.type} - {debt.description}</span>
+                        <span className="text-xs text-amber-700">Vencimento: {debt.dueDate}</span>
+                      </div>
+                      <span className="font-bold text-amber-700">{formatCurrency(debt.amount)}</span>
+                    </div>
+                  ))}
+                  <div className="pt-2 border-t border-stone-100 flex justify-end gap-4 font-semibold text-stone-800">
+                    <span>Total em Débitos:</span>
+                    <span className="text-rose-600">{formatCurrency(draftVehicle.debts.reduce((a, b) => a + b.amount, 0))}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6 bg-stone-50 rounded-xl border border-dashed border-stone-200">
+                  <p className="text-sm text-stone-500">
+                    {draftVehicle.debts ? "Nenhum débito encontrado." : "Consulte a placa para verificar IPVA, Licenciamento e Multas."}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Gallery */}
@@ -354,50 +552,54 @@ export function VehicleModal() {
               </div>
             </div>
           </div>
-
-          {/* Floating Save Button */}
-          {isDirty && (
-            <div className="absolute bottom-8 right-8 animate-in slide-in-from-bottom-4 fade-in z-50">
-              <div className="relative group">
-                <button 
-                  onClick={handleSave}
-                  className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg shadow-blue-600/40 transition-all hover:scale-110 active:scale-95"
-                >
-                  <Save size={24} />
-                </button>
-                <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
-                  Salvar alterações
-                  <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-stone-900"></div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Unsaved Changes Confirmation Modal */}
-      {showConfirmClose && (
-        <div className="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in">
-          <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full mx-4 animate-in zoom-in-95">
-            <div className="flex items-center gap-4 text-amber-500 mb-4">
-              <div className="p-3 bg-amber-50 rounded-full">
-                <AlertTriangle size={24} />
-              </div>
-              <h3 className="text-lg font-bold text-stone-900">Sair sem salvar?</h3>
+      {/* Floating Save Button */}
+      {isDirty && (
+        <div className="absolute bottom-8 right-8 animate-in slide-in-from-bottom-4 fade-in z-50">
+          <div className="relative group">
+            <button 
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg shadow-blue-600/40 transition-all hover:scale-110 active:scale-95 cursor-pointer disabled:opacity-70 disabled:hover:scale-100"
+            >
+              {isSaving ? <Loader2 size={24} className="animate-spin" /> : <Save size={24} />}
+            </button>
+            <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
+              Salvar alterações
+              <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-stone-900"></div>
             </div>
-            <p className="text-stone-500 text-sm mb-6">
-              Você fez alterações neste veículo. Tem certeza que deseja sair? Todas as edições não salvas serão perdidas.
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Close Modal */}
+      {showConfirmClose && (
+        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95">
+            <h3 className="text-xl font-bold text-stone-800 mb-2">Alterações não salvas</h3>
+            <p className="text-stone-600 mb-6">
+              Você tem alterações que não foram salvas. O que deseja fazer?
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="w-full px-4 py-2.5 rounded-lg font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors cursor-pointer flex justify-center items-center gap-2 disabled:opacity-70"
+              >
+                {isSaving && <Loader2 size={20} className="animate-spin" />}
+                Salvar Alterações
+              </button>
               <button 
                 onClick={() => setShowConfirmClose(false)}
-                className="px-4 py-2 rounded-lg font-medium text-stone-600 hover:bg-stone-100 transition-colors"
+                className="px-4 py-2 rounded-lg font-medium text-stone-600 hover:bg-stone-100 transition-colors cursor-pointer"
               >
                 Continuar Editando
               </button>
               <button 
                 onClick={() => setActiveVehicle(null)}
-                className="px-4 py-2 rounded-lg font-medium bg-rose-500 hover:bg-rose-600 text-white shadow-sm transition-colors"
+                className="px-4 py-2 rounded-lg font-medium bg-rose-500 hover:bg-rose-600 text-white shadow-sm transition-colors cursor-pointer"
               >
                 Descartar
               </button>
@@ -407,18 +609,7 @@ export function VehicleModal() {
       )}
 
       {/* Fullscreen Image View */}
-      {fullscreenImage && (
-        <div className="fixed inset-0 z-[80] bg-black/95 backdrop-blur-sm flex items-center justify-center animate-in fade-in" onClick={() => setFullscreenImage(null)}>
-          <button 
-            onClick={() => setFullscreenImage(null)}
-            className="absolute top-6 right-6 text-white/50 hover:text-white p-3 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <X size={32} />
-          </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={fullscreenImage} className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg" alt="Preview" />
-        </div>
-      )}
+      {renderFullscreenGallery()}
     </>
   );
 }

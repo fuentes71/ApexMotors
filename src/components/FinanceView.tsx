@@ -1,8 +1,9 @@
-import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileText, Download, X, ChevronRight, Pencil, AlertTriangle } from "lucide-react";
+import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileText, Download, X, ChevronRight, Pencil, AlertTriangle, Loader2 } from "lucide-react";
 import { formatCurrency, calculateTotalFixedForPeriod } from "../utils";
 import { Expense } from "../types";
 import { useState, Fragment } from "react";
 import { useData } from "../context/DataContext";
+import api from "../services/api";
 
 interface FinanceViewProps {
   fixedExpenses: Expense[];
@@ -16,32 +17,63 @@ export function FinanceView({
   const { startMonth, endMonth, vehicles } = useData();
   const [expandedFixedId, setExpandedFixedId] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isSavingId, setIsSavingId] = useState<string | null>(null);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
-  const handleCloseEdit = (exp: Expense) => {
+  const handleCloseEdit = async (exp: Expense) => {
     if (!exp.name.trim() || exp.value <= 0 || !exp.startDate) {
       alert("A descrição, valor (maior que 0) e data de início são obrigatórios!");
       return;
     }
-    setExpandedFixedId(null);
+    setIsSavingId(exp.id);
+    try {
+      const res = await api.put(`/expenses/${exp.id}`, exp);
+      setFixedExpenses(fixedExpenses.map(e => e.id === exp.id ? res.data : e));
+      setExpandedFixedId(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSavingId(null);
+    }
   };
 
-  const handleAddFixedExpense = () => {
-    const newId = Date.now().toString();
+  const handleAddFixedExpense = async () => {
+    setIsAdding(true);
     const newExpense: Expense = {
-      id: newId,
+      id: Date.now().toString(),
       name: '',
       value: 0,
       recurrence: 'Mensal',
       startDate: new Date().toISOString().split('T')[0],
       endDate: ''
     };
-    setFixedExpenses([...fixedExpenses, newExpense]);
-    setExpandedFixedId(newId);
+    try {
+      const res = await api.post('/expenses', newExpense);
+      setFixedExpenses([...fixedExpenses, res.data]);
+      setExpandedFixedId(res.data.id);
+      setTimeout(() => {
+        document.getElementById(`expense-name-${res.data.id}`)?.focus();
+      }, 100);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
-    // Auto-focus after render
-    setTimeout(() => {
-      document.getElementById(`expense-name-${newId}`)?.focus();
-    }, 100);
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Tem certeza que deseja excluir esta despesa?")) {
+      setIsDeletingId(id);
+      try {
+        await api.delete(`/expenses/${id}`);
+        setFixedExpenses(fixedExpenses.filter(e => e.id !== id));
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsDeletingId(null);
+      }
+    }
   };
 
   const handleFixedImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,15 +211,12 @@ export function FinanceView({
                           <Pencil size={18} />
                         </button>
                         <button 
-                          onClick={() => {
-                            if (window.confirm('Tem certeza que deseja excluir esta despesa?')) {
-                              setFixedExpenses(fixedExpenses.filter(e => e.id !== exp.id));
-                            }
-                          }}
-                          className="p-1.5 rounded-lg transition-all text-stone-400 hover:text-rose-600 hover:bg-rose-50"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(exp.id); }}
+                          disabled={isDeletingId === exp.id}
+                          className="p-1.5 rounded-lg transition-all text-stone-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-50 disabled:hover:bg-transparent"
                           title="Excluir"
                         >
-                          <Trash2 size={18} />
+                          {isDeletingId === exp.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                         </button>
                       </div>
                     </td>
@@ -200,8 +229,8 @@ export function FinanceView({
                         <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
                           <div className="flex justify-between items-center mb-1">
                             <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Detalhes da Despesa</span>
-                            <button onClick={() => setFixedExpenses(fixedExpenses.filter(e => e.id !== exp.id))} className="text-stone-400 hover:text-rose-500 p-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider" title="Excluir">
-                              <Trash2 size={14} /> Excluir
+                            <button disabled={isDeletingId === exp.id} onClick={() => handleDelete(exp.id)} className="text-stone-400 hover:text-rose-500 p-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider disabled:opacity-50" title="Excluir">
+                              {isDeletingId === exp.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Excluir
                             </button>
                           </div>
                           
@@ -300,9 +329,10 @@ export function FinanceView({
                           <div className="mt-2 flex justify-end">
                             <button 
                               onClick={() => handleCloseEdit(exp)}
-                              className="flex items-center gap-2 bg-stone-900 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-stone-800 transition-colors shadow-sm"
+                              disabled={isSavingId === exp.id}
+                              className="flex items-center gap-2 bg-stone-900 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-stone-800 transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                              <Check size={16} /> Concluir Edição
+                              {isSavingId === exp.id ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Concluir Edição
                             </button>
                           </div>
                         </div>
@@ -322,9 +352,10 @@ export function FinanceView({
         <div className="relative group">
           <button 
             onClick={handleAddFixedExpense}
-            className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg shadow-blue-600/40 transition-all hover:scale-110 active:scale-95"
+            disabled={isAdding}
+            className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg shadow-blue-600/40 transition-all hover:scale-110 active:scale-95 disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed"
           >
-            <Plus size={24} />
+            {isAdding ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
           </button>
           <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
             Nova Despesa

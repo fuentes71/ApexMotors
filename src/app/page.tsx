@@ -49,7 +49,7 @@ export default function DashboardPage() {
   const prevNetBalance = prevTotalVehicleProfit - prevTotalFixed;
 
   const soldVehiclesCount = filteredVehicles.filter(v => v.status === "Vendido").length;
-  const inStockVehiclesCount = filteredVehicles.filter(v => v.status === "Em Estoque").length;
+  const inStockVehiclesCount = filteredVehicles.filter(v => v.status === "Em Estoque" || v.status === "Manutenção").length;
   
   const avgProfit = soldVehiclesCount > 0 
     ? filteredVehicles.filter(v => v.status === "Vendido").reduce((acc, v) => acc + (v.valorVenda - v.valorCompra - v.despesas.reduce((s, e) => s + e.value, 0)), 0) / soldVehiclesCount

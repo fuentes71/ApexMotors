@@ -4,10 +4,12 @@ import { LayoutDashboard, CarFront, Wallet, Settings, LogOut, X } from "lucide-r
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useData } from "../context/DataContext";
+import { useState } from "react";
 
 export function Sidebar() {
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useData();
   const pathname = usePathname();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const navItems = [
     { id: 'dashboard', href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -54,8 +56,29 @@ export function Sidebar() {
           })}
         </nav>
         
-        <div className="p-4 border-t border-stone-200/60">
-          <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all">
+        <div className="p-4 border-t border-stone-200/60 relative">
+          {isSettingsOpen && (
+            <div className="absolute bottom-[80px] left-4 right-4 bg-white border border-stone-200 rounded-xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in z-50">
+              <Link 
+                href="/settings" 
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors"
+              >
+                <div className="w-6 h-6 bg-rose-50 text-rose-600 rounded flex items-center justify-center font-bold text-[10px]">
+                  PDF
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium">Modelos e PDF</span>
+                  <span className="text-[10px] text-stone-400">Editar contratos</span>
+                </div>
+              </Link>
+            </div>
+          )}
+
+          <button 
+            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
+          >
             <Settings size={16} className="text-stone-400" />
             Configurações
           </button>
@@ -106,6 +129,40 @@ export function Sidebar() {
                 )
               })}
             </nav>
+            <div className="p-4 border-t border-stone-200/60 relative">
+              {isSettingsOpen && (
+                <div className="absolute bottom-[80px] left-4 right-4 bg-white border border-stone-200 rounded-xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in z-50">
+                  <Link 
+                    href="/settings" 
+                    onClick={() => {
+                      setIsSettingsOpen(false);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors"
+                  >
+                    <div className="w-6 h-6 bg-rose-50 text-rose-600 rounded flex items-center justify-center font-bold text-[10px]">
+                      PDF
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium">Modelos e PDF</span>
+                      <span className="text-[10px] text-stone-400">Editar contratos</span>
+                    </div>
+                  </Link>
+                </div>
+              )}
+
+              <button 
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
+              >
+                <Settings size={16} className="text-stone-400" />
+                Configurações
+              </button>
+              <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1">
+                <LogOut size={16} className="text-rose-400" />
+                Sair
+              </button>
+            </div>
           </aside>
         </div>
       )}

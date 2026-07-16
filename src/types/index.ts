@@ -15,6 +15,14 @@ export type Expense = {
   addToMonthly?: boolean;
 };
 
+export interface VehicleDebt {
+  id: string;
+  type: 'IPVA' | 'Licenciamento' | 'Multa';
+  amount: number;
+  dueDate: string;
+  description: string;
+}
+
 export type Vehicle = {
   id: string;
   name: string;
@@ -24,7 +32,12 @@ export type Vehicle = {
   valorCompra: number;
   valorVenda: number;
   despesas: Expense[];
-  status: "Em Estoque" | "Vendido";
+  status: "Em Estoque" | "Manutenção" | "Vendido";
   dataEntrada: string;
   dataVenda?: string;
+  placa?: string;
+  renavam?: string;
+  debts?: VehicleDebt[];
+  buyerName?: string;
+  buyerDoc?: string;
 };

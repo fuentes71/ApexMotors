@@ -1,0 +1,223 @@
+import { Expense, Vehicle } from "../types";
+
+export const initialFixedExpenses: Expense[] = [
+  { id: "fx1", name: "Aluguel Estacionamento", value: 2500, recurrence: 'Mensal', startDate: '2026-01-01' },
+  { id: "fx2", name: "Salário Sara (Atendimento)", value: 2200, recurrence: 'Mensal', startDate: '2026-01-01' },
+  { id: "fx3", name: "Anúncios Meta Ads", value: 30, recurrence: 'Diária', startDate: '2026-01-01' },
+  { id: "fx4", name: "Lavagem Rápida Terceirizada", value: 450, recurrence: 'Semanal', startDate: '2026-01-01' },
+  { id: "fx5", name: "Sistema de Gestão (ERP)", value: 300, recurrence: 'Mensal', startDate: '2026-01-01' },
+  { id: "fx6", name: "Assinatura Webmotors VIP", value: 1200, recurrence: 'Mensal', startDate: '2026-02-01' },
+  { id: "fx7", name: "Contabilidade", value: 800, recurrence: 'Mensal', startDate: '2026-01-01' },
+  { id: "fx8", name: "Seguro do Pátio", value: 3500, recurrence: 'Anual', startDate: '2026-03-15' },
+];
+
+export const initialVehicles: Vehicle[] = [
+  // 1. Veículo Recente (Julho) - Vendido Rápido
+  {
+    id: "v1",
+    name: "Audi A3 Sedan 2.0 TFSI",
+    description: "Único dono, revisões na concessionária. Carro de repasse vendido em tempo recorde.",
+    image: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80",
+    galeria: [
+      "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80"
+    ],
+    valorCompra: 85000,
+    valorVenda: 105000,
+    status: "Vendido",
+    dataEntrada: "2026-07-02",
+    dataVenda: "2026-07-10",
+    despesas: [
+      { id: "v1_e1", name: "Polimento Técnico", value: 450, category: "Funilaria" },
+      { id: "v1_e2", name: "Anúncio Destaque Webmotors", value: 150, category: "Marketing" },
+    ],
+    placa: "AUD-1A23",
+    renavam: "11122233344",
+    buyerName: "Carlos Eduardo Mendes",
+    buyerDoc: "123.456.789-00",
+  },
+  // 2. Veículo em Estoque com Débitos
+  {
+    id: "v2",
+    name: "Jeep Compass Longitude",
+    description: "Carro com IPVA atrasado, aguardando comprador para regularizar.",
+    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
+    galeria: [
+      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80"
+    ],
+    valorCompra: 110000,
+    valorVenda: 135000,
+    status: "Em Estoque",
+    dataEntrada: "2026-06-15",
+    despesas: [
+      { id: "v2_e1", name: "Lavagem Detalhada", value: 300, category: "Mecânica" },
+    ],
+    placa: "JEP-9B87",
+    renavam: "99988877766",
+    debts: [
+      { id: "v2_d1", type: "IPVA", amount: 2800.00, dueDate: "2026-01-30", description: "IPVA 2026 Atrasado" },
+      { id: "v2_d2", type: "Multa", amount: 130.16, dueDate: "2026-05-15", description: "Excesso de Velocidade" }
+    ]
+  },
+  // 3. Veículo em Manutenção (Oficina)
+  {
+    id: "v3",
+    name: "Honda Civic Touring 1.5 Turbo",
+    description: "Carro chegou fazendo barulho na suspensão. Aguardando peças da concessionária.",
+    image: "https://images.unsplash.com/photo-1629897148590-7d3d0f01eb06?auto=format&fit=crop&w=800&q=80",
+    galeria: [
+      "https://images.unsplash.com/photo-1629897148590-7d3d0f01eb06?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1625828557999-52219e2c6085?auto=format&fit=crop&w=800&q=80"
+    ],
+    valorCompra: 125000,
+    valorVenda: 148000,
+    status: "Manutenção",
+    dataEntrada: "2026-07-05",
+    despesas: [
+      { id: "v3_e1", name: "Guincho até a oficina", value: 250, category: "Mecânica" },
+      { id: "v3_e2", name: "Amortecedores Dianteiros", value: 1800, category: "Mecânica" }
+    ],
+    placa: "CIV-2C22",
+    renavam: "55566677788"
+  },
+  // 4. Veículo de Baixo Custo / Alto Giro
+  {
+    id: "v4",
+    name: "VW Fox Connect 1.6",
+    description: "Excelente para motorista de aplicativo. Bastante procurado.",
+    image: "https://images.unsplash.com/photo-1698226065545-c42b2ab62867?auto=format&fit=crop&w=800&q=80",
+    galeria: [
+      "https://images.unsplash.com/photo-1698226065545-c42b2ab62867?auto=format&fit=crop&w=800&q=80"
+    ],
+    valorCompra: 45000,
+    valorVenda: 58000,
+    status: "Vendido",
+    dataEntrada: "2026-04-10",
+    dataVenda: "2026-04-18",
+    despesas: [
+      { id: "v4_e1", name: "Troca de Óleo e Filtros", value: 350, category: "Mecânica" },
+      { id: "v4_e2", name: "Higienização Interna", value: 180, category: "Funilaria" },
+      { id: "v4_e3", name: "Transferência", value: 300, category: "Documentação" }
+    ],
+    placa: "FOX-4D56",
+    buyerName: "Amanda Rodrigues",
+    buyerDoc: "987.654.321-11",
+  },
+  // 5. Veículo Premium de Alto Valor
+  {
+    id: "v5",
+    name: "BMW X1 sDrive20i M Sport",
+    description: "Configuração exclusiva, interior caramelo. Muito conservada.",
+    image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80",
+    galeria: [
+      "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1556189250-72ba954cfc2b?auto=format&fit=crop&w=800&q=80"
+    ],
+    valorCompra: 190000,
+    valorVenda: 235000,
+    status: "Em Estoque",
+    dataEntrada: "2026-05-20",
+    despesas: [
+      { id: "v5_e1", name: "Vitrificação de Pintura", value: 1200, category: "Funilaria" },
+      { id: "v5_e2", name: "Laudo Cautelar Premium", value: 450, category: "Documentação" },
+      { id: "v5_e3", name: "Tráfego Pago Focado", value: 800, category: "Marketing" }
+    ],
+    placa: "BMW-1M00",
+    debts: []
+  },
+  // 6. Veículo Vendido com Alta Margem
+  {
+    id: "v6",
+    name: "Toyota Hilux SRX 2.8 Diesel",
+    description: "Comprada em leilão de frota, pequenos reparos feitos e vendida com margem excelente.",
+    image: "https://images.unsplash.com/photo-1623813350293-85ecb1bc32c3?auto=format&fit=crop&w=800&q=80",
+    galeria: [
+      "https://images.unsplash.com/photo-1623813350293-85ecb1bc32c3?auto=format&fit=crop&w=800&q=80"
+    ],
+    valorCompra: 150000,
+    valorVenda: 220000,
+    status: "Vendido",
+    dataEntrada: "2026-03-01",
+    dataVenda: "2026-04-05",
+    despesas: [
+      { id: "v6_e1", name: "Reparo Pára-choque Dianteiro", value: 1500, category: "Funilaria" },
+      { id: "v6_e2", name: "Pneus Novos (Jogo Misto)", value: 4800, category: "Mecânica" },
+      { id: "v6_e3", name: "Despachante Leilão", value: 1200, category: "Documentação" }
+    ],
+    placa: "HLX-4X44",
+    buyerName: "Fazenda Agro Boi",
+    buyerDoc: "12.345.678/0001-99"
+  },
+  // 7. SUV Compacto (Manutenção)
+  {
+    id: "v7",
+    name: "Chevrolet Tracker Premier 1.2",
+    description: "Teto solar panorâmico. Apresentou falha no sensor de estacionamento.",
+    image: "https://images.unsplash.com/photo-1681240212354-94943fcfd3ff?auto=format&fit=crop&w=800&q=80",
+    galeria: [
+      "https://images.unsplash.com/photo-1681240212354-94943fcfd3ff?auto=format&fit=crop&w=800&q=80"
+    ],
+    valorCompra: 115000,
+    valorVenda: 138000,
+    status: "Manutenção",
+    dataEntrada: "2026-07-12",
+    despesas: [
+      { id: "v7_e1", name: "Módulo Sensor Ré", value: 650, category: "Mecânica" }
+    ],
+    placa: "TRK-0P12"
+  },
+  // 8. Sedan Médio Vendido no Início do Ano
+  {
+    id: "v8",
+    name: "Toyota Corolla XEi 2.0",
+    description: "Carro de único dono, pegamos numa troca com a Hilux.",
+    image: "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80",
+    galeria: [],
+    valorCompra: 98000,
+    valorVenda: 115000,
+    status: "Vendido",
+    dataEntrada: "2026-01-10",
+    dataVenda: "2026-02-05",
+    despesas: [
+      { id: "v8_e1", name: "Bateria Nova", value: 550, category: "Mecânica" },
+      { id: "v8_e2", name: "Taxa de Transferência", value: 250, category: "Documentação" }
+    ],
+    placa: "COR-2L2L",
+    buyerName: "Roberto Justus",
+    buyerDoc: "444.555.666-77"
+  },
+  // 9. Hatch Popular em Estoque Sem Foto
+  {
+    id: "v9",
+    name: "Hyundai HB20 1.0 Comfort",
+    description: "Chegou agora, aguardando lavagem para tirar as fotos e anunciar.",
+    image: "",
+    galeria: [],
+    valorCompra: 52000,
+    valorVenda: 65000,
+    status: "Em Estoque",
+    dataEntrada: "2026-07-15",
+    despesas: [],
+    placa: "HBV-2022"
+  },
+  // 10. Carro Esportivo
+  {
+    id: "v10",
+    name: "Porsche 718 Cayman",
+    description: "Oportunidade. Cliente deixou em consignação mas acabamos comprando para revenda.",
+    image: "https://images.unsplash.com/photo-1503376712353-6447abf4b0ce?auto=format&fit=crop&w=800&q=80",
+    galeria: [
+      "https://images.unsplash.com/photo-1503376712353-6447abf4b0ce?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=800&q=80"
+    ],
+    valorCompra: 420000,
+    valorVenda: 490000,
+    status: "Em Estoque",
+    dataEntrada: "2026-06-01",
+    despesas: [
+      { id: "v10_e1", name: "Revisão Porsche Center", value: 4500, category: "Mecânica" },
+      { id: "v10_e2", name: "Anúncios Premium", value: 1500, category: "Marketing" }
+    ],
+    placa: "POR-7180"
+  }
+];
