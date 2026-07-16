@@ -1,4 +1,4 @@
-import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2 } from "lucide-react";
+import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2, FileText } from "lucide-react";
 import { formatCurrency, DEFAULT_CAR_IMAGE } from "../utils";
 import { Vehicle } from "../types";
 import { useData } from "../context/DataContext";
@@ -155,7 +155,7 @@ export function InventoryView({
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-stone-800 truncate text-sm">{v.name}</h3>
                             {v.debts && v.debts.length > 0 && (
-                              <AlertTriangle size={14} className="text-amber-500" title="Possui Débitos" />
+                              <span title="Possui Débitos"><AlertTriangle size={14} className="text-amber-500" /></span>
                             )}
                           </div>
                           <p className="text-xs text-stone-500 truncate max-w-[150px] sm:max-w-[200px]">

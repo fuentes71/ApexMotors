@@ -96,7 +96,7 @@ export const generateStructuredPDF = ({
 
     const expenseRows = activeFixedExpenses.map(e => [
       e.name,
-      e.recurrence || 'Mensal',
+      e.category || 'Mensal',
       formatCurrency(e.value),
       formatCurrency(calculateTotalFixedForPeriod([e], startMonth, endMonth))
     ]);

@@ -158,7 +158,16 @@ export function VehicleModal() {
     });
 
     if (newExpenseAddToMonthly) {
-      setFixedExpenses([...fixedExpenses, newExp]);
+      const fixedExp = {
+        id: crypto.randomUUID(),
+        name: newExp.name,
+        value: newExp.value,
+        category: "Outros" as const,
+        dueDate: new Date().toISOString().split('T')[0],
+        isPaid: false,
+        linkedVehicleId: draftVehicle.id
+      };
+      setFixedExpenses([...fixedExpenses, fixedExp]);
     }
 
     setNewExpenseName("");

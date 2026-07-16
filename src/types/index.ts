@@ -13,18 +13,13 @@ export type Expense = {
   endDate?: string; // YYYY-MM-DD (if empty, it's a continuous fixed expense)
   linkedVehicleId?: string;
   addToMonthly?: boolean;
+  dueDate?: string;
+  isPaid?: boolean;
+  receiptUrl?: string;
+  paymentDate?: string;
 };
 
-export interface FixedExpense {
-  id: string;
-  name: string;
-  value: number;
-  dueDate: string;
-  isPaid: boolean;
-  category: "Aluguel" | "Salários" | "Impostos" | "Sistemas" | "Marketing" | "Outros";
-  receiptUrl?: string; // NOVO: URL do comprovante (ex: blob:http://...)
-  paymentDate?: string; // NOVO: data em que foi pago
-}
+
 
 export interface Client {
   id: string;
