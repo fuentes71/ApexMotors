@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Filter, Download, ChevronDown, Calendar, Check } from "lucide-react";
+import { Menu, Download, ChevronDown, Calendar, Check } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { formatMonth, formatCurrency, calculateTotalFixedForPeriod } from "../utils";
 import { generateStructuredPDF } from "../utils/pdfExport";

@@ -1,4 +1,4 @@
-import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle, Check } from "lucide-react";
+import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle } from "lucide-react";
 import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
 import { Expense, Category, Vehicle } from "../types";
@@ -13,6 +13,7 @@ export function VehicleModal() {
   } = useData();
 
   const [draftVehicle, setDraftVehicle] = useState<Vehicle | null>(null);
+  const [prevActiveVehicle, setPrevActiveVehicle] = useState<Vehicle | null>(null);
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpenseValue, setNewExpenseValue] = useState("");
   const [newExpenseCat, setNewExpenseCat] = useState<Category>("Mecânica");
@@ -22,21 +23,21 @@ export function VehicleModal() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  if (activeVehicle !== prevActiveVehicle) {
+    setPrevActiveVehicle(activeVehicle);
     if (activeVehicle) {
-      // Deep copy to avoid mutating the original until saved
       setDraftVehicle(JSON.parse(JSON.stringify(activeVehicle)));
     } else {
       setDraftVehicle(null);
       setShowConfirmClose(false);
     }
-  }, [activeVehicle]);
+  }
 
   if (!activeVehicle || !draftVehicle) return null;
 
   const isDirty = JSON.stringify(activeVehicle) !== JSON.stringify(draftVehicle);
 
-  const handleUpdate = (field: keyof Vehicle, value: any) => {
+  const handleUpdate = <K extends keyof Vehicle>(field: K, value: Vehicle[K]) => {
     setDraftVehicle({ ...draftVehicle, [field]: value });
   };
 
@@ -200,6 +201,7 @@ export function VehicleModal() {
               <div className="grid grid-cols-4 gap-3">
                 {draftVehicle.galeria.map((img, i) => (
                   <div key={i} className="aspect-square bg-stone-100 rounded-lg overflow-hidden group relative shadow-sm border border-stone-200">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img} className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform" alt="Galeria" onClick={() => setFullscreenImage(img)} />
                     <button 
                       onClick={() => {
@@ -413,6 +415,7 @@ export function VehicleModal() {
           >
             <X size={32} />
           </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={fullscreenImage} className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg" alt="Preview" />
         </div>
       )}

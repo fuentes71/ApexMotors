@@ -1,5 +1,6 @@
 import React from "react";
 import { Wrench, Megaphone, FileText, Tag } from "lucide-react";
+import { Expense } from "../types";
 
 export const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -49,7 +50,7 @@ export const getDaysDifference = (startStr: string, endStr?: string) => {
   return diffDays >= 0 ? diffDays : 0;
 };
 
-export const calculateTotalFixedForPeriod = (expenses: any[], startMonth: string, endMonth: string): number => {
+export const calculateTotalFixedForPeriod = (expenses: Expense[], startMonth: string, endMonth: string): number => {
   let total = 0;
 
   const [ey, em] = endMonth.split('-');
@@ -62,7 +63,7 @@ export const calculateTotalFixedForPeriod = (expenses: any[], startMonth: string
     }
     
     const [sy, sm, sd] = exp.startDate.split('-');
-    let current = new Date(Number(sy), Number(sm) - 1, Number(sd), 12, 0, 0);
+    const current = new Date(Number(sy), Number(sm) - 1, Number(sd), 12, 0, 0);
 
     let endBound = rangeEnd;
     if (exp.endDate) {

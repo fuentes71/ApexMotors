@@ -1,4 +1,4 @@
-import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, ImageIcon } from "lucide-react";
+import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus } from "lucide-react";
 import { formatCurrency, DEFAULT_CAR_IMAGE } from "../utils";
 import { Vehicle } from "../types";
 import { useData } from "../context/DataContext";
@@ -59,6 +59,7 @@ export function InventoryView({
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-lg bg-stone-100 overflow-hidden flex-shrink-0 flex items-center justify-center border border-stone-200 relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={v.image || DEFAULT_CAR_IMAGE} alt={v.name} className={`w-full h-full object-cover ${v.status === 'Vendido' ? 'grayscale opacity-70' : ''}`} />
                           {v.status === 'Vendido' && (
                             <div className="absolute inset-0 bg-emerald-900/10 flex items-center justify-center">

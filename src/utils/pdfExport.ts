@@ -77,7 +77,7 @@ export const generateStructuredPDF = ({
       }
     });
 
-    finalY = (doc as any).lastAutoTable.finalY + 14;
+    finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 14;
   }
 
   // Tabela de Despesas Fixas do Período
