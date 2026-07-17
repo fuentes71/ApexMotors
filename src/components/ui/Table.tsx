@@ -3,8 +3,8 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 export function Table({ children, className = "" }: { children: React.ReactNode, className?: string }) {
   return (
-    <div className={`w-full overflow-visible ${className}`}>
-      <table className="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
+    <div className={`w-full overflow-x-auto lg:overflow-visible pb-24 lg:pb-0 ${className}`}>
+      <table className="w-full min-w-[700px] lg:min-w-0 text-left border-collapse whitespace-nowrap lg:whitespace-normal">
         {children}
       </table>
     </div>
