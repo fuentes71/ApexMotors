@@ -26,17 +26,17 @@ export function KpiCards({
   return (
     <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-6">
       {kpis.map((kpi, i) => (
-        <div key={i} className="bg-white rounded-3xl p-5 border border-stone-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between">
+        <div key={i} className="bg-white rounded-3xl p-5 border border-stone-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between min-w-0">
           <div className="flex justify-between items-start mb-4">
-            <div className={`p-2.5 bg-${kpi.color}-50 text-${kpi.color}-600 rounded-xl group-hover:scale-110 transition-transform`}>
+            <div className={`p-2.5 bg-${kpi.color}-50 text-${kpi.color}-600 rounded-xl group-hover:scale-110 transition-transform flex-shrink-0`}>
               <kpi.icon size={20} />
             </div>
             {kpi.ind}
           </div>
-          <div>
-            <p className="text-stone-500 font-medium text-sm mb-1">{kpi.title}</p>
-            <h4 className="text-2xl font-bold text-stone-900 tracking-tight">{kpi.value}</h4>
-            <p className="text-xs text-stone-400 mt-1">{kpi.subtitle}</p>
+          <div className="min-w-0">
+            <p className="text-stone-500 font-medium text-sm mb-1 truncate">{kpi.title}</p>
+            <h4 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight truncate">{kpi.value}</h4>
+            <p className="text-xs text-stone-400 mt-1 truncate">{kpi.subtitle}</p>
           </div>
         </div>
       ))}

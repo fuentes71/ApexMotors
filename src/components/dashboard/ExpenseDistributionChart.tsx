@@ -19,7 +19,7 @@ export function ExpenseDistributionChart({ data, colors }: ExpenseDistributionCh
         <h2 className="font-bold text-stone-800 text-lg">Despesas</h2>
       </div>
       <p className="text-sm text-stone-500 mb-6">Como os custos estão distribuídos</p>
-      <div className="h-56 w-full relative flex-1">
+      <div className="min-h-[224px] w-full relative flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
