@@ -26,7 +26,7 @@ export interface Client {
   name: string;
   phone: string;
   email: string;
-  status: 'Lead' | 'Negociando' | 'Cliente';
+  status: 'Lead' | 'Frio' | 'Negociando' | 'Cliente' | 'Fechado';
   interest: string;
   notes: string;
   createdAt: string;
@@ -58,3 +58,12 @@ export type Vehicle = {
   buyerName?: string;
   buyerDoc?: string;
 };
+
+export interface WhatsAppTemplates {
+  lead_interest: string;
+  lead_noInterest: string;
+  negociando_interest: string;
+  negociando_noInterest: string;
+  cliente_interest: string;
+  cliente_noInterest: string;
+}

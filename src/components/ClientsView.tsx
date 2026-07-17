@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useData } from "../context/DataContext";
 import { useSort } from "../hooks/useSort";
-import { Plus, Search, Trash2, Mail, Phone, Calendar, Loader2, Users, ChevronRight } from "lucide-react";
+import { useToast } from "../context/ToastContext";
+import { generateWhatsAppLink } from "../utils";
+import { Plus, Search, Trash2, Mail, Phone, Calendar, Loader2, Users, ChevronRight, MessageCircle, ChevronDown, Check } from "lucide-react";
 import { Client } from "../types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import { Pagination } from "./ui/Pagination";
@@ -11,10 +13,13 @@ import { format } from "date-fns";
 import api from "../services/api";
 
 export function ClientsView() {
-  const { clients, setClients, setActiveClient } = useData();
+  const { clients, setClients, setActiveClient, whatsappTemplates } = useData();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [whatsappDropdownId, setWhatsappDropdownId] = useState<string | null>(null);
   const ITEMS_PER_PAGE = 10;
   
   const [draftClient, setDraftClient] = useState<Client | null>(null);
@@ -23,6 +28,13 @@ export function ClientsView() {
     c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.phone.includes(searchTerm)
   );
+
+  const handleWhatsApp = (client: Client, withMessage: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const link = generateWhatsAppLink(client, withMessage, whatsappTemplates);
+    if (link) window.open(link, '_blank');
+    setWhatsappDropdownId(null);
+  };
 
   const { sortColumn, sortDirection, handleSort, sortedData: sortedClients } = useSort(filteredClients);
 
@@ -45,10 +57,26 @@ export function ClientsView() {
     try {
       await api.delete(`/clients/${id}`);
       setClients(prev => prev.filter(c => c.id !== id));
+      showToast("Cliente excluído!", "success");
     } catch (error) {
       console.error(error);
+      showToast("Erro ao excluir", "error");
     } finally {
       setIsDeletingId(null);
+    }
+  };
+
+  const handleStatusChange = async (client: Client, newStatus: Client['status'], e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const response = await api.put(`/clients/${client.id}`, { ...client, status: newStatus });
+      setClients(prev => prev.map(c => c.id === client.id ? response.data : c));
+      showToast("Status alterado!", "success");
+    } catch (error) {
+      console.error(error);
+      showToast("Erro ao alterar status", "error");
+    } finally {
+      setOpenDropdownId(null);
     }
   };
 
@@ -62,19 +90,7 @@ export function ClientsView() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto animate-in fade-in duration-500 pb-24">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-stone-900 flex items-center gap-2">
-            <Users size={24} className="text-indigo-600" />
-            Gestão de Clientes e Leads
-          </h1>
-          <p className="text-sm text-stone-500 mt-1">
-            Acompanhe interessados, negociações em andamento e clientes fidelizados.
-          </p>
-        </div>
-      </div>
-
+    <>
       <div className="bg-white border border-stone-200 shadow-sm rounded-2xl overflow-visible">
         <div className="p-4 border-b border-stone-100 bg-stone-50/50 flex flex-col md:flex-row items-center gap-4">
           <div className="relative flex-1 w-full">
@@ -90,7 +106,7 @@ export function ClientsView() {
         </div>
 
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-[#FAFAFA]">
             <TableHead 
               sortable 
               sortDirection={sortColumn === 'name' ? sortDirection : null} 
@@ -135,10 +151,44 @@ export function ClientsView() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(client.status)}`}>
-                      {client.status}
-                    </span>
+                  <TableCell className="relative">
+                    <div className="relative inline-block w-[110px]">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdownId(openDropdownId === client.id ? null : client.id);
+                        }}
+                        className={`w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap cursor-pointer hover:shadow-sm ${
+                          client.status === 'Lead' || client.status === 'Frio' ? 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' :
+                          client.status === 'Negociando' ? 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200' :
+                          client.status === 'Cliente' || client.status === 'Fechado' ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200' :
+                          'bg-stone-100 text-stone-800 border-stone-200 hover:bg-stone-200'
+                        }`}
+                      >
+                        <span>{client.status}</span>
+                        <ChevronDown size={12} className="opacity-50 shrink-0" />
+                      </button>
+
+                      {openDropdownId === client.id && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }} />
+                          <div className="absolute top-full mt-2 left-0 w-36 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
+                            {['Lead', 'Frio', 'Negociando', 'Cliente', 'Fechado'].map((statusOption) => (
+                              <button 
+                                key={statusOption}
+                                onClick={(e) => handleStatusChange(client, statusOption as Client['status'], e)}
+                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-stone-50 flex items-center justify-between group transition-colors"
+                              >
+                                <span className={`font-medium ${client.status === statusOption ? 'text-indigo-600' : 'text-stone-700'}`}>
+                                  {statusOption}
+                                </span>
+                                {client.status === statusOption && <Check size={14} className="text-indigo-600" />}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <div className="max-w-[200px]">
@@ -156,7 +206,44 @@ export function ClientsView() {
                           >
                             {isDeletingId === client.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                           </button>
+                          {client.phone && (
+                            <div className="relative inline-block">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setWhatsappDropdownId(whatsappDropdownId === client.id ? null : client.id);
+                                }}
+                                className="p-1.5 text-stone-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                                title="Enviar WhatsApp"
+                              >
+                                <MessageCircle size={16} />
+                              </button>
+                              
+                              {whatsappDropdownId === client.id && (
+                                <>
+                                  <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setWhatsappDropdownId(null); }} />
+                                  <div className="absolute top-full mt-2 right-0 w-48 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
+                                    <button 
+                                      onClick={(e) => handleWhatsApp(client, true, e)}
+                                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-stone-50 flex items-center gap-2 transition-colors text-stone-700"
+                                    >
+                                      <MessageCircle size={14} className="text-green-600" />
+                                      <span className="font-medium">Mensagem automática</span>
+                                    </button>
+                                    <button 
+                                      onClick={(e) => handleWhatsApp(client, false, e)}
+                                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-stone-50 flex items-center gap-2 transition-colors text-stone-700 border-t border-stone-100"
+                                    >
+                                      <Phone size={14} className="text-stone-400" />
+                                      <span className="font-medium">Apenas contato</span>
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
                           <button 
+                            onClick={(e) => { e.stopPropagation(); setActiveClient(client); }}
                             className="p-1.5 text-stone-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all"
                             title="Ver detalhes"
                           >
@@ -199,6 +286,6 @@ export function ClientsView() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

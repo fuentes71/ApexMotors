@@ -3,6 +3,7 @@ import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
 import { Vehicle, Expense, Category } from "../types";
 import api from "../services/api";
+import { useToast } from "../context/ToastContext";
 import { formatCurrency, getCategoryColor, getCategoryIcon } from "../utils";
 import { generateContractPDF } from "../utils/pdfExport";
 
@@ -15,6 +16,7 @@ export function VehicleModal() {
     contractTemplate
   } = useData();
 
+  const { showToast } = useToast();
   const [draftVehicle, setDraftVehicle] = useState<Vehicle | null>(null);
   const [prevActiveVehicle, setPrevActiveVehicle] = useState<Vehicle | null>(null);
   const [isConsulting, setIsConsulting] = useState(false);
@@ -44,14 +46,25 @@ export function VehicleModal() {
     if (!draftVehicle) return;
     setIsSaving(true);
     try {
-      const res = await api.put(`/vehicles/${draftVehicle.id}`, draftVehicle);
-      setVehicles(vehicles.map(v => v.id === draftVehicle.id ? res.data : v));
+      const isNew = draftVehicle.id === "new";
+      let res;
+      if (isNew) {
+        res = await api.post(`/vehicles`, draftVehicle);
+        setVehicles([...vehicles, res.data]);
+      } else {
+        res = await api.put(`/vehicles/${draftVehicle.id}`, draftVehicle);
+        setVehicles(vehicles.map(v => v.id === draftVehicle.id ? res.data : v));
+      }
       setActiveVehicle(null);
+      showToast(isNew ? "Veículo cadastrado com sucesso!" : "Veículo atualizado com sucesso!", "success");
     } catch (e) {
       console.error(e);
       // Fallback
-      setVehicles(vehicles.map(v => v.id === draftVehicle.id ? draftVehicle : v));
+      if (draftVehicle.id !== "new") {
+        setVehicles(vehicles.map(v => v.id === draftVehicle.id ? draftVehicle : v));
+      }
       setActiveVehicle(null);
+      showToast("Veículo salvo localmente (modo offline)", "warning");
     } finally {
       setIsSaving(false);
     }
@@ -195,6 +208,10 @@ export function VehicleModal() {
   };
 
   const handleCloseAttempt = () => {
+    if (isSaving) {
+      setActiveVehicle(null);
+      return;
+    }
     if (isDirty) {
       setShowConfirmClose(true);
     } else {
@@ -218,7 +235,7 @@ export function VehicleModal() {
             </button>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-32">
+          <div className="flex-1 overflow-y-auto p-6 space-y-8">
             {/* Header / Info */}
             <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-5">
               <div>
@@ -561,27 +578,19 @@ export function VehicleModal() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Floating Save Button */}
-      {isDirty && (
-        <div className="absolute bottom-8 right-8 animate-in slide-in-from-bottom-4 fade-in z-50">
-          <div className="relative group">
+          
+          <div className="p-6 border-t border-stone-200 bg-white mt-auto">
             <button 
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg shadow-blue-600/40 transition-all hover:scale-110 active:scale-95 cursor-pointer disabled:opacity-70 disabled:hover:scale-100"
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-600/20"
             >
-              {isSaving ? <Loader2 size={24} className="animate-spin" /> : <Save size={24} />}
+              {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />} 
+              {isSaving ? 'Salvando...' : 'Salvar Veículo'}
             </button>
-            <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
-              Salvar alterações
-              <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-stone-900"></div>
-            </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Confirm Close Modal */}
       {showConfirmClose && (

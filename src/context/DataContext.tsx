@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from "react";
-import { Vehicle, Expense, Client } from "../types";
+import { Vehicle, Expense, Client, WhatsAppTemplates } from "../types";
 import api from "../services/api";
 
 interface DataContextType {
@@ -27,6 +27,8 @@ interface DataContextType {
   setActiveClient: (c: Client | null) => void;
   activeExpense: Expense | null;
   setActiveExpense: (e: Expense | null) => void;
+  whatsappTemplates: WhatsAppTemplates;
+  setWhatsappTemplates: (templates: WhatsAppTemplates) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -46,6 +48,29 @@ DADOS DO VEÍCULO:
 Declaro ainda ter recebido o veículo nas condições em que se encontra e
 totalmente livre de desembaraços e débitos até a presente data, tornando-me
 responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
+
+  const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplates = {
+    lead_interest: "Olá, {{firstName}}! Tudo bem? Vi que você tem interesse em: *{{interest}}*. Gostaríamos de conversar sobre algumas opções que temos disponíveis!",
+    lead_noInterest: "Olá, {{firstName}}! Tudo bem? Em que podemos te ajudar hoje? Temos diversas opções na loja que podem te interessar!",
+    negociando_interest: "Olá, {{firstName}}! Tudo bem? Gostaria de saber se você conseguiu pensar na nossa proposta sobre o *{{interest}}*? Qualquer dúvida estou à disposição.",
+    negociando_noInterest: "Olá, {{firstName}}! Tudo bem? Como estão as coisas? Gostaria de tirar alguma dúvida sobre as opções que vimos?",
+    cliente_interest: "Olá, {{firstName}}! Tudo bem? Como está a experiência com seu novo *{{interest}}*? Estamos à disposição para qualquer dúvida ou revisão!",
+    cliente_noInterest: "Olá, {{firstName}}! Tudo bem? Lembramos de você por aqui! Como estão as coisas? Se precisar de alguma manutenção ou avaliação, nos avise."
+  };
+
+  const [whatsappTemplates, setWhatsappTemplates] = useState<WhatsAppTemplates>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("@apexMotors:whatsappTemplates_v2");
+      if (stored) return JSON.parse(stored);
+    }
+    return DEFAULT_WHATSAPP_TEMPLATES;
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("@apexMotors:whatsappTemplates_v2", JSON.stringify(whatsappTemplates));
+    }
+  }, [whatsappTemplates]);
 
   const [startMonth, setStartMonth] = useState(() => {
     const d = new Date();
@@ -91,7 +116,9 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
       activeClient,
       setActiveClient,
       activeExpense,
-      setActiveExpense
+      setActiveExpense,
+      whatsappTemplates,
+      setWhatsappTemplates
     }}>
       {children}
     </DataContext.Provider>

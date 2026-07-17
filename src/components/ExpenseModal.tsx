@@ -3,9 +3,11 @@ import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { Expense, RecurrenceType, Category } from "../types";
 import api from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 export function ExpenseModal() {
   const { activeExpense, setActiveExpense, fixedExpenses, setFixedExpenses } = useData();
+  const { showToast } = useToast();
   const [draftExpense, setDraftExpense] = useState<Expense | null>(null);
   const [prevActiveExpense, setPrevActiveExpense] = useState<Expense | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -23,7 +25,8 @@ export function ExpenseModal() {
     if (!draftExpense) return;
     setIsSaving(true);
     try {
-      if (fixedExpenses.find(e => e.id === draftExpense.id)) {
+      const isNew = draftExpense.id === "new";
+      if (!isNew && fixedExpenses.find(e => e.id === draftExpense.id)) {
         const res = await api.put(`/expenses/${draftExpense.id}`, draftExpense);
         setFixedExpenses(fixedExpenses.map(e => e.id === draftExpense.id ? res.data : e));
       } else {
@@ -31,8 +34,10 @@ export function ExpenseModal() {
         setFixedExpenses([...fixedExpenses, res.data]);
       }
       setActiveExpense(null);
+      showToast(isNew ? "Despesa adicionada com sucesso!" : "Despesa atualizada com sucesso!", "success");
     } catch (e) {
       console.error(e);
+      showToast("Erro ao salvar despesa", "error");
     } finally {
       setIsSaving(false);
     }
@@ -41,8 +46,17 @@ export function ExpenseModal() {
   if (!activeExpense || !draftExpense) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-stone-900/20 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+    <div 
+      className="fixed inset-0 z-50 flex justify-end bg-stone-900/20 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={() => {
+        if (!isSaving) handleSave();
+        setActiveExpense(null);
+      }}
+    >
+      <div 
+        className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-stone-50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">

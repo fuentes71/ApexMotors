@@ -1,9 +1,10 @@
-import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2, FileText } from "lucide-react";
+import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2, FileText, Search } from "lucide-react";
 import { formatCurrency, DEFAULT_CAR_IMAGE } from "../utils";
 import { Vehicle } from "../types";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { useSort } from "../hooks/useSort";
+import { useToast } from "../context/ToastContext";
 import { generateContractPDF } from "../utils/pdfExport";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import { Pagination } from "./ui/Pagination";
@@ -21,6 +22,7 @@ export function InventoryView({
   filteredVehicles, vehicles, setVehicles, setActiveVehicle, handleAddVehicle
 }: InventoryViewProps) {
   const { fixedExpenses, setFixedExpenses, contractTemplate, setFullscreenImage } = useData();
+  const { showToast } = useToast();
 
   const [sellingVehicle, setSellingVehicle] = useState<Vehicle | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -30,9 +32,15 @@ export function InventoryView({
   const [isAdding, setIsAdding] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const ITEMS_PER_PAGE = 10;
 
-  const { sortColumn, sortDirection, handleSort, sortedData: sortedVehicles } = useSort(filteredVehicles, {
+  const displayVehicles = filteredVehicles.filter(v => 
+    v.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (v.placa && v.placa.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const { sortColumn, sortDirection, handleSort, sortedData: sortedVehicles } = useSort(displayVehicles, {
     cost: (a, b) => {
       const costA = a.valorCompra + a.despesas.reduce((acc, e) => acc + e.value, 0);
       const costB = b.valorCompra + b.despesas.reduce((acc, e) => acc + e.value, 0);
@@ -59,8 +67,10 @@ export function InventoryView({
       try {
         const res = await api.put(`/vehicles/${v.id}`, updatedV);
         setVehicles(vehicles.map(vh => vh.id === v.id ? res.data : vh));
+        showToast("Status alterado com sucesso!", "success");
       } catch(e) {
         console.error(e);
+        showToast("Erro ao alterar status", "error");
         setVehicles(vehicles.map(vh => vh.id === v.id ? updatedV : vh));
       }
     }
@@ -80,9 +90,11 @@ export function InventoryView({
     try {
       const res = await api.put(`/vehicles/${sellingVehicle.id}`, updatedV);
       setVehicles(vehicles.map(vh => vh.id === sellingVehicle.id ? res.data : vh));
+      showToast("Veículo vendido!", "success");
     } catch(e) {
       console.error(e);
       setVehicles(vehicles.map(vh => vh.id === sellingVehicle.id ? updatedV : vh));
+      showToast("Venda salva offline", "warning");
     } finally {
       setIsSelling(false);
     }
@@ -96,14 +108,19 @@ export function InventoryView({
 
   return (
     <section className="w-full">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold text-stone-800 flex items-center gap-2">
-          <CarFront size={20} className="text-stone-500" />
-          Veículos do Período
-        </h2>
-      </div>
-
       <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-visible">
+        <div className="p-4 border-b border-stone-100 bg-stone-50/50 flex flex-col md:flex-row items-center gap-4">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Buscar por veículo ou placa..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm"
+            />
+          </div>
+        </div>
         <Table>
           <TableHeader className="bg-[#FAFAFA]">
             <TableHead 

@@ -14,7 +14,7 @@ export function Sidebar() {
   const navItems = [
     { id: 'dashboard', href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'veiculos', href: '/vehicles', label: 'Inventário', icon: CarFront },
-    { id: 'clientes', href: '/clients', label: 'Clientes CRM', icon: Users },
+    { id: 'clientes', href: '/clients', label: 'Clientes', icon: Users },
     { id: 'financeiro', href: '/finance', label: 'Financeiro', icon: Wallet },
   ];
 

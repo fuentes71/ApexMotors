@@ -54,11 +54,14 @@ export function Header() {
   const getTitle = () => {
     if (pathname.startsWith('/vehicles')) return 'Inventário de Veículos';
     if (pathname.startsWith('/finance')) return 'Controle Financeiro';
+    if (pathname.startsWith('/clients')) return 'Gestão de Clientes';
     return 'Dashboard';
   };
 
   const isDashboard = pathname === '/';
   const isFinance = pathname.startsWith('/finance');
+  const isClients = pathname.startsWith('/clients');
+  const isVehicles = pathname.startsWith('/vehicles');
 
   // --- Lista Dinâmica de Meses para o Filtro ---
   const monthOptions = Array.from({length: 12}).map((_, i) => {
@@ -117,6 +120,15 @@ export function Header() {
           </div>
           
           <h1 className="text-3xl font-bold tracking-tight text-stone-900 print:hidden">{getTitle()}</h1>
+          {isFinance && (
+            <p className="text-sm text-stone-500 mt-1 print:hidden">Controle os custos fixos e recorrentes do período.</p>
+          )}
+          {isClients && (
+            <p className="text-sm text-stone-500 mt-1 print:hidden">Acompanhe interessados, negociações em andamento e clientes fidelizados.</p>
+          )}
+          {isVehicles && (
+            <p className="text-sm text-stone-500 mt-1 print:hidden">Gerencie o estoque de veículos, compras e vendas.</p>
+          )}
           
           {(isDashboard || isFinance) && (
             <>

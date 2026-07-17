@@ -1,6 +1,6 @@
 import React from "react";
 import { Wrench, Megaphone, FileText, Tag } from "lucide-react";
-import { Expense } from "../types";
+import { Expense, Client } from "../types";
 
 export const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -97,8 +97,85 @@ export const calculateTotalFixedForPeriod = (expenses: Expense[], startMonth: st
       } else {
         break;
       }
+
     }
   });
 
   return total;
+};
+
+export const generateWhatsAppLink = (client: Client, withMessage: boolean = true, templates?: WhatsAppTemplates): string => {
+  if (!client.phone) return '';
+  const cleanPhone = client.phone.replace(/\D/g, '');
+  const fullPhone = cleanPhone.length === 11 || cleanPhone.length === 10 ? `55${cleanPhone}` : cleanPhone;
+  
+  if (!withMessage) {
+    return `https://wa.me/${fullPhone}`;
+  }
+
+  const firstName = client.name ? client.name.split(' ')[0] : 'amigo(a)';
+  let message = '';
+
+  if (templates) {
+    const renderTemplate = (text: string) => {
+      return text
+        .replace(/\{\{interest\}\}/g, client.interest || '')
+        .replace(/\{\{firstName\}\}/g, firstName);
+    };
+    
+    if (client.status === 'Lead' || client.status === 'Frio') {
+      if (client.interest) {
+        message = renderTemplate(templates.lead_interest);
+      } else {
+        message = renderTemplate(templates.lead_noInterest);
+      }
+    } else if (client.status === 'Negociando') {
+      if (client.interest) {
+        message = renderTemplate(templates.negociando_interest);
+      } else {
+        message = renderTemplate(templates.negociando_noInterest);
+      }
+    } else if (client.status === 'Cliente' || client.status === 'Fechado') {
+      if (client.interest) {
+        message = renderTemplate(templates.cliente_interest);
+      } else {
+        message = renderTemplate(templates.cliente_noInterest);
+      }
+    } else {
+      if (client.interest) {
+        message = `Olá, ${firstName}! Vi que você tem interesse em: *${client.interest}*. Gostaríamos de conversar!`;
+      } else {
+        message = `Olá, ${firstName}!`;
+      }
+    }
+  } else {
+    // Fallback if templates are not provided
+    message = `Olá, ${firstName}! Tudo bem?`;
+    if (client.status === 'Lead' || client.status === 'Frio') {
+      if (client.interest) {
+        message += ` Vi que você tem interesse em: *${client.interest}*. Gostaríamos de conversar sobre algumas opções que temos disponíveis!`;
+      } else {
+        message += ` Em que podemos te ajudar hoje? Temos diversas opções na loja que podem te interessar!`;
+      }
+    } else if (client.status === 'Negociando') {
+      if (client.interest) {
+        message += ` Gostaria de saber se você conseguiu pensar na nossa proposta sobre o *${client.interest}*? Qualquer dúvida estou à disposição.`;
+      } else {
+        message += ` Como estão as coisas? Gostaria de tirar alguma dúvida sobre as opções que vimos?`;
+      }
+    } else if (client.status === 'Cliente' || client.status === 'Fechado') {
+      if (client.interest) {
+        message += ` Como está a experiência com seu novo *${client.interest}*? Estamos à disposição para qualquer dúvida ou revisão!`;
+      } else {
+        message += ` Lembramos de você por aqui! Como estão as coisas? Se precisar de alguma manutenção ou avaliação, nos avise.`;
+      }
+    } else {
+      if (client.interest) {
+        message += ` Vi que você tem interesse em: *${client.interest}*. Gostaríamos de conversar!`;
+      }
+    }
+  }
+
+  const encodedMessage = encodeURIComponent(message);
+  return `https://wa.me/${fullPhone}?text=${encodedMessage}`;
 };

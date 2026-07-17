@@ -1,9 +1,10 @@
-import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileText, Download, X, ChevronRight, Pencil, AlertTriangle, Loader2, TrendingDown } from "lucide-react";
+import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileText, Download, X, ChevronRight, Pencil, AlertTriangle, Loader2, TrendingDown, Search } from "lucide-react";
 import { formatCurrency, calculateTotalFixedForPeriod } from "../utils";
 import { Expense } from "../types";
 import { useState, Fragment } from "react";
 import { useSort } from "../hooks/useSort";
 import { useData } from "../context/DataContext";
+import { useToast } from "../context/ToastContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import { Pagination } from "./ui/Pagination";
 import api from "../services/api";
@@ -20,11 +21,14 @@ export function FinanceView({
   fixedExpenses, setFixedExpenses, totalFixed
 }: FinanceViewProps) {
   const { startMonth, endMonth, vehicles, setActiveExpense } = useData();
+  const { showToast } = useToast();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const visibleExpenses = fixedExpenses.filter(exp => 
-    calculateTotalFixedForPeriod([exp], startMonth, endMonth) > 0
+    calculateTotalFixedForPeriod([exp], startMonth, endMonth) > 0 &&
+    exp.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const { sortColumn, sortDirection, handleSort, sortedData: sortedExpenses } = useSort(visibleExpenses, {
@@ -52,8 +56,10 @@ export function FinanceView({
       try {
         await api.delete(`/expenses/${id}`);
         setFixedExpenses(fixedExpenses.filter(e => e.id !== id));
+        showToast("Despesa excluída", "success");
       } catch (e) {
         console.error(e);
+        showToast("Erro ao excluir", "error");
       } finally {
         setIsDeletingId(null);
       }
@@ -73,19 +79,19 @@ export function FinanceView({
 
   return (
     <>
-      <div className="w-full max-w-4xl mx-auto flex justify-between items-end mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-stone-900 flex items-center gap-2">
-            <Wallet size={24} className="text-blue-600" />
-            Despesas Mensais
-          </h1>
-          <p className="text-sm text-stone-500 mt-1">
-            Controle os custos fixos e recorrentes do período.
-          </p>
-        </div>
-      </div>
-
       <div className="w-full max-w-4xl mx-auto bg-white border border-stone-200 rounded-2xl shadow-sm overflow-visible flex flex-col">
+        <div className="p-4 border-b border-stone-100 bg-stone-50/50 flex flex-col md:flex-row items-center gap-4">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Buscar por descrição..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm"
+            />
+          </div>
+        </div>
         <Table>
           <TableHeader className="bg-[#FAFAFA]">
             <TableHead 

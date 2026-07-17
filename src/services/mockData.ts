@@ -221,7 +221,7 @@ export const initialVehicles: Vehicle[] = [
     placa: "POR-7180"
   },
   {
-    id: "v9",
+    id: "v11",
     name: "Honda HR-V Touring 1.5 Turbo",
     description: "Versão topo de linha, teto solar, pacote Honda Sensing. Muito procurado.",
     image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=800&q=80",
@@ -233,12 +233,12 @@ export const initialVehicles: Vehicle[] = [
     status: "Em Estoque",
     dataEntrada: "2026-07-05",
     despesas: [
-      { id: "v9_e1", name: "Higienização Interna", value: 350, category: "Funilaria" }
+      { id: "v11_e1", name: "Higienização Interna", value: 350, category: "Funilaria" }
     ],
     placa: "HRV-2T22"
   },
   {
-    id: "v10",
+    id: "v12",
     name: "Volkswagen Polo Highline 200 TSI",
     description: "Painel digital, excelente estado. Recebido como parte do pagamento.",
     image: "https://images.unsplash.com/photo-1616422285623-14bf929f2710?auto=format&fit=crop&w=800&q=80",
@@ -248,7 +248,7 @@ export const initialVehicles: Vehicle[] = [
     status: "Manutenção",
     dataEntrada: "2026-07-15",
     despesas: [
-      { id: "v10_e1", name: "Revisão dos 50 mil km", value: 850, category: "Mecânica" }
+      { id: "v12_e1", name: "Revisão dos 50 mil km", value: 850, category: "Mecânica" }
     ],
     placa: "POL-0H20"
   }
