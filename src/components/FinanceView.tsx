@@ -6,7 +6,7 @@ import { useSort } from "../hooks/useSort";
 import { useData } from "../context/DataContext";
 import { useToast } from "../context/ToastContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
-import { Pagination } from "./ui/Pagination";
+import { ViewLayout } from "./ui/ViewLayout";
 import api from "../services/api";
 
 const ITEMS_PER_PAGE = 10;
@@ -79,19 +79,22 @@ export function FinanceView({
 
   return (
     <>
-      <div className="w-full max-w-4xl mx-auto bg-white border border-stone-200 rounded-2xl shadow-sm overflow-visible flex flex-col">
-        <div className="p-4 border-b border-stone-100 bg-stone-50/50 flex flex-col md:flex-row items-center gap-4">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Buscar por descrição..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm"
-            />
-          </div>
-        </div>
+      <ViewLayout
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Buscar por descrição..."
+        pagination={{
+          currentPage,
+          totalPages: Math.ceil(visibleExpenses.length / ITEMS_PER_PAGE),
+          onPageChange: setCurrentPage
+        }}
+        floatingAction={{
+          icon: <Plus size={24} />,
+          label: "Nova Despesa",
+          onClick: handleAddFixedExpense,
+          colorClass: "bg-blue-600 hover:bg-blue-700 shadow-blue-600/40"
+        }}
+      >
         <Table>
           <TableHeader className="bg-[#FAFAFA]">
             <TableHead 
@@ -222,28 +225,7 @@ export function FinanceView({
             )}
           </TableBody>
         </Table>
-        <Pagination 
-          currentPage={currentPage}
-          totalPages={Math.ceil(visibleExpenses.length / ITEMS_PER_PAGE)}
-          onPageChange={setCurrentPage}
-        />
-      </div>
-
-      {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8 z-40 animate-in slide-in-from-bottom-4 fade-in print:hidden">
-        <div className="relative group">
-          <button 
-            onClick={handleAddFixedExpense}
-            className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg shadow-blue-600/40 transition-all hover:scale-110 active:scale-95"
-          >
-            <Plus size={24} />
-          </button>
-          <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
-            Nova Despesa
-            <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-stone-900"></div>
-          </div>
-        </div>
-      </div>
+      </ViewLayout>
 
       {/* PREVIEW MODAL */}
       {previewImage && (

@@ -1,4 +1,4 @@
-import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2, FileText, Search } from "lucide-react";
+import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2, FileText, Search, Download, Calendar, Tag, X, AlertCircle } from "lucide-react";
 import { formatCurrency, DEFAULT_CAR_IMAGE } from "../utils";
 import { Vehicle } from "../types";
 import { useData } from "../context/DataContext";
@@ -7,7 +7,7 @@ import { useSort } from "../hooks/useSort";
 import { useToast } from "../context/ToastContext";
 import { generateContractPDF } from "../utils/pdfExport";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
-import { Pagination } from "./ui/Pagination";
+import { ViewLayout } from "./ui/ViewLayout";
 import api from "../services/api";
 
 interface InventoryViewProps {
@@ -108,19 +108,26 @@ export function InventoryView({
 
   return (
     <section className="w-full">
-      <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-visible">
-        <div className="p-4 border-b border-stone-100 bg-stone-50/50 flex flex-col md:flex-row items-center gap-4">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Buscar por veículo ou placa..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm"
-            />
-          </div>
-        </div>
+      <ViewLayout
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Buscar por veículo ou placa..."
+        pagination={{
+          currentPage,
+          totalPages: Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE),
+          onPageChange: setCurrentPage
+        }}
+        floatingAction={{
+          icon: isAdding ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />,
+          label: "Novo Veículo",
+          onClick: async () => {
+            setIsAdding(true);
+            await handleAddVehicle();
+            setIsAdding(false);
+          },
+          colorClass: "bg-blue-600 hover:bg-blue-700 shadow-blue-600/40"
+        }}
+      >
         <Table>
           <TableHeader className="bg-[#FAFAFA]">
             <TableHead 
@@ -338,33 +345,7 @@ export function InventoryView({
               })}
           </TableBody>
         </Table>
-        <Pagination 
-          currentPage={currentPage}
-          totalPages={Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE)}
-          onPageChange={setCurrentPage}
-        />
-      </div>
-
-      {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8 z-40 animate-in slide-in-from-bottom-4 fade-in print:hidden">
-        <div className="relative group">
-          <button 
-            onClick={async () => {
-              setIsAdding(true);
-              await handleAddVehicle();
-              setIsAdding(false);
-            }}
-            disabled={isAdding}
-            className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg shadow-blue-600/40 transition-all hover:scale-110 active:scale-95 disabled:opacity-70"
-          >
-            {isAdding ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
-          </button>
-          <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
-            Novo Veículo
-            <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-stone-900"></div>
-          </div>
-        </div>
-      </div>
+      </ViewLayout>
       {sellingVehicle && (
         <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in">
           <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-md w-full mx-4 border border-stone-200">

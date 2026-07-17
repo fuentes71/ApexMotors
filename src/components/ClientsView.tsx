@@ -5,12 +5,12 @@ import { useData } from "../context/DataContext";
 import { useSort } from "../hooks/useSort";
 import { useToast } from "../context/ToastContext";
 import { generateWhatsAppLink } from "../utils";
-import { Plus, Search, Trash2, Mail, Phone, Calendar, Loader2, Users, ChevronRight, MessageCircle, ChevronDown, Check } from "lucide-react";
+import { Search, ChevronRight, Phone, Mail, Calendar, CarFront, Edit2, Trash2, Plus, Loader2, ChevronDown, Check } from "lucide-react";
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "./ui/Table";
+import { ViewLayout } from "./ui/ViewLayout";
 import { Client } from "../types";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
-import { Pagination } from "./ui/Pagination";
-import { format } from "date-fns";
 import api from "../services/api";
+import { format } from "date-fns";
 
 export function ClientsView() {
   const { clients, setClients, setActiveClient, whatsappTemplates } = useData();
@@ -90,22 +90,23 @@ export function ClientsView() {
   };
 
   return (
-    <>
-      <div className="bg-white border border-stone-200 shadow-sm rounded-2xl overflow-visible">
-        <div className="p-4 border-b border-stone-100 bg-stone-50/50 flex flex-col md:flex-row items-center gap-4">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Buscar por nome, e-mail ou telefone..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
-            />
-          </div>
-        </div>
-
-        <Table>
+    <ViewLayout
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      searchPlaceholder="Buscar por nome, e-mail ou telefone..."
+      pagination={{
+        currentPage,
+        totalPages: Math.ceil(filteredClients.length / ITEMS_PER_PAGE),
+        onPageChange: setCurrentPage
+      }}
+      floatingAction={{
+        icon: <Plus size={24} />,
+        label: "Novo Cliente",
+        onClick: handleAddClient,
+        colorClass: "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/40"
+      }}
+    >
+      <Table>
           <TableHeader className="bg-[#FAFAFA]">
             <TableHead 
               sortable 
@@ -264,28 +265,6 @@ export function ClientsView() {
             )}
           </TableBody>
         </Table>
-        <Pagination 
-          currentPage={currentPage}
-          totalPages={Math.ceil(filteredClients.length / ITEMS_PER_PAGE)}
-          onPageChange={setCurrentPage}
-        />
-      </div>
-
-      {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8 z-40 animate-in slide-in-from-bottom-4 fade-in print:hidden">
-        <div className="relative group">
-          <button 
-            onClick={handleAddClient}
-            className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg shadow-indigo-600/40 transition-all hover:scale-110 active:scale-95"
-          >
-            <Plus size={24} />
-          </button>
-          <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
-            Novo Cliente
-            <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-stone-900"></div>
-          </div>
-        </div>
-      </div>
-    </>
+    </ViewLayout>
   );
 }
