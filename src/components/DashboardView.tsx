@@ -194,7 +194,7 @@ export function DashboardView({
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={pieColors[entry.name]} />
+                    <Cell key={`cell-${index}`} fill={pieColors[entry.name as string]} />
                   ))}
                 </Pie>
                 <RechartsTooltip 
@@ -207,8 +207,8 @@ export function DashboardView({
           <div className="grid grid-cols-2 gap-2 mt-2">
             {pieData.map((entry, index) => (
               <div key={index} className="flex items-center gap-2 text-xs text-stone-600">
-                <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: pieColors[entry.name]}}></div>
-                <span className="truncate">{entry.name}</span>
+                <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: pieColors[entry.name as string]}}></div>
+                <span className="truncate">{entry.name as string}</span>
               </div>
             ))}
           </div>
