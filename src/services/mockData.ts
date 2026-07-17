@@ -245,7 +245,7 @@ export const initialVehicles: Vehicle[] = [
     galeria: [],
     valorCompra: 78000,
     valorVenda: 92000,
-    status: "Oficina",
+    status: "Manutenção",
     dataEntrada: "2026-07-15",
     despesas: [
       { id: "v10_e1", name: "Revisão dos 50 mil km", value: 850, category: "Mecânica" }

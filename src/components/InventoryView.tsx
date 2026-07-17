@@ -55,7 +55,7 @@ export function InventoryView({
       setBuyerName(v.buyerName || "");
       setBuyerDoc(v.buyerDoc || "");
     } else {
-      const updatedV = { ...v, status: newStatus as any, dataVenda: undefined, buyerName: undefined, buyerDoc: undefined };
+      const updatedV = { ...v, status: newStatus as Vehicle['status'], dataVenda: undefined, buyerName: undefined, buyerDoc: undefined };
       try {
         const res = await api.put(`/vehicles/${v.id}`, updatedV);
         setVehicles(vehicles.map(vh => vh.id === v.id ? res.data : vh));

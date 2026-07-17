@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TrendingUp, Activity, CheckCircle2, BarChart2, PieChart as PieIcon, ArrowUpRight, ArrowDownRight, DollarSign, Wallet, PiggyBank, Clock, Tag } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { formatCurrency } from "../utils";
@@ -12,8 +13,8 @@ interface DashboardViewProps {
   avgProfit: number;
   inStockVehiclesCount: number;
   soldVehiclesCount: number;
-  barData: any[];
-  pieData: any[];
+  barData: Record<string, unknown>[];
+  pieData: Record<string, unknown>[];
   pieColors: Record<string, string>;
   avgTicket: number;
   prevAvgTicket: number;
@@ -197,7 +198,7 @@ export function DashboardView({
                   ))}
                 </Pie>
                 <RechartsTooltip 
-                  formatter={(value: any) => formatCurrency(Number(value))}
+                  formatter={(value: any) => formatCurrency(Number(value) || 0)}
                   contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} 
                 />
               </PieChart>

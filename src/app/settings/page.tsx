@@ -10,9 +10,12 @@ export default function SettingsPage() {
   const [templateDraft, setTemplateDraft] = useState(contractTemplate);
   const [isSaved, setIsSaved] = useState(false);
 
-  useEffect(() => {
+  const [prevTemplate, setPrevTemplate] = useState(contractTemplate);
+
+  if (contractTemplate !== prevTemplate) {
+    setPrevTemplate(contractTemplate);
     setTemplateDraft(contractTemplate);
-  }, [contractTemplate]);
+  }
 
   const handleSave = () => {
     setContractTemplate(templateDraft);

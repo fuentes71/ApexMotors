@@ -41,7 +41,7 @@ const mock = new MockAdapter(api, { delayResponse: 500 }); // simulate 500ms net
 // Memory storage for our mock data
 let vehicles = [...initialVehicles];
 let fixedExpenses = [...initialFixedExpenses];
-let memoryClients = [...mockClients];
+const memoryClients = [...mockClients];
 
 // --- Routes for Clients ---
 

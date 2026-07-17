@@ -111,7 +111,7 @@ export function ExpenseModal() {
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Recorrência</label>
                 <select 
                   value={draftExpense.recurrence || 'Mensal'}
-                  onChange={e => setDraftExpense({...draftExpense, recurrence: e.target.value as any})}
+                  onChange={e => setDraftExpense({...draftExpense, recurrence: e.target.value as RecurrenceType})}
                   className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
                 >
                   <option value="Única">Única</option>
@@ -128,7 +128,7 @@ export function ExpenseModal() {
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Categoria</label>
               <select 
                 value={draftExpense.category}
-                onChange={e => setDraftExpense({...draftExpense, category: e.target.value as any})}
+                onChange={e => setDraftExpense({...draftExpense, category: e.target.value as Category})}
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
               >
                 <option value="Administrativo">Administrativo</option>
@@ -149,7 +149,7 @@ export function ExpenseModal() {
                   type="number"
                   min="1" max="31"
                   value={draftExpense.dueDate || ''}
-                  onChange={e => setDraftExpense({...draftExpense, dueDate: Number(e.target.value)})}
+                  onChange={e => setDraftExpense({...draftExpense, dueDate: e.target.value})}
                   className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   placeholder="Ex: 5"
                 />
@@ -179,6 +179,7 @@ export function ExpenseModal() {
 
             {draftExpense.image && (
               <div className="relative w-full h-32 bg-stone-100 rounded-xl overflow-hidden mt-1 group border border-stone-200 shadow-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={draftExpense.image} alt="Comprovante" className="w-full h-full object-cover" />
                 <button 
                   onClick={() => setDraftExpense({...draftExpense, image: undefined})}

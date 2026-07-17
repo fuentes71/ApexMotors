@@ -102,7 +102,7 @@ export function ClientModal() {
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Status da Negociação</label>
               <select 
                 value={draftClient.status}
-                onChange={e => setDraftClient({...draftClient, status: e.target.value as any})}
+                onChange={e => setDraftClient({...draftClient, status: e.target.value as Client['status']})}
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none"
               >
                 <option value="Lead">Lead</option>

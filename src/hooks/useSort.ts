@@ -33,7 +33,7 @@ export function useSort<T>(
   const sortedData = useMemo(() => {
     if (!sortColumn || !sortDirection) return data;
 
-    return [...data].sort((a: any, b: any) => {
+    return [...data].sort((a: T, b: T) => {
       // Usa função customizada caso exista para a coluna atual
       if (customSortFunctions && customSortFunctions[sortColumn]) {
         const customCmp = customSortFunctions[sortColumn](a, b);
@@ -41,8 +41,8 @@ export function useSort<T>(
       }
 
       // Fallback genérico para as demais colunas
-      const valA = a[sortColumn] ?? '';
-      const valB = b[sortColumn] ?? '';
+      const valA = a[sortColumn as keyof T] ?? '';
+      const valB = b[sortColumn as keyof T] ?? '';
 
       if (typeof valA === 'string' && typeof valB === 'string') {
         const cmp = valA.localeCompare(valB);
