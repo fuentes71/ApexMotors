@@ -119,27 +119,63 @@ export default function DashboardPage() {
     };
   });
 
+  const last6Months = Array.from({length: 6}, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 5 + i);
+    return d.toISOString().substring(0, 7); // YYYY-MM
+  });
+
+  const salesTrendData = last6Months.map(monthStr => {
+    const monthVehicles = vehicles.filter(v => v.status === "Vendido" && v.dataVenda?.startsWith(monthStr));
+    const revenue = monthVehicles.reduce((acc, v) => acc + v.valorVenda, 0);
+    const profit = monthVehicles.reduce((acc, v) => acc + (v.valorVenda - v.valorCompra - v.despesas.reduce((s, e) => s + e.value, 0)), 0);
+    return {
+      name: monthStr.substring(5, 7) + "/" + monthStr.substring(2, 4),
+      Receita: revenue,
+      Lucro: profit
+    };
+  });
+
+  const inventoryAgingData = [
+    { name: "0-30 dias", count: 0 },
+    { name: "31-60 dias", count: 0 },
+    { name: "61-90 dias", count: 0 },
+    { name: "+90 dias", count: 0 },
+  ];
+
+  vehicles.filter(v => v.status !== "Vendido").forEach(v => {
+    const days = calculateDays(v.dataEntrada, new Date().toISOString());
+    if (days <= 30) inventoryAgingData[0].count++;
+    else if (days <= 60) inventoryAgingData[1].count++;
+    else if (days <= 90) inventoryAgingData[2].count++;
+    else inventoryAgingData[3].count++;
+  });
+
   return (
-    <div className="flex-1 flex flex-col min-w-0 pb-20 print:pb-0 h-screen overflow-y-auto">
+    <div className="flex-1 flex flex-col min-w-0 pb-20 print:pb-0 h-screen overflow-y-auto bg-[#FAFAFA]">
       <Header />
-      <DashboardView
-        netBalance={netBalance}
-        totalVehicleProfit={totalVehicleProfit}
-        totalFixed={totalFixed}
-        prevNetBalance={prevNetBalance}
-        prevTotalVehicleProfit={prevTotalVehicleProfit}
-        prevTotalFixed={prevTotalFixed}
-        soldVehiclesCount={soldVehiclesCount}
-        inStockVehiclesCount={inStockVehiclesCount}
-        avgProfit={avgProfit}
-        pieData={pieData}
-        pieColors={pieColors}
-        barData={barData}
-        avgTicket={avgTicket}
-        prevAvgTicket={prevAvgTicket}
-        avgStockDays={avgStockDays}
-        prevAvgStockDays={prevAvgStockDays}
-      />
+      <div className="px-4 lg:px-8 max-w-7xl mx-auto w-full pt-6 pb-12">
+        <DashboardView
+          netBalance={netBalance}
+          totalVehicleProfit={totalVehicleProfit}
+          totalFixed={totalFixed}
+          prevNetBalance={prevNetBalance}
+          prevTotalVehicleProfit={prevTotalVehicleProfit}
+          prevTotalFixed={prevTotalFixed}
+          soldVehiclesCount={soldVehiclesCount}
+          inStockVehiclesCount={inStockVehiclesCount}
+          avgProfit={avgProfit}
+          pieData={pieData}
+          pieColors={pieColors}
+          barData={barData}
+          avgTicket={avgTicket}
+          prevAvgTicket={prevAvgTicket}
+          avgStockDays={avgStockDays}
+          prevAvgStockDays={prevAvgStockDays}
+          salesTrendData={salesTrendData}
+          inventoryAgingData={inventoryAgingData}
+        />
+      </div>
     </div>
   );
 }
