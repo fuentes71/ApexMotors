@@ -101,11 +101,14 @@ export function Header() {
   };
 
   return (
-    <header className="max-w-5xl mx-auto w-full pt-8 pb-8 px-6 lg:px-10 border-b border-stone-200 mb-8 print:pt-4 flex-shrink-0">
+    <header className="max-w-5xl mx-auto w-full pt-16 lg:pt-8 pb-8 px-6 lg:px-10 border-b border-stone-200 mb-8 print:pt-4 flex-shrink-0 relative">
       <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
         <div>
-          <div className="flex items-center gap-3 mb-2 lg:hidden">
-            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 text-stone-500 hover:bg-stone-100 rounded-lg transition-colors print:hidden">
+          <div className="lg:hidden fixed top-4 left-4 z-40 print:hidden">
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)} 
+              className="p-3 bg-white shadow-md border border-stone-100 text-stone-700 hover:text-stone-900 rounded-full transition-all active:scale-95"
+            >
               <Menu size={24} />
             </button>
           </div>
