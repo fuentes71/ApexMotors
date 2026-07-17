@@ -1,6 +1,7 @@
 import { DollarSign, Wallet, PiggyBank, TrendingUp } from "lucide-react";
 import { formatCurrency } from "../../utils";
 import { TrendIndicator } from "./TrendIndicator";
+import { Tooltip } from "../ui/Tooltip";
 
 interface FinancialSummaryProps {
   netBalance: number;
@@ -23,43 +24,63 @@ export function FinancialSummary({
           <DollarSign size={160} />
         </div>
         <div className="flex justify-between items-start mb-4 relative z-10">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full min-w-0 pr-4">
             <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md flex-shrink-0">
               <Wallet className="text-stone-300" size={20} />
             </div>
-            <h3 className="font-semibold text-stone-300 tracking-wide truncate" title="Lucro Líquido">Lucro Líquido</h3>
+            <Tooltip content="Lucro Líquido" position="top">
+              <h3 className="font-semibold text-stone-300 tracking-wide truncate w-full">Lucro Líquido</h3>
+            </Tooltip>
           </div>
           <TrendIndicator current={netBalance} prev={prevNetBalance} />
         </div>
-        <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mt-2 relative z-10 truncate" title={formatCurrency(netBalance)}>{formatCurrency(netBalance)}</p>
-        <p className="text-sm text-stone-400 mt-2 truncate" title="Saldo líquido do período atual">Saldo líquido do período atual</p>
+        <div className="w-full flex items-start flex-col relative z-10 min-w-0">
+          <Tooltip content={formatCurrency(netBalance)} position="top">
+            <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mt-2 w-full truncate">{formatCurrency(netBalance)}</p>
+          </Tooltip>
+          <Tooltip content="Saldo líquido do período atual" position="top">
+            <p className="text-sm text-stone-400 mt-2 w-full truncate">Saldo líquido do período atual</p>
+          </Tooltip>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
         <div className="bg-white rounded-3xl p-6 flex flex-col border border-stone-100 shadow-sm hover:shadow-md transition-shadow min-w-0">
           <div className="flex justify-between items-start mb-2">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full min-w-0 pr-4">
               <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600 flex-shrink-0">
                 <PiggyBank size={20} />
               </div>
-              <h3 className="font-semibold text-stone-600 truncate" title="Lucro Veículos">Lucro Veículos</h3>
+              <Tooltip content="Lucro Veículos" position="top">
+                <h3 className="font-semibold text-stone-600 truncate w-full">Lucro Veículos</h3>
+              </Tooltip>
             </div>
             <TrendIndicator current={totalVehicleProfit} prev={prevTotalVehicleProfit} />
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate" title={formatCurrency(totalVehicleProfit)}>{formatCurrency(totalVehicleProfit)}</p>
+          <div className="w-full min-w-0 flex">
+            <Tooltip content={formatCurrency(totalVehicleProfit)} position="top">
+              <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate w-full">{formatCurrency(totalVehicleProfit)}</p>
+            </Tooltip>
+          </div>
         </div>
 
         <div className="bg-white rounded-3xl p-6 flex flex-col border border-stone-100 shadow-sm hover:shadow-md transition-shadow min-w-0">
           <div className="flex justify-between items-start mb-2">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full min-w-0 pr-4">
               <div className="p-2 bg-rose-50 rounded-xl text-rose-600 flex-shrink-0">
                 <TrendingUp size={20} className="rotate-180" />
               </div>
-              <h3 className="font-semibold text-stone-600 truncate" title="Custos Fixos">Custos Fixos</h3>
+              <Tooltip content="Custos Fixos" position="top">
+                <h3 className="font-semibold text-stone-600 truncate w-full">Custos Fixos</h3>
+              </Tooltip>
             </div>
             <TrendIndicator current={totalFixed} prev={prevTotalFixed} invertColors />
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate" title={formatCurrency(totalFixed)}>{formatCurrency(totalFixed)}</p>
+          <div className="w-full min-w-0 flex">
+            <Tooltip content={formatCurrency(totalFixed)} position="top">
+              <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate w-full">{formatCurrency(totalFixed)}</p>
+            </Tooltip>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { TrendingUp, Activity, CheckCircle2, Clock, Tag } from "lucide-react";
 import { formatCurrency } from "../../utils";
 import { TrendIndicator } from "./TrendIndicator";
+import { Tooltip } from "../ui/Tooltip";
 
 interface KpiCardsProps {
   avgProfit: number;
@@ -33,10 +34,16 @@ export function KpiCards({
             </div>
             {kpi.ind}
           </div>
-          <div className="min-w-0">
-            <p className="text-stone-500 font-medium text-sm mb-1 truncate" title={kpi.title}>{kpi.title}</p>
-            <h4 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight truncate" title={String(kpi.value)}>{kpi.value}</h4>
-            <p className="text-xs text-stone-400 mt-1 truncate" title={kpi.subtitle}>{kpi.subtitle}</p>
+          <div className="min-w-0 flex flex-col items-start w-full">
+            <Tooltip content={kpi.title} position="top">
+              <p className="text-stone-500 font-medium text-sm mb-1 w-full truncate">{kpi.title}</p>
+            </Tooltip>
+            <Tooltip content={String(kpi.value)} position="top">
+              <h4 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight w-full truncate">{kpi.value}</h4>
+            </Tooltip>
+            <Tooltip content={kpi.subtitle} position="top">
+              <p className="text-xs text-stone-400 mt-1 w-full truncate">{kpi.subtitle}</p>
+            </Tooltip>
           </div>
         </div>
       ))}
