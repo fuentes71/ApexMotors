@@ -1,4 +1,5 @@
 import React from "react";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 export function Table({ children, className = "" }: { children: React.ReactNode, className?: string }) {
   return (
@@ -20,10 +21,32 @@ export function TableHeader({ children, className = "" }: { children: React.Reac
   );
 }
 
-export function TableHead({ children, className = "" }: { children: React.ReactNode, className?: string }) {
+interface TableHeadProps {
+  children: React.ReactNode;
+  className?: string;
+  sortable?: boolean;
+  sortDirection?: 'asc' | 'desc' | null;
+  onClick?: () => void;
+  title?: string;
+}
+
+export function TableHead({ children, className = "", sortable, sortDirection, onClick, title }: TableHeadProps) {
   return (
-    <th className={`px-4 py-4 md:px-6 font-semibold whitespace-nowrap ${className}`}>
-      {children}
+    <th 
+      className={`px-4 py-4 md:px-4 font-semibold whitespace-nowrap ${sortable ? 'cursor-pointer hover:bg-stone-100 transition-colors select-none group' : ''} ${className}`}
+      onClick={sortable ? onClick : undefined}
+      title={title}
+    >
+      <div className={`flex items-center gap-1 ${className.includes('text-right') ? 'justify-end' : className.includes('text-center') ? 'justify-center' : ''}`}>
+        {children}
+        {sortable && (
+          <span className={`flex text-stone-400 ${sortDirection ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 transition-opacity'}`}>
+            {sortDirection === 'asc' ? <ArrowUp size={14} className="text-stone-800" /> : 
+             sortDirection === 'desc' ? <ArrowDown size={14} className="text-stone-800" /> : 
+             <ArrowUpDown size={14} />}
+          </span>
+        )}
+      </div>
     </th>
   );
 }
@@ -51,9 +74,14 @@ export function TableRow({ children, className = "", interactive = false, ...pro
   );
 }
 
-export function TableCell({ children, className = "" }: { children: React.ReactNode, className?: string }) {
+interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
+  children?: React.ReactNode;
+  className?: string;
+}
+
+export function TableCell({ children, className = "", ...props }: TableCellProps) {
   return (
-    <td className={`px-4 py-4 md:px-6 ${className}`}>
+    <td className={`px-4 py-4 md:px-4 ${className}`} {...props}>
       {children}
     </td>
   );

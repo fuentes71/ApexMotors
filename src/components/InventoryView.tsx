@@ -3,8 +3,10 @@ import { formatCurrency, DEFAULT_CAR_IMAGE } from "../utils";
 import { Vehicle } from "../types";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
+import { useSort } from "../hooks/useSort";
 import { generateContractPDF } from "../utils/pdfExport";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
+import { Pagination } from "./ui/Pagination";
 import api from "../services/api";
 
 interface InventoryViewProps {
@@ -27,6 +29,25 @@ export function InventoryView({
   const [isSelling, setIsSelling] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  const { sortColumn, sortDirection, handleSort, sortedData: sortedVehicles } = useSort(filteredVehicles, {
+    cost: (a, b) => {
+      const costA = a.valorCompra + a.despesas.reduce((acc, e) => acc + e.value, 0);
+      const costB = b.valorCompra + b.despesas.reduce((acc, e) => acc + e.value, 0);
+      return costA - costB;
+    },
+    profit: (a, b) => {
+      const costA = a.valorCompra + a.despesas.reduce((acc, e) => acc + e.value, 0);
+      const profitA = a.valorVenda - costA;
+      
+      const costB = b.valorCompra + b.despesas.reduce((acc, e) => acc + e.value, 0);
+      const profitB = b.valorVenda - costB;
+      
+      return profitA - profitB;
+    }
+  });
 
   const handleStatusChange = async (v: Vehicle, newStatus: string) => {
     if (newStatus === 'Vendido') {
@@ -85,10 +106,36 @@ export function InventoryView({
       <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-visible">
         <Table>
           <TableHeader className="bg-[#FAFAFA]">
-            <TableHead>Veículo</TableHead>
-            <TableHead className="w-[180px]">Status</TableHead>
-            <TableHead className="hidden sm:table-cell">Custo Total</TableHead>
-            <TableHead>Lucro Líquido</TableHead>
+            <TableHead 
+              sortable 
+              sortDirection={sortColumn === 'name' ? sortDirection : null} 
+              onClick={() => handleSort('name')}
+            >
+              Veículo
+            </TableHead>
+            <TableHead 
+              className="w-[180px]"
+              sortable 
+              sortDirection={sortColumn === 'status' ? sortDirection : null} 
+              onClick={() => handleSort('status')}
+            >
+              Status
+            </TableHead>
+            <TableHead 
+              className="hidden sm:table-cell"
+              sortable 
+              sortDirection={sortColumn === 'cost' ? sortDirection : null} 
+              onClick={() => handleSort('cost')}
+            >
+              Custo Total
+            </TableHead>
+            <TableHead
+              sortable 
+              sortDirection={sortColumn === 'profit' ? sortDirection : null} 
+              onClick={() => handleSort('profit')}
+            >
+              Lucro Líquido
+            </TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableHeader>
           <TableBody>
@@ -99,7 +146,9 @@ export function InventoryView({
                 </TableCell>
               </TableRow>
             )}
-              {filteredVehicles.map(v => {
+              {sortedVehicles
+                .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                .map(v => {
                 const expenses = v.despesas.reduce((acc, e) => acc + e.value, 0);
                 const totalCost = v.valorCompra + expenses;
                 const profit = v.valorVenda - totalCost;
@@ -272,6 +321,11 @@ export function InventoryView({
               })}
           </TableBody>
         </Table>
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE)}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Floating Action Button */}

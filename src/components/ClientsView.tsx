@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useData } from "../context/DataContext";
+import { useSort } from "../hooks/useSort";
 import { Plus, Search, Trash2, Mail, Phone, Calendar, Loader2, Users, ChevronRight } from "lucide-react";
 import { Client } from "../types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
+import { Pagination } from "./ui/Pagination";
 import { format } from "date-fns";
 import api from "../services/api";
 
@@ -12,14 +14,17 @@ export function ClientsView() {
   const { clients, setClients, setActiveClient } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   
   const [draftClient, setDraftClient] = useState<Client | null>(null);
-
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.phone.includes(searchTerm)
   );
+
+  const { sortColumn, sortDirection, handleSort, sortedData: sortedClients } = useSort(filteredClients);
 
   const handleAddClient = () => {
     setActiveClient({
@@ -86,14 +91,28 @@ export function ClientsView() {
 
         <Table>
           <TableHeader>
-            <TableHead>Cliente</TableHead>
+            <TableHead 
+              sortable 
+              sortDirection={sortColumn === 'name' ? sortDirection : null} 
+              onClick={() => handleSort('name')}
+            >
+              Cliente
+            </TableHead>
             <TableHead className="hidden sm:table-cell">Contato</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead 
+              sortable 
+              sortDirection={sortColumn === 'status' ? sortDirection : null} 
+              onClick={() => handleSort('status')}
+            >
+              Status
+            </TableHead>
             <TableHead className="hidden md:table-cell">Interesse</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableHeader>
           <TableBody>
-            {filteredClients.map((client) => {
+            {sortedClients
+              .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+              .map(client => {
               return (
                 <TableRow key={client.id} interactive onClick={() => setActiveClient(client)}>
                   <TableCell>
@@ -158,6 +177,11 @@ export function ClientsView() {
             )}
           </TableBody>
         </Table>
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredClients.length / ITEMS_PER_PAGE)}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Floating Action Button */}

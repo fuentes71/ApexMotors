@@ -2,9 +2,13 @@ import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileTex
 import { formatCurrency, calculateTotalFixedForPeriod } from "../utils";
 import { Expense } from "../types";
 import { useState, Fragment } from "react";
+import { useSort } from "../hooks/useSort";
 import { useData } from "../context/DataContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
+import { Pagination } from "./ui/Pagination";
 import api from "../services/api";
+
+const ITEMS_PER_PAGE = 10;
 
 interface FinanceViewProps {
   fixedExpenses: Expense[];
@@ -18,6 +22,18 @@ export function FinanceView({
   const { startMonth, endMonth, vehicles, setActiveExpense } = useData();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const visibleExpenses = fixedExpenses.filter(exp => 
+    calculateTotalFixedForPeriod([exp], startMonth, endMonth) > 0
+  );
+
+  const { sortColumn, sortDirection, handleSort, sortedData: sortedExpenses } = useSort(visibleExpenses, {
+    total: (a, b) => {
+      const totalA = calculateTotalFixedForPeriod([a], startMonth, endMonth);
+      const totalB = calculateTotalFixedForPeriod([b], startMonth, endMonth);
+      return totalA - totalB;
+    }
+  });
 
   const handleAddFixedExpense = () => {
     setActiveExpense({
@@ -72,30 +88,49 @@ export function FinanceView({
       <div className="w-full max-w-4xl mx-auto bg-white border border-stone-200 rounded-2xl shadow-sm overflow-visible flex flex-col">
         <Table>
           <TableHeader className="bg-[#FAFAFA]">
-            <TableHead>Descrição</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Valor Base</TableHead>
-            <TableHead title="Valor somado dentro do período selecionado no filtro">Total (No Período)</TableHead>
+            <TableHead 
+              sortable 
+              sortDirection={sortColumn === 'name' ? sortDirection : null} 
+              onClick={() => handleSort('name')}
+            >
+              Descrição
+            </TableHead>
+            <TableHead 
+              sortable 
+              sortDirection={sortColumn === 'recurrence' ? sortDirection : null} 
+              onClick={() => handleSort('recurrence')}
+            >
+              Tipo
+            </TableHead>
+            <TableHead 
+              sortable 
+              sortDirection={sortColumn === 'value' ? sortDirection : null} 
+              onClick={() => handleSort('value')}
+            >
+              Valor Base
+            </TableHead>
+            <TableHead 
+              title="Valor somado dentro do período selecionado no filtro"
+              sortable 
+              sortDirection={sortColumn === 'total' ? sortDirection : null} 
+              onClick={() => handleSort('total')}
+            >
+              Total (No Período)
+            </TableHead>
             <TableHead className="text-center print:hidden">Comprovante</TableHead>
             <TableHead className="text-right print:hidden">Ações</TableHead>
           </TableHeader>
           <TableBody>
-            {(() => {
-              const visibleExpenses = fixedExpenses.filter(exp => 
-                calculateTotalFixedForPeriod([exp], startMonth, endMonth) > 0
-              );
-              
-              if (visibleExpenses.length === 0) {
-                return (
-                  <TableRow>
-                    <TableCell className="text-center text-stone-400" colSpan={6}>
-                      Nenhuma despesa ativa neste período.
-                    </TableCell>
-                  </TableRow>
-                );
-              }
-
-              return visibleExpenses.map(exp => {
+            {visibleExpenses.length === 0 ? (
+              <TableRow>
+                <TableCell className="text-center text-stone-400" colSpan={6}>
+                  Nenhuma despesa ativa neste período.
+                </TableCell>
+              </TableRow>
+            ) : (
+              sortedExpenses
+                .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                .map(exp => {
                 const recurrenceColor = {
                   'Única': 'bg-stone-100 text-stone-600',
                   'Diária': 'bg-orange-50 text-orange-600',
@@ -177,9 +212,15 @@ export function FinanceView({
                   </TableRow>
                 </Fragment>
                 );
-              })})()}
+              })
+            )}
           </TableBody>
         </Table>
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={Math.ceil(visibleExpenses.length / ITEMS_PER_PAGE)}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* Floating Action Button */}
