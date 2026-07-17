@@ -34,9 +34,9 @@ export function KpiCards({
             {kpi.ind}
           </div>
           <div className="min-w-0">
-            <p className="text-stone-500 font-medium text-sm mb-1 truncate">{kpi.title}</p>
-            <h4 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight truncate">{kpi.value}</h4>
-            <p className="text-xs text-stone-400 mt-1 truncate">{kpi.subtitle}</p>
+            <p className="text-stone-500 font-medium text-sm mb-1 truncate" title={kpi.title}>{kpi.title}</p>
+            <h4 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight truncate" title={String(kpi.value)}>{kpi.value}</h4>
+            <p className="text-xs text-stone-400 mt-1 truncate" title={kpi.subtitle}>{kpi.subtitle}</p>
           </div>
         </div>
       ))}

@@ -27,12 +27,12 @@ export function FinancialSummary({
             <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md flex-shrink-0">
               <Wallet className="text-stone-300" size={20} />
             </div>
-            <h3 className="font-semibold text-stone-300 tracking-wide truncate">Lucro Líquido</h3>
+            <h3 className="font-semibold text-stone-300 tracking-wide truncate" title="Lucro Líquido">Lucro Líquido</h3>
           </div>
           <TrendIndicator current={netBalance} prev={prevNetBalance} />
         </div>
-        <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mt-2 relative z-10 truncate">{formatCurrency(netBalance)}</p>
-        <p className="text-sm text-stone-400 mt-2 truncate">Saldo líquido do período atual</p>
+        <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mt-2 relative z-10 truncate" title={formatCurrency(netBalance)}>{formatCurrency(netBalance)}</p>
+        <p className="text-sm text-stone-400 mt-2 truncate" title="Saldo líquido do período atual">Saldo líquido do período atual</p>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
@@ -42,11 +42,11 @@ export function FinancialSummary({
               <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600 flex-shrink-0">
                 <PiggyBank size={20} />
               </div>
-              <h3 className="font-semibold text-stone-600 truncate">Lucro Veículos</h3>
+              <h3 className="font-semibold text-stone-600 truncate" title="Lucro Veículos">Lucro Veículos</h3>
             </div>
             <TrendIndicator current={totalVehicleProfit} prev={prevTotalVehicleProfit} />
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate">{formatCurrency(totalVehicleProfit)}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate" title={formatCurrency(totalVehicleProfit)}>{formatCurrency(totalVehicleProfit)}</p>
         </div>
 
         <div className="bg-white rounded-3xl p-6 flex flex-col border border-stone-100 shadow-sm hover:shadow-md transition-shadow min-w-0">
@@ -55,11 +55,11 @@ export function FinancialSummary({
               <div className="p-2 bg-rose-50 rounded-xl text-rose-600 flex-shrink-0">
                 <TrendingUp size={20} className="rotate-180" />
               </div>
-              <h3 className="font-semibold text-stone-600 truncate">Custos Fixos</h3>
+              <h3 className="font-semibold text-stone-600 truncate" title="Custos Fixos">Custos Fixos</h3>
             </div>
             <TrendIndicator current={totalFixed} prev={prevTotalFixed} invertColors />
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate">{formatCurrency(totalFixed)}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate" title={formatCurrency(totalFixed)}>{formatCurrency(totalFixed)}</p>
         </div>
       </div>
     </div>
