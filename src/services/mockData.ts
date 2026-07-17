@@ -300,7 +300,7 @@ export const mockClients: Client[] = [
     name: "Marcos Vinícius",
     phone: "(41) 97777-5555",
     email: "marcos.v@email.com",
-    status: "Frio",
+    status: "Lead" as const,
     interest: "Audi A3",
     notes: "Achou o valor do Audi A3 muito alto. Manter no radar caso apareça um A3 mais antigo.",
     createdAt: "2026-06-20"
