@@ -5,6 +5,7 @@ import { useState, Fragment } from "react";
 import { useSort } from "../hooks/useSort";
 import { useData } from "../context/DataContext";
 import { useToast } from "../context/ToastContext";
+import { useConfirm } from "../context/ConfirmContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import { ViewLayout } from "./ui/ViewLayout";
 import api from "../services/api";
@@ -39,6 +40,8 @@ export function FinanceView({
     }
   });
 
+  const { confirm } = useConfirm();
+
   const handleAddFixedExpense = () => {
     setActiveExpense({
       id: "new",
@@ -51,18 +54,25 @@ export function FinanceView({
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Tem certeza que deseja excluir esta despesa?")) {
-      setIsDeletingId(id);
-      try {
-        await api.delete(`/expenses/${id}`);
-        setFixedExpenses(fixedExpenses.filter(e => e.id !== id));
-        showToast("Despesa excluída", "success");
-      } catch (e) {
-        console.error(e);
-        showToast("Erro ao excluir", "error");
-      } finally {
-        setIsDeletingId(null);
-      }
+    const isConfirmed = await confirm({
+      title: "Excluir Despesa",
+      message: "Tem certeza que deseja excluir esta despesa? Ela não aparecerá mais nos relatórios.",
+      confirmText: "Excluir",
+      cancelText: "Cancelar",
+      type: "danger"
+    });
+    if (!isConfirmed) return;
+
+    setIsDeletingId(id);
+    try {
+      await api.delete(`/expenses/${id}`);
+      setFixedExpenses(fixedExpenses.filter(e => e.id !== id));
+      showToast("Despesa excluída", "success");
+    } catch (e) {
+      console.error(e);
+      showToast("Erro ao excluir", "error");
+    } finally {
+      setIsDeletingId(null);
     }
   };
 

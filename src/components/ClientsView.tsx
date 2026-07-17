@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useData } from "../context/DataContext";
 import { useSort } from "../hooks/useSort";
 import { useToast } from "../context/ToastContext";
+import { useConfirm } from "../context/ConfirmContext";
 import { generateWhatsAppLink } from "../utils";
 import { Search, ChevronRight, Phone, Mail, Calendar, CarFront, Edit2, Trash2, Plus, Loader2, ChevronDown, Check, MessageCircle, Users } from "lucide-react";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "./ui/Table";
@@ -38,6 +39,8 @@ export function ClientsView() {
 
   const { sortColumn, sortDirection, handleSort, sortedData: sortedClients } = useSort(filteredClients);
 
+  const { confirm } = useConfirm();
+
   const handleAddClient = () => {
     setActiveClient({
       id: "new",
@@ -52,7 +55,15 @@ export function ClientsView() {
   };
 
   const deleteClient = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+    const isConfirmed = await confirm({
+      title: "Excluir Cliente",
+      message: "Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.",
+      confirmText: "Excluir",
+      cancelText: "Cancelar",
+      type: "danger"
+    });
+    if (!isConfirmed) return;
+    
     setIsDeletingId(id);
     try {
       await api.delete(`/clients/${id}`);

@@ -5,6 +5,7 @@ import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { useSort } from "../hooks/useSort";
 import { useToast } from "../context/ToastContext";
+import { useConfirm } from "../context/ConfirmContext";
 import { generateContractPDF } from "../utils/pdfExport";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import { ViewLayout } from "./ui/ViewLayout";
@@ -309,7 +310,14 @@ export function InventoryView({
                         <button 
                           onClick={async (e) => {
                             e.stopPropagation();
-                            if (window.confirm("Tem certeza que deseja excluir este veículo? As despesas associadas a ele também serão excluídas.")) {
+                            const isConfirmed = await confirm({
+                              title: "Excluir Veículo",
+                              message: "Tem certeza que deseja excluir este veículo? As despesas associadas a ele também serão excluídas.",
+                              confirmText: "Excluir",
+                              cancelText: "Cancelar",
+                              type: "danger"
+                            });
+                            if (isConfirmed) {
                               setIsDeletingId(v.id);
                               try {
                                 await api.delete(`/vehicles/${v.id}`);
