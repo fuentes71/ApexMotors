@@ -1,7 +1,7 @@
 import { X, Save, Loader2, Receipt } from "lucide-react";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
-import { Expense } from "../types";
+import { Expense, RecurrenceType, Category } from "../types";
 import api from "../services/api";
 
 export function ExpenseModal() {
