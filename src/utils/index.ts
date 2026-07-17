@@ -1,6 +1,6 @@
 import React from "react";
 import { Wrench, Megaphone, FileText, Tag } from "lucide-react";
-import { Expense, Client } from "../types";
+import { Expense, Client, WhatsAppTemplates } from "../types";
 
 export const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);

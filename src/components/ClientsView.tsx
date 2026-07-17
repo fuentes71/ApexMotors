@@ -5,7 +5,7 @@ import { useData } from "../context/DataContext";
 import { useSort } from "../hooks/useSort";
 import { useToast } from "../context/ToastContext";
 import { generateWhatsAppLink } from "../utils";
-import { Search, ChevronRight, Phone, Mail, Calendar, CarFront, Edit2, Trash2, Plus, Loader2, ChevronDown, Check } from "lucide-react";
+import { Search, ChevronRight, Phone, Mail, Calendar, CarFront, Edit2, Trash2, Plus, Loader2, ChevronDown, Check, MessageCircle, Users } from "lucide-react";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "./ui/Table";
 import { ViewLayout } from "./ui/ViewLayout";
 import { Client } from "../types";

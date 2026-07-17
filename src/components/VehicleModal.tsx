@@ -47,7 +47,7 @@ export function VehicleModal() {
     setIsSaving(true);
     try {
       const isNew = draftVehicle.id === "new";
-      let res;
+      let res: any;
       if (isNew) {
         res = await api.post(`/vehicles`, draftVehicle);
         setVehicles([...vehicles, res.data]);
