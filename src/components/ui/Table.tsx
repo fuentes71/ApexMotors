@@ -1,12 +1,18 @@
 import React from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ArrowLeftRight } from "lucide-react";
 
 export function Table({ children, className = "" }: { children: React.ReactNode, className?: string }) {
   return (
-    <div className={`w-full overflow-x-auto lg:overflow-visible pb-24 lg:pb-0 ${className}`}>
-      <table className="w-full min-w-[700px] lg:min-w-0 text-left border-collapse whitespace-nowrap lg:whitespace-normal">
-        {children}
-      </table>
+    <div className="w-full">
+      <div className="lg:hidden flex items-center justify-end gap-1.5 mb-2 px-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+        <span>Deslize a tabela</span>
+        <ArrowLeftRight size={12} />
+      </div>
+      <div className={`w-full overflow-x-auto lg:overflow-visible pb-24 lg:pb-0 scrollbar-hide ${className}`}>
+        <table className="w-full min-w-[700px] lg:min-w-0 text-left border-collapse whitespace-nowrap lg:whitespace-normal">
+          {children}
+        </table>
+      </div>
     </div>
   );
 }
