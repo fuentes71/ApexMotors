@@ -203,18 +203,18 @@ export function FinanceView({
                     <TableCell className="text-right print:hidden">
                       <div className="flex items-center justify-end gap-2">
                         <button 
-                          className="p-1.5 rounded-lg transition-all print:hidden text-stone-300 hover:text-blue-500 hover:bg-blue-50"
-                          title="Ver Detalhes"
-                        >
-                          <ChevronRight size={18} className="transition-transform duration-200 group-hover:translate-x-0.5" />
-                        </button>
-                        <button 
                           onClick={(e) => { e.stopPropagation(); handleDelete(exp.id); }}
                           disabled={isDeletingId === exp.id}
                           className="p-1.5 rounded-lg transition-all text-stone-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-50 disabled:hover:bg-transparent"
                           title="Excluir"
                         >
                           {isDeletingId === exp.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                        </button>
+                        <button 
+                          className="p-1.5 rounded-lg transition-all print:hidden text-stone-300 hover:text-blue-500 hover:bg-blue-50"
+                          title="Ver Detalhes"
+                        >
+                          <ChevronRight size={18} className="transition-transform duration-200 group-hover:translate-x-0.5" />
                         </button>
                       </div>
                     </TableCell>
