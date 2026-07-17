@@ -40,7 +40,7 @@ export function TableHead({ children, className = "", sortable, sortDirection, o
       <div className={`flex items-center gap-1 ${className.includes('text-right') ? 'justify-end' : className.includes('text-center') ? 'justify-center' : ''}`}>
         {children}
         {sortable && (
-          <span className={`flex text-stone-400 ${sortDirection ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 transition-opacity'}`}>
+          <span className={`flex text-stone-400 ${sortDirection ? 'opacity-100' : 'lg:opacity-0 group-hover:opacity-100 transition-opacity'}`}>
             {sortDirection === 'asc' ? <ArrowUp size={14} className="text-stone-800" /> : 
              sortDirection === 'desc' ? <ArrowDown size={14} className="text-stone-800" /> : 
              <ArrowUpDown size={14} />}

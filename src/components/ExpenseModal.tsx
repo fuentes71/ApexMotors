@@ -197,7 +197,7 @@ export function ExpenseModal() {
                 <img src={draftExpense.image} alt="Comprovante" className="w-full h-full object-cover" />
                 <button 
                   onClick={() => setDraftExpense({...draftExpense, image: undefined})}
-                  className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500"
+                  className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white p-1.5 rounded-lg lg:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500"
                   title="Remover comprovante"
                 >
                   <X size={14} />

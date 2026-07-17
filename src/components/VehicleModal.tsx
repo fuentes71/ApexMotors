@@ -435,7 +435,7 @@ export function VehicleModal() {
                           handleUpdate("image", newGal[0] || "");
                         }
                       }}
-                      className="absolute top-2 right-2 bg-rose-500/90 text-white opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-rose-600 transition-all shadow-sm backdrop-blur-sm"
+                      className="absolute top-2 right-2 bg-rose-500/90 text-white lg:opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-rose-600 transition-all shadow-sm backdrop-blur-sm"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -467,7 +467,7 @@ export function VehicleModal() {
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="font-bold text-stone-900">{formatCurrency(exp.value)}</span>
-                      <button onClick={() => handleRemoveExpense(exp.id)} className="text-stone-300 hover:text-rose-500 p-1.5 bg-white border border-stone-200 rounded-md opacity-0 group-hover:opacity-100 hover:border-rose-200 hover:bg-rose-50 transition-all shadow-sm">
+                      <button onClick={() => handleRemoveExpense(exp.id)} className="text-stone-300 hover:text-rose-500 p-1.5 bg-white border border-stone-200 rounded-md lg:opacity-0 group-hover:opacity-100 hover:border-rose-200 hover:bg-rose-50 transition-all shadow-sm">
                         <Trash2 size={14} />
                       </button>
                     </div>

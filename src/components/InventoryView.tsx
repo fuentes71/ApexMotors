@@ -331,7 +331,7 @@ export function InventoryView({
                             }
                           }}
                           disabled={isDeletingId === v.id}
-                          className="text-stone-300 hover:text-rose-500 disabled:opacity-50 disabled:hover:bg-transparent p-2 rounded-lg hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all print:hidden"
+                          className="text-stone-300 hover:text-rose-500 disabled:opacity-50 disabled:hover:bg-transparent p-2 rounded-lg hover:bg-rose-50 lg:opacity-0 group-hover:opacity-100 transition-all print:hidden"
                           title="Excluir Veículo"
                         >
                           {isDeletingId === v.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
@@ -341,7 +341,7 @@ export function InventoryView({
                             e.stopPropagation();
                             setActiveVehicle(v);
                           }}
-                          className={`p-2 rounded-lg transition-all print:hidden ${v.status === 'Vendido' ? 'opacity-0 group-hover:opacity-100 text-stone-300 hover:text-blue-500 hover:bg-blue-50' : 'text-stone-300 hover:text-blue-500 hover:bg-blue-50'}`}
+                          className={`p-2 rounded-lg transition-all print:hidden ${v.status === 'Vendido' ? 'lg:opacity-0 group-hover:opacity-100 text-stone-300 hover:text-blue-500 hover:bg-blue-50' : 'text-stone-300 hover:text-blue-500 hover:bg-blue-50'}`}
                           title="Ver Detalhes"
                         >
                           <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />

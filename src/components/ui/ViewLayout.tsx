@@ -64,7 +64,7 @@ export function ViewLayout({
             >
               {floatingAction.icon}
             </button>
-            <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
+            <div className="absolute bottom-full mb-3 right-0 bg-stone-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg lg:opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl">
               {floatingAction.label}
               <div className="absolute top-full right-4 -mt-1 border-4 border-transparent border-t-stone-900"></div>
             </div>
