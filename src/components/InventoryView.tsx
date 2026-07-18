@@ -1,5 +1,6 @@
 import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2, FileText, Search, Download, Calendar, Tag, X, AlertCircle } from "lucide-react";
 import { formatCurrency, DEFAULT_CAR_IMAGE } from "../utils";
+import Image from "next/image";
 import { Vehicle } from "../types";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
@@ -23,7 +24,8 @@ interface InventoryViewProps {
 export function InventoryView({
   filteredVehicles, vehicles, setVehicles, setActiveVehicle, handleAddVehicle
 }: InventoryViewProps) {
-  const { fixedExpenses, setFixedExpenses, contractTemplate, setFullscreenImage } = useData();
+  const { fixedExpenses, setFixedExpenses, contractTemplate, setFullscreenImage, currentUser } = useData();
+  const isVendedor = currentUser?.role === 'Vendedor';
   const { showToast } = useToast();
   const { confirm: confirmAction } = useConfirm();
 
@@ -121,7 +123,7 @@ export function InventoryView({
           totalPages: Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE),
           onPageChange: setCurrentPage
         }}
-        floatingAction={{
+        floatingAction={isVendedor ? undefined : {
           icon: isAdding ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />,
           label: "Novo Veículo",
           onClick: async () => {
@@ -151,22 +153,31 @@ export function InventoryView({
                 >
                   Status
                 </TableHead>
-                <TableHead 
-                  className="hidden sm:table-cell"
-                  sortable 
-                  sortDirection={sortColumn === 'cost' ? sortDirection : null} 
-                  onClick={() => handleSort('cost')}
-                >
-                  Custo Total
-                </TableHead>
-                <TableHead
-                  sortable 
-                  sortDirection={sortColumn === 'profit' ? sortDirection : null} 
-                  onClick={() => handleSort('profit')}
-                >
-                  Lucro Líquido
-                </TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                {isVendedor ? (
+                  <>
+                    <TableHead>Placa</TableHead>
+                    <TableHead>Valor Venda</TableHead>
+                  </>
+                ) : (
+                  <>
+                    <TableHead 
+                      className="hidden sm:table-cell"
+                      sortable 
+                      sortDirection={sortColumn === 'cost' ? sortDirection : null} 
+                      onClick={() => handleSort('cost')}
+                    >
+                      Custo Total
+                    </TableHead>
+                    <TableHead
+                      sortable 
+                      sortDirection={sortColumn === 'profit' ? sortDirection : null} 
+                      onClick={() => handleSort('profit')}
+                    >
+                      Lucro Líquido
+                    </TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </>
+                )}
               </TableHeader>
               <TableBody>
                 {filteredVehicles.length === 0 && (
@@ -211,8 +222,7 @@ export function InventoryView({
                                   }}
                                 >
                                   {hasPhoto ? (
-                                    /* eslint-disable-next-line @next/next/no-img-element */
-                                    <img src={v.image || v.galeria[0]} alt={v.name} className={`w-full h-full object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} />
+                                    <Image src={v.image || v.galeria[0]} alt={v.name} fill className={`object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} unoptimized />
                                   ) : (
                                     <CarFront size={20} className="text-stone-300" />
                                   )}
@@ -292,68 +302,89 @@ export function InventoryView({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-semibold text-sm text-stone-800">{formatCurrency(totalCost)}</span>
-                            {expenses > 0 && (
-                              <span className="text-[10px] text-rose-500 font-medium">+{formatCurrency(expenses)} desp.</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {v.status === 'Vendido' ? (
-                            <div className="flex flex-col gap-0.5">
-                              <span className={`font-bold text-sm ${profit > 0 ? 'text-emerald-600' : profit < 0 ? 'text-rose-600' : 'text-stone-600'}`}>
-                                {profit > 0 ? '+' : ''}{formatCurrency(profit)}
-                              </span>
-                              <span className="text-[10px] text-stone-500 font-medium">Vendido por {formatCurrency(v.valorVenda)}</span>
-                            </div>
-                          ) : (
-                            <span className="text-sm font-medium text-stone-400 italic">Estoque</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button 
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                const isConfirmed = await confirmAction({
-                                  title: "Excluir Veículo",
-                                  message: "Tem certeza que deseja excluir este veículo? As despesas associadas a ele também serão excluídas.",
-                                  confirmText: "Excluir",
-                                  cancelText: "Cancelar",
-                                  type: "danger"
-                                });
-                                if (isConfirmed) {
-                                  setIsDeletingId(v.id);
-                                  try {
-                                    await api.delete(`/vehicles/${v.id}`);
-                                  } catch(err) {
-                                    console.error(err);
-                                  }
-                                  setVehicles(vehicles.filter(ve => ve.id !== v.id));
-                                  setFixedExpenses(fixedExpenses.filter(exp => exp.linkedVehicleId !== v.id));
-                                  setIsDeletingId(null);
-                                }
-                              }}
-                              disabled={isDeletingId === v.id}
-                              className="text-stone-300 hover:text-rose-500 disabled:opacity-50 disabled:hover:bg-transparent p-2 rounded-lg hover:bg-rose-50 lg:opacity-0 group-hover:opacity-100 transition-all print:hidden"
-                              title="Excluir Veículo"
-                            >
-                              {isDeletingId === v.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                            </button>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveVehicle(v);
-                              }}
-                              className={`p-2 rounded-lg transition-all print:hidden ${v.status === 'Vendido' ? 'lg:opacity-0 group-hover:opacity-100 text-stone-300 hover:text-blue-500 hover:bg-blue-50' : 'text-stone-300 hover:text-blue-500 hover:bg-blue-50'}`}
-                              title="Ver Detalhes"
-                            >
-                              <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
-                            </button>
-                          </div>
-                        </TableCell>
+                        {isVendedor ? (
+                          <>
+                            <TableCell>{v.placa || 'N/A'}</TableCell>
+                            <TableCell className="font-semibold text-stone-900">{formatCurrency(v.valorVenda)}</TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell className="hidden sm:table-cell">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-semibold text-sm text-stone-800">{formatCurrency(totalCost)}</span>
+                                {expenses > 0 && (
+                                  <span className="text-[10px] text-rose-500 font-medium">+{formatCurrency(expenses)} desp.</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {v.status === 'Vendido' ? (
+                                <div className="flex flex-col gap-0.5">
+                                  <span className={`font-bold text-sm ${profit > 0 ? 'text-emerald-600' : profit < 0 ? 'text-rose-600' : 'text-stone-600'}`}>
+                                    {profit > 0 ? '+' : ''}{formatCurrency(profit)}
+                                  </span>
+                                  <span className="text-[10px] text-stone-500 font-medium">Vendido por {formatCurrency(v.valorVenda)}</span>
+                                </div>
+                              ) : (
+                                <span className="text-sm font-medium text-stone-400 italic">Estoque</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {v.status === 'Vendido' && (v.buyerName || v.buyerDoc) && (
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      generateContractPDF(v, contractTemplate);
+                                    }}
+                                    className="text-stone-300 hover:text-emerald-500 p-2 rounded-lg hover:bg-emerald-50 lg:opacity-0 group-hover:opacity-100 transition-all print:hidden"
+                                    title="Gerar Recibo de Venda"
+                                  >
+                                    <FileText size={16} />
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const isConfirmed = await confirmAction({
+                                      title: "Excluir Veículo",
+                                      message: "Tem certeza que deseja excluir este veículo? As despesas associadas a ele também serão excluídas.",
+                                      confirmText: "Excluir",
+                                      cancelText: "Cancelar",
+                                      type: "danger"
+                                    });
+                                    if (isConfirmed) {
+                                      setIsDeletingId(v.id);
+                                      try {
+                                        await api.delete(`/vehicles/${v.id}`);
+                                      } catch(err) {
+                                        console.error(err);
+                                      }
+                                      setVehicles(vehicles.filter(ve => ve.id !== v.id));
+                                      setFixedExpenses(fixedExpenses.filter(exp => exp.linkedVehicleId !== v.id));
+                                      setIsDeletingId(null);
+                                    }
+                                  }}
+                                  disabled={isDeletingId === v.id}
+                                  className="text-stone-300 hover:text-rose-500 disabled:opacity-50 disabled:hover:bg-transparent p-2 rounded-lg hover:bg-rose-50 lg:opacity-0 group-hover:opacity-100 transition-all print:hidden"
+                                  title="Excluir Veículo"
+                                >
+                                  {isDeletingId === v.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                </button>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveVehicle(v);
+                                  }}
+                                  className={`p-2 rounded-lg transition-all print:hidden ${v.status === 'Vendido' ? 'lg:opacity-0 group-hover:opacity-100 text-stone-300 hover:text-blue-500 hover:bg-blue-50' : 'text-stone-300 hover:text-blue-500 hover:bg-blue-50'}`}
+                                  title="Ver Detalhes"
+                                >
+                                  <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                                </button>
+                              </div>
+                            </TableCell>
+                          </>
+                        )}
                       </TableRow>
                     );
                   })}
@@ -384,6 +415,18 @@ export function InventoryView({
                     >
 
                       <div className="absolute top-4 right-4 flex gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                        {v.status === 'Vendido' && (v.buyerName || v.buyerDoc) && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              generateContractPDF(v, contractTemplate);
+                            }}
+                            className="text-stone-400 hover:text-emerald-500 bg-white shadow-sm border border-stone-100 p-2 rounded-full hover:bg-emerald-50 print:hidden"
+                            title="Gerar Recibo de Venda"
+                          >
+                            <FileText size={14} />
+                          </button>
+                        )}
                         <button 
                           onClick={async (e) => {
                             e.stopPropagation();
@@ -407,7 +450,8 @@ export function InventoryView({
                             }
                           }}
                           disabled={isDeletingId === v.id}
-                          className="text-stone-400 hover:text-rose-500 bg-white shadow-sm border border-stone-100 p-2 rounded-full hover:bg-rose-50"
+                          className="text-stone-400 hover:text-rose-500 bg-white shadow-sm border border-stone-100 p-2 rounded-full hover:bg-rose-50 print:hidden"
+                          title="Excluir Veículo"
                         >
                           {isDeletingId === v.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                         </button>
@@ -437,7 +481,7 @@ export function InventoryView({
                           }}
                         >
                           {hasPhoto ? (
-                            <img src={v.image || v.galeria[0]} alt={v.name} className={`w-full h-full object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} />
+                            <Image src={v.image || v.galeria[0]} alt={v.name} fill className={`object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} unoptimized />
                           ) : (
                             <CarFront size={24} className="text-stone-300" />
                           )}

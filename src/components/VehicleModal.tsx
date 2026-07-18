@@ -1,4 +1,5 @@
-import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle, Search, FileWarning, FileText, Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle, Search, FileWarning, FileText, Check, ChevronLeft, ChevronRight, Loader2, Calendar, Link as LinkIcon, DollarSign, Wrench, Info } from "lucide-react";
+import Image from "next/image";
 import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
 import { Vehicle, Expense, Category } from "../types";
@@ -13,8 +14,9 @@ export function VehicleModal() {
     vehicles, setVehicles, 
     fullscreenImage, setFullscreenImage,
     fixedExpenses, setFixedExpenses,
-    contractTemplate
+    contractTemplate, currentUser
   } = useData();
+  const isVendedor = currentUser?.role === 'Vendedor';
 
   const { showToast } = useToast();
   const [draftVehicle, setDraftVehicle] = useState<Vehicle | null>(null);
@@ -119,8 +121,9 @@ export function VehicleModal() {
           </>
         )}
 
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={fullscreenImage} className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg relative z-0" alt="Preview" />
+        <div className="relative w-[90vw] h-[90vh]">
+          <Image src={fullscreenImage} fill className="object-contain rounded-lg relative z-0" alt="Preview" unoptimized />
+        </div>
       </div>
     );
   };
@@ -132,6 +135,7 @@ export function VehicleModal() {
 
 
   const handleUpdate = <K extends keyof Vehicle>(field: K, value: Vehicle[K]) => {
+    if (isVendedor) return;
     setDraftVehicle(prev => prev ? { ...prev, [field]: value } : null);
   };
 
@@ -177,7 +181,7 @@ export function VehicleModal() {
   const handleAddExpense = () => {
     if (!newExpenseName || !newExpenseValue) return;
     
-    const multiplier = getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate);
+    const multiplier = getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate || "");
     const unitValue = Number(newExpenseValue);
     const totalValue = unitValue * multiplier;
     
@@ -287,15 +291,17 @@ export function VehicleModal() {
                     className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all"
                   />
                 </div>
-                <div>
-                  <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Compra (R$)</label>
-                  <input 
-                    type="number" 
-                    value={draftVehicle.valorCompra || ""}
-                    onChange={(e) => handleUpdate("valorCompra", Number(e.target.value))}
-                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all"
-                  />
-                </div>
+                {!isVendedor && (
+                  <div>
+                    <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Compra (R$)</label>
+                    <input 
+                      type="number" 
+                      value={draftVehicle.valorCompra || ""}
+                      onChange={(e) => handleUpdate("valorCompra", Number(e.target.value))}
+                      className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Venda (R$)</label>
                   <input 
@@ -441,8 +447,7 @@ export function VehicleModal() {
               <div className="grid grid-cols-4 gap-3">
                 {draftVehicle.galeria.map((img, i) => (
                   <div key={i} className="aspect-square bg-stone-100 rounded-lg overflow-hidden group relative shadow-sm border border-stone-200">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform" alt="Galeria" onClick={() => setFullscreenImage(img)} />
+                    <Image src={img} fill className="object-cover cursor-pointer hover:scale-105 transition-transform" alt="Galeria" onClick={() => setFullscreenImage(img)} unoptimized />
                     <button 
                       onClick={() => {
                         const newGal = draftVehicle.galeria.filter((_, idx) => idx !== i);
@@ -469,8 +474,9 @@ export function VehicleModal() {
             </div>
 
             {/* Expenses */}
-            <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
-              <h3 className="text-sm font-semibold text-stone-800 mb-4 uppercase tracking-wider">Despesas do Veículo</h3>
+            {!isVendedor && (
+              <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+                <h3 className="text-sm font-semibold text-stone-800 mb-4 uppercase tracking-wider">Despesas do Veículo</h3>
               
               <div className="space-y-3 mb-6">
                 {draftVehicle.despesas.map((exp) => (
@@ -583,8 +589,8 @@ export function VehicleModal() {
                   </div>
                   {newExpenseRecurrence !== 'Única' && (
                     <div className="sm:col-span-8 bg-blue-50 p-3 rounded-lg border border-blue-100 flex flex-col justify-center shadow-sm">
-                      <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider mb-0.5">Total Estimado ({getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate)}x ocorrências)</span>
-                      <span className="text-base font-bold text-blue-900">{formatCurrency(Number(newExpenseValue) * getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate))}</span>
+                      <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider mb-0.5">Total Estimado ({getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate || "")}x ocorrências)</span>
+                      <span className="text-base font-bold text-blue-900">{formatCurrency(Number(newExpenseValue) * getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate || ""))}</span>
                     </div>
                   )}
                 </div>
@@ -598,20 +604,23 @@ export function VehicleModal() {
                     <Plus size={16} /> <span>Adicionar Despesa</span>
                   </button>
                 </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
           
-          <div className="p-6 border-t border-stone-200 bg-white mt-auto">
-            <button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-600/20"
-            >
-              {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />} 
-              {isSaving ? 'Salvando...' : 'Salvar Veículo'}
-            </button>
-          </div>
+          {!isVendedor && (
+            <div className="p-6 border-t border-stone-200 bg-white mt-auto">
+              <button 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-600/20"
+              >
+                {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />} 
+                {isSaving ? 'Salvando...' : 'Salvar Veículo'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

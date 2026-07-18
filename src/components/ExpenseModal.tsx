@@ -1,4 +1,5 @@
-import { X, Save, Loader2, Receipt } from "lucide-react";
+import { X, Save, Loader2, Receipt, Upload, Calendar } from "lucide-react";
+import Image from "next/image";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { Expense, RecurrenceType, Category } from "../types";
@@ -201,8 +202,7 @@ export function ExpenseModal() {
 
             {draftExpense.image && (
               <div className="relative w-full h-32 bg-stone-100 rounded-xl overflow-hidden mt-1 group border border-stone-200 shadow-sm">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={draftExpense.image} alt="Comprovante" className="w-full h-full object-cover" />
+                <Image src={draftExpense.image} alt="Comprovante" fill className="object-cover" unoptimized />
                 <button 
                   onClick={() => setDraftExpense({...draftExpense, image: undefined})}
                   className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white p-1.5 rounded-lg lg:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500"

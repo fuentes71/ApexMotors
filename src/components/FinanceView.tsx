@@ -1,6 +1,7 @@
 import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileText, Download, X, ChevronRight, Pencil, AlertTriangle, Loader2, TrendingDown, Search } from "lucide-react";
 import { formatCurrency, calculateTotalFixedForPeriod } from "../utils";
-import { Expense } from "../types";
+import { Expense, Category } from "../types";
+import Image from "next/image";
 import { useState, Fragment } from "react";
 import { useSort } from "../hooks/useSort";
 import { useData } from "../context/DataContext";
@@ -347,9 +348,8 @@ export function FinanceView({
       {previewImage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-stone-900/80 backdrop-blur-sm" onClick={() => setPreviewImage(null)}></div>
-          <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center justify-center pointer-events-none">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewImage} alt="Comprovante Fullscreen" className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl pointer-events-auto" />
+          <div className="relative w-full max-w-4xl h-[80vh] flex flex-col items-center justify-center pointer-events-none">
+            <Image src={previewImage} alt="Comprovante Fullscreen" fill className="object-contain rounded-lg shadow-2xl pointer-events-auto" unoptimized />
             <div className="mt-6 flex gap-4 pointer-events-auto">
               <button 
                 onClick={() => downloadImage(previewImage, "Despesa_Fixa")}

@@ -1,10 +1,14 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from "react";
-import { Vehicle, Expense, Client, WhatsAppTemplates } from "../types";
+import { Vehicle, Expense, Client, WhatsAppTemplates, Employee, Role } from "../types";
 import api from "../services/api";
 
 interface DataContextType {
+  currentUser: Employee | null;
+  setCurrentUser: Dispatch<SetStateAction<Employee | null>>;
+  employees: Employee[];
+  setEmployees: Dispatch<SetStateAction<Employee[]>>;
   vehicles: Vehicle[];
   setVehicles: Dispatch<SetStateAction<Vehicle[]>>;
   fixedExpenses: Expense[];
@@ -85,6 +89,16 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
   const [fixedExpenses, setFixedExpenses] = useState<Expense[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+
+  // Mock logged in user as Admin
+  const [currentUser, setCurrentUser] = useState<Employee | null>({
+    id: 'user-1',
+    name: 'Admin Teste',
+    email: 'admin@apexmotors.com',
+    role: 'Admin',
+    createdAt: new Date().toISOString()
+  });
 
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
   const [activeClient, setActiveClient] = useState<Client | null>(null);
@@ -102,6 +116,8 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
 
   return (
     <DataContext.Provider value={{
+      currentUser, setCurrentUser,
+      employees, setEmployees,
       vehicles, setVehicles,
       fixedExpenses, setFixedExpenses,
       startMonth, setStartMonth,
@@ -113,6 +129,9 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
       setContractTemplate,
       clients,
       setClients,
+      employees,
+      setEmployees,
+      currentUser,
       activeClient,
       setActiveClient,
       activeExpense,

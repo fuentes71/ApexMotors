@@ -2,13 +2,15 @@
 
 import { LayoutDashboard, CarFront, Wallet, Settings, LogOut, X, Users } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
 
 export function Sidebar() {
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useData();
   const pathname = usePathname();
+  const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const navItems = [
@@ -16,6 +18,7 @@ export function Sidebar() {
     { id: 'veiculos', href: '/vehicles', label: 'Inventário', icon: CarFront },
     { id: 'clientes', href: '/clients', label: 'Clientes', icon: Users },
     { id: 'financeiro', href: '/finance', label: 'Financeiro', icon: Wallet },
+    { id: 'funcionarios', href: '/employees', label: 'Funcionários', icon: Users },
   ];
 
   const getIsActive = (href: string) => {
@@ -28,9 +31,7 @@ export function Sidebar() {
       {/* --- SIDEBAR (DESKTOP) --- */}
       <aside className="w-64 bg-[#FAFAFA] border-r border-stone-200/60 hidden lg:flex flex-col sticky top-0 h-screen print:hidden z-40">
         <div className="p-6 flex items-center gap-3">
-          <div className="w-7 h-7 bg-stone-900 rounded-md flex items-center justify-center text-white text-xs font-bold shadow-sm">
-            AM
-          </div>
+          <Image src="/logo.jpg" alt="ApexMotors Logo" width={28} height={28} className="rounded-md object-cover" />
           <span className="font-semibold text-[15px] text-stone-900 tracking-tight">ApexMotors</span>
         </div>
         
@@ -83,7 +84,10 @@ export function Sidebar() {
             <Settings size={16} className="text-stone-400" />
             Configurações
           </button>
-          <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1">
+          <button 
+            onClick={() => router.push('/login')}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
+          >
             <LogOut size={16} className="text-rose-400" />
             Sair
           </button>
@@ -97,9 +101,7 @@ export function Sidebar() {
           <aside className="relative w-64 bg-[#FAFAFA] h-full flex flex-col shadow-2xl animate-in slide-in-from-left">
             <div className="p-6 flex items-center justify-between border-b border-stone-200/60">
               <div className="flex items-center gap-3">
-                <div className="w-7 h-7 bg-stone-900 rounded-md flex items-center justify-center text-white text-xs font-bold">
-                  AM
-                </div>
+                <Image src="/logo.jpg" alt="ApexMotors Logo" width={28} height={28} className="rounded-md object-cover" />
                 <span className="font-semibold text-[15px] text-stone-900 tracking-tight">ApexMotors</span>
               </div>
               <button onClick={() => setIsMobileMenuOpen(false)} className="text-stone-400 hover:text-stone-600 p-1">
@@ -159,7 +161,13 @@ export function Sidebar() {
                 <Settings size={16} className="text-stone-400" />
                 Configurações
               </button>
-              <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1">
+              <button 
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  router.push('/login');
+                }}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
+              >
                 <LogOut size={16} className="text-rose-400" />
                 Sair
               </button>

@@ -2,6 +2,7 @@
 
 import { Menu, Download, ChevronDown, Calendar, Check } from "lucide-react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { formatMonth, formatCurrency, calculateTotalFixedForPeriod } from "../utils";
 import { generateStructuredPDF } from "../utils/pdfExport";
 import { useData } from "../context/DataContext";
@@ -113,9 +114,7 @@ export function Header() {
             </button>
           </div>
           <div className="hidden print:flex items-center gap-4 mb-6 pb-6 border-b border-stone-200">
-            <div className="w-12 h-12 bg-stone-900 rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-sm">
-              AM
-            </div>
+            <Image src="/logo.jpg" alt="ApexMotors Logo" width={48} height={48} className="rounded-lg object-cover" />
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-stone-900">Relatório ApexMotors</h1>
               <p className="text-stone-500">{getTitle()} • {startMonth === endMonth ? formatMonth(startMonth) : `${formatMonth(startMonth)} a ${formatMonth(endMonth)}`}</p>

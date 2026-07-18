@@ -59,6 +59,16 @@ export type Vehicle = {
   buyerDoc?: string;
 };
 
+export type Role = "Admin" | "Vendedor";
+
+export interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  createdAt: string;
+}
+
 export interface WhatsAppTemplates {
   lead_interest: string;
   lead_noInterest: string;
