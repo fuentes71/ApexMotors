@@ -2,7 +2,7 @@ import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle, Search, FileWarning,
 import Image from "next/image";
 import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
-import { Vehicle, Expense, Category } from "../types";
+import { Vehicle, Expense, Category, RecurrenceType } from "../types";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { formatCurrency, getCategoryColor, getCategoryIcon } from "../utils";
@@ -555,7 +555,7 @@ export function VehicleModal() {
                     <label className="text-[11px] font-semibold text-stone-500 uppercase mb-1.5 block">Recorrência</label>
                     <select 
                       value={newExpenseRecurrence}
-                      onChange={e => setNewExpenseRecurrence(e.target.value as Expense['recurrence'])}
+                      onChange={e => setNewExpenseRecurrence(e.target.value as RecurrenceType)}
                       className="w-full bg-white outline-none border border-stone-200 rounded-lg px-3.5 py-2 text-sm font-medium text-stone-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer transition-shadow shadow-sm"
                     >
                       <option value="Única">Única</option>
