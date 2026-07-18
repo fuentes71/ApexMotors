@@ -129,8 +129,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
       setContractTemplate,
       clients,
       setClients,
-      employees,
-      setEmployees,
+
       currentUser,
       activeClient,
       setActiveClient,
