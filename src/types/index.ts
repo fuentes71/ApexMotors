@@ -6,6 +6,7 @@ export type Expense = {
   id: string;
   name: string;
   value: number;
+  unitValue?: number;
   category?: Category;
   image?: string;
   recurrence?: RecurrenceType;

@@ -179,7 +179,8 @@ export function VehicleModal() {
   };
 
   const handleAddExpense = () => {
-    if (!newExpenseName || !newExpenseValue) return;
+    const isRecurrent = newExpenseRecurrence !== 'Única';
+    if (!newExpenseName || !newExpenseValue || (isRecurrent && (!newExpenseStartDate || !newExpenseEndDate))) return;
     
     const multiplier = getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate || "");
     const unitValue = Number(newExpenseValue);
@@ -190,6 +191,7 @@ export function VehicleModal() {
       id: newId,
       name: newExpenseName,
       value: totalValue,
+      unitValue: unitValue,
       category: newExpenseCat,
       recurrence: newExpenseRecurrence,
       linkedVehicleId: draftVehicle.id,
@@ -218,9 +220,7 @@ export function VehicleModal() {
 
   const handleEditExpense = (expense: Expense) => {
     setNewExpenseName(expense.name);
-    // Since the stored value is total, if recurrence is not 'Única', this logic is a bit flawed but we show total anyway.
-    // Ideally we should store unitValue. Let's just put the value for now:
-    setNewExpenseValue(expense.value.toString());
+    setNewExpenseValue((expense.unitValue || expense.value).toString());
     setNewExpenseCat(expense.category || "Mecânica");
     setNewExpenseRecurrence(expense.recurrence || "Única");
     setNewExpenseStartDate(expense.startDate || new Date().toISOString().split('T')[0]);
@@ -615,7 +615,7 @@ export function VehicleModal() {
                 <div className="flex justify-end pt-4 border-t border-stone-200">
                   <button 
                     onClick={handleAddExpense}
-                    disabled={!newExpenseName || !newExpenseValue}
+                    disabled={!newExpenseName || !newExpenseValue || (newExpenseRecurrence !== 'Única' && (!newExpenseStartDate || !newExpenseEndDate))}
                     className="w-full sm:w-auto bg-stone-900 disabled:bg-stone-200 disabled:text-stone-400 text-white px-6 py-2.5 rounded-xl hover:bg-stone-800 hover:-translate-y-[1px] active:translate-y-0 transition-all font-semibold flex items-center justify-center gap-2 shadow-sm disabled:shadow-none"
                   >
                     <Plus size={16} /> <span>Adicionar Despesa</span>
