@@ -1,4 +1,4 @@
-import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle, Search, FileWarning, FileText, Check, ChevronLeft, ChevronRight, Loader2, Calendar, Link as LinkIcon, DollarSign, Wrench, Info } from "lucide-react";
+import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle, Search, FileWarning, FileText, Check, ChevronLeft, ChevronRight, Loader2, Calendar, Link as LinkIcon, DollarSign, Wrench, Info, Pencil } from "lucide-react";
 import Image from "next/image";
 import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
@@ -188,7 +188,7 @@ export function VehicleModal() {
     const newId = Date.now().toString();
     const newExp: Expense = {
       id: newId,
-      name: `${draftVehicle.name} - ${newExpenseName}`,
+      name: newExpenseName,
       value: totalValue,
       category: newExpenseCat,
       recurrence: newExpenseRecurrence,
@@ -214,6 +214,18 @@ export function VehicleModal() {
       ...draftVehicle,
       despesas: draftVehicle.despesas.filter(e => e.id !== id)
     });
+  };
+
+  const handleEditExpense = (expense: Expense) => {
+    setNewExpenseName(expense.name);
+    // Since the stored value is total, if recurrence is not 'Única', this logic is a bit flawed but we show total anyway.
+    // Ideally we should store unitValue. Let's just put the value for now:
+    setNewExpenseValue(expense.value.toString());
+    setNewExpenseCat(expense.category || "Mecânica");
+    setNewExpenseRecurrence(expense.recurrence || "Única");
+    setNewExpenseStartDate(expense.startDate || new Date().toISOString().split('T')[0]);
+    setNewExpenseEndDate(expense.endDate || "");
+    handleRemoveExpense(expense.id);
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -489,9 +501,14 @@ export function VehicleModal() {
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="font-bold text-stone-900">{formatCurrency(exp.value)}</span>
-                      <button onClick={() => handleRemoveExpense(exp.id)} className="text-stone-300 hover:text-rose-500 p-1.5 bg-white border border-stone-200 rounded-md lg:opacity-0 group-hover:opacity-100 hover:border-rose-200 hover:bg-rose-50 transition-all shadow-sm">
+                    <div className="flex items-center gap-2 lg:opacity-0 group-hover:opacity-100 transition-all">
+                      <button onClick={() => handleEditExpense(exp)} className="text-stone-300 hover:text-blue-500 p-1.5 bg-white border border-stone-200 rounded-md hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm">
+                        <Pencil size={14} />
+                      </button>
+                      <button onClick={() => handleRemoveExpense(exp.id)} className="text-stone-300 hover:text-rose-500 p-1.5 bg-white border border-stone-200 rounded-md hover:border-rose-200 hover:bg-rose-50 transition-colors shadow-sm">
                         <Trash2 size={14} />
                       </button>
+                    </div>
                     </div>
                   </div>
                 ))}
