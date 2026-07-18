@@ -21,6 +21,17 @@ export function ExpenseModal() {
     }
   }
 
+  const isDirty = JSON.stringify(activeExpense) !== JSON.stringify(draftExpense);
+
+  const handleCloseAttempt = () => {
+    if (isSaving) return;
+    if (isDirty) {
+      handleSave();
+    } else {
+      setActiveExpense(null);
+    }
+  };
+
   const handleSave = async () => {
     if (!draftExpense) return;
     setIsSaving(true);
@@ -48,10 +59,7 @@ export function ExpenseModal() {
   return (
     <div 
       className="fixed inset-0 z-50 flex justify-end bg-stone-900/20 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={() => {
-        if (!isSaving) handleSave();
-        setActiveExpense(null);
-      }}
+      onClick={handleCloseAttempt}
     >
       <div 
         className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
@@ -69,7 +77,7 @@ export function ExpenseModal() {
             </div>
           </div>
           <button 
-            onClick={() => setActiveExpense(null)}
+            onClick={handleCloseAttempt}
             className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-200 rounded-full transition-colors"
           >
             <X size={20} />

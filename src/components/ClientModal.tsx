@@ -27,6 +27,17 @@ export function ClientModal() {
     }
   }
 
+  const isDirty = JSON.stringify(activeClient) !== JSON.stringify(draftClient);
+
+  const handleCloseAttempt = () => {
+    if (isSaving) return;
+    if (isDirty) {
+      handleSave();
+    } else {
+      setActiveClient(null);
+    }
+  };
+
   const handleSave = async () => {
     if (!draftClient) return;
     setIsSaving(true);
@@ -54,10 +65,7 @@ export function ClientModal() {
   return (
     <div 
       className="fixed inset-0 z-50 flex justify-end bg-stone-900/20 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={() => {
-        if (!isSaving) handleSave();
-        setActiveClient(null);
-      }}
+      onClick={handleCloseAttempt}
     >
       <div 
         className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
@@ -75,7 +83,7 @@ export function ClientModal() {
             </div>
           </div>
           <button 
-            onClick={() => setActiveClient(null)}
+            onClick={handleCloseAttempt}
             className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-200 rounded-full transition-colors"
           >
             <X size={20} />
