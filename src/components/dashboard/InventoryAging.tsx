@@ -1,7 +1,7 @@
 import { CalendarDays } from "lucide-react";
 
 interface InventoryAgingProps {
-  data: Record<string, unknown>[];
+  data: { name: string; count: number }[];
   inStockVehiclesCount: number;
 }
 
@@ -18,7 +18,7 @@ export function InventoryAging({ data, inStockVehiclesCount }: InventoryAgingPro
       </div>
       <p className="text-sm text-stone-500 mb-6">Tempo de permanência dos veículos no pátio</p>
       <div className="space-y-4 flex-1 flex flex-col justify-center">
-        {data.map((item: any, i: number) => {
+        {data.map((item, i: number) => {
           const total = inStockVehiclesCount || 1;
           const percentage = Math.round((Number(item.count) / total) * 100);
           let barColor = "bg-emerald-500";

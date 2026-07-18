@@ -25,7 +25,7 @@ export function VehicleModal() {
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpenseValue, setNewExpenseValue] = useState("");
   const [newExpenseCat, setNewExpenseCat] = useState<Category>("Mecânica");
-  const [newExpenseRecurrence, setNewExpenseRecurrence] = useState<Expense["recurrence"]>("Única");
+  const [newExpenseRecurrence, setNewExpenseRecurrence] = useState<NonNullable<Expense["recurrence"]>>("Única");
   const [newExpenseStartDate, setNewExpenseStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [newExpenseEndDate, setNewExpenseEndDate] = useState("");
   const [showConfirmClose, setShowConfirmClose] = useState(false);
@@ -50,7 +50,7 @@ export function VehicleModal() {
     setIsSaving(true);
     try {
       const isNew = draftVehicle.id === "new";
-      let res: any;
+      let res: { data: Vehicle };
       if (isNew) {
         res = await api.post(`/vehicles`, draftVehicle);
         setVehicles([...vehicles, res.data]);
