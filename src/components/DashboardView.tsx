@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FinancialSummary } from "./dashboard/FinancialSummary";
 import { SalesTrendChart } from "./dashboard/SalesTrendChart";
 import { KpiCards } from "./dashboard/KpiCards";
@@ -25,7 +24,7 @@ interface DashboardViewProps {
   avgStockDays: number;
   prevAvgStockDays: number;
   salesTrendData: Record<string, unknown>[];
-  inventoryAgingData: Record<string, unknown>[];
+  inventoryAgingData: { name: string; count: number }[];
 }
 
 export function DashboardView({
