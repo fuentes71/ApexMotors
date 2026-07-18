@@ -24,7 +24,8 @@ export function VehicleModal() {
   const [newExpenseValue, setNewExpenseValue] = useState("");
   const [newExpenseCat, setNewExpenseCat] = useState<Category>("Mecânica");
   const [newExpenseRecurrence, setNewExpenseRecurrence] = useState<Expense["recurrence"]>("Única");
-  const [newExpenseAddToMonthly, setNewExpenseAddToMonthly] = useState(false);
+  const [newExpenseStartDate, setNewExpenseStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [newExpenseEndDate, setNewExpenseEndDate] = useState("");
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -151,18 +152,45 @@ export function VehicleModal() {
     }, 1500);
   };
 
+  const getMultiplier = (recurrence: string, startDate: string, endDate: string) => {
+    if (recurrence === 'Única' || !startDate || !endDate) return 1;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (end < start) return 1;
+    
+    start.setHours(12, 0, 0, 0);
+    end.setHours(12, 0, 0, 0);
+    
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+
+    switch(recurrence) {
+      case 'Diária': return diffDays;
+      case 'Semanal': return Math.ceil(diffDays / 7);
+      case 'Quinzenal': return Math.ceil(diffDays / 15);
+      case 'Mensal': return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+      case 'Anual': return end.getFullYear() - start.getFullYear() + 1;
+      default: return 1;
+    }
+  };
+
   const handleAddExpense = () => {
     if (!newExpenseName || !newExpenseValue) return;
+    
+    const multiplier = getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate);
+    const unitValue = Number(newExpenseValue);
+    const totalValue = unitValue * multiplier;
+    
     const newId = Date.now().toString();
     const newExp: Expense = {
       id: newId,
       name: `${draftVehicle.name} - ${newExpenseName}`,
-      value: Number(newExpenseValue),
+      value: totalValue,
       category: newExpenseCat,
       recurrence: newExpenseRecurrence,
       linkedVehicleId: draftVehicle.id,
-      addToMonthly: newExpenseAddToMonthly,
-      startDate: new Date().toISOString().split('T')[0]
+      startDate: newExpenseStartDate,
+      endDate: newExpenseEndDate || undefined
     };
 
     setDraftVehicle({
@@ -170,23 +198,11 @@ export function VehicleModal() {
       despesas: [...draftVehicle.despesas, newExp]
     });
 
-    if (newExpenseAddToMonthly) {
-      const fixedExp = {
-        id: crypto.randomUUID(),
-        name: newExp.name,
-        value: newExp.value,
-        category: "Outros" as const,
-        dueDate: new Date().toISOString().split('T')[0],
-        isPaid: false,
-        linkedVehicleId: draftVehicle.id
-      };
-      setFixedExpenses([...fixedExpenses, fixedExp]);
-    }
-
     setNewExpenseName("");
     setNewExpenseValue("");
     setNewExpenseRecurrence("Única");
-    setNewExpenseAddToMonthly(false);
+    setNewExpenseStartDate(new Date().toISOString().split('T')[0]);
+    setNewExpenseEndDate("");
   };
 
   const handleRemoveExpense = (id: string) => {
@@ -485,7 +501,7 @@ export function VehicleModal() {
                   <Plus size={14} /> Registrar Nova Despesa
                 </h4>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-5">
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-4">
                   <div className="sm:col-span-5">
                     <label className="text-[11px] font-semibold text-stone-500 uppercase mb-1.5 block">Descrição</label>
                     <input 
@@ -497,17 +513,6 @@ export function VehicleModal() {
                     />
                   </div>
                   
-                  <div className="sm:col-span-3">
-                    <label className="text-[11px] font-semibold text-stone-500 uppercase mb-1.5 block">Valor (R$)</label>
-                    <input 
-                      type="number" 
-                      placeholder="0,00" 
-                      value={newExpenseValue}
-                      onChange={e => setNewExpenseValue(e.target.value)}
-                      className="w-full bg-white outline-none border border-stone-200 rounded-lg px-3.5 py-2 text-sm font-medium focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-shadow shadow-sm"
-                    />
-                  </div>
-
                   <div className="sm:col-span-4">
                     <label className="text-[11px] font-semibold text-stone-500 uppercase mb-1.5 block">Categoria</label>
                     <select 
@@ -522,57 +527,75 @@ export function VehicleModal() {
                       <option value="Outros">Outros</option>
                     </select>
                   </div>
+
+                  <div className="sm:col-span-3">
+                    <label className="text-[11px] font-semibold text-stone-500 uppercase mb-1.5 block">Recorrência</label>
+                    <select 
+                      value={newExpenseRecurrence}
+                      onChange={e => setNewExpenseRecurrence(e.target.value as Expense['recurrence'])}
+                      className="w-full bg-white outline-none border border-stone-200 rounded-lg px-3.5 py-2 text-sm font-medium text-stone-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer transition-shadow shadow-sm"
+                    >
+                      <option value="Única">Única</option>
+                      <option value="Diária">Diária</option>
+                      <option value="Semanal">Semanal</option>
+                      <option value="Quinzenal">Quinzenal</option>
+                      <option value="Mensal">Mensal</option>
+                      <option value="Anual">Anual</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-stone-200 gap-4">
-                  <div className="flex items-center gap-4 flex-wrap h-[32px]">
-                    <label className="flex items-center gap-2.5 cursor-pointer group">
-                      <div className="relative inline-flex items-center h-5 rounded-full w-9">
-                        <input 
-                          type="checkbox" 
-                          checked={newExpenseAddToMonthly}
-                          onChange={e => {
-                            setNewExpenseAddToMonthly(e.target.checked);
-                            if (!e.target.checked) setNewExpenseRecurrence('Única');
-                          }}
-                          className="peer sr-only"
-                        />
-                        <div className="w-9 h-5 bg-stone-200 rounded-full peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/20 peer-checked:bg-blue-600 transition-colors"></div>
-                        <div className="absolute left-[2px] top-[2px] bg-white border border-stone-300 rounded-full h-4 w-4 transition-transform peer-checked:translate-x-[16px] peer-checked:border-white shadow-sm"></div>
-                      </div>
-                      <span className="text-sm font-medium text-stone-600 group-hover:text-stone-900 transition-colors">
-                        Lançar no Financeiro
-                      </span>
-                    </label>
-
-                    {newExpenseAddToMonthly && (
-                      <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left-2 duration-200">
-                        <div className="w-px h-4 bg-stone-300 hidden sm:block"></div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">Recorrência:</span>
-                          <select 
-                            value={newExpenseRecurrence}
-                            onChange={e => setNewExpenseRecurrence(e.target.value as Expense['recurrence'])}
-                            className="bg-transparent outline-none text-sm font-bold text-blue-600 cursor-pointer hover:text-blue-700 transition-colors"
-                          >
-                            <option value="Única">Única</option>
-                            <option value="Diária">Diária</option>
-                            <option value="Semanal">Semanal</option>
-                            <option value="Quinzenal">Quinzenal</option>
-                            <option value="Mensal">Mensal</option>
-                            <option value="Anual">Anual</option>
-                          </select>
-                        </div>
-                      </div>
-                    )}
+                {newExpenseRecurrence !== 'Única' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 p-4 bg-stone-100/50 rounded-xl border border-stone-200 shadow-inner animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div>
+                      <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider mb-1.5 block">Data Início</label>
+                      <input 
+                        type="date"
+                        value={newExpenseStartDate}
+                        onChange={e => setNewExpenseStartDate(e.target.value)}
+                        className="w-full bg-white outline-none border border-stone-200 rounded-lg px-3 py-2 text-sm font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider mb-1.5 block">Data Fim (Necessária p/ Total)</label>
+                      <input 
+                        type="date"
+                        value={newExpenseEndDate}
+                        onChange={e => setNewExpenseEndDate(e.target.value)}
+                        className="w-full bg-white outline-none border border-stone-200 rounded-lg px-3 py-2 text-sm font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      />
+                    </div>
                   </div>
+                )}
 
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-5 items-end">
+                  <div className="sm:col-span-4">
+                    <label className="text-[11px] font-semibold text-stone-500 uppercase mb-1.5 block">
+                      {newExpenseRecurrence === 'Única' ? 'Valor (R$)' : 'Valor Unitário (R$)'}
+                    </label>
+                    <input 
+                      type="number" 
+                      placeholder="0,00" 
+                      value={newExpenseValue}
+                      onChange={e => setNewExpenseValue(e.target.value)}
+                      className="w-full bg-white outline-none border border-stone-200 rounded-lg px-3.5 py-2 text-sm font-medium focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-shadow shadow-sm"
+                    />
+                  </div>
+                  {newExpenseRecurrence !== 'Única' && (
+                    <div className="sm:col-span-8 bg-blue-50 p-3 rounded-lg border border-blue-100 flex flex-col justify-center shadow-sm">
+                      <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider mb-0.5">Total Estimado ({getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate)}x ocorrências)</span>
+                      <span className="text-base font-bold text-blue-900">{formatCurrency(Number(newExpenseValue) * getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate))}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end pt-4 border-t border-stone-200">
                   <button 
                     onClick={handleAddExpense}
                     disabled={!newExpenseName || !newExpenseValue}
-                    className="w-full sm:w-auto bg-stone-900 disabled:bg-stone-200 disabled:text-stone-400 text-white px-5 py-2 rounded-lg hover:bg-stone-800 hover:-translate-y-[1px] active:translate-y-0 transition-all font-semibold flex items-center justify-center gap-2 shadow-sm disabled:shadow-none"
+                    className="w-full sm:w-auto bg-stone-900 disabled:bg-stone-200 disabled:text-stone-400 text-white px-6 py-2.5 rounded-xl hover:bg-stone-800 hover:-translate-y-[1px] active:translate-y-0 transition-all font-semibold flex items-center justify-center gap-2 shadow-sm disabled:shadow-none"
                   >
-                    <Plus size={16} /> <span>Adicionar</span>
+                    <Plus size={16} /> <span>Adicionar Despesa</span>
                   </button>
                 </div>
               </div>
