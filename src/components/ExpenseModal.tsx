@@ -6,12 +6,14 @@ import { useState } from "react";
 import { Expense, RecurrenceType, Category } from "../types";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
+import { useConfirm } from "../context/ConfirmContext";
 import { DateInput } from "./DateInput";
 import { toISODate } from "../utils";
 
 export function ExpenseModal() {
   const { activeExpense, setActiveExpense, fixedExpenses, setFixedExpenses } = useData();
   const { showToast } = useToast();
+  const { confirm: confirmAction } = useConfirm();
   const [draftExpense, setDraftExpense] = useState<Expense | null>(null);
   const [prevActiveExpense, setPrevActiveExpense] = useState<Expense | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -28,10 +30,18 @@ export function ExpenseModal() {
 
   const isDirty = JSON.stringify(activeExpense) !== JSON.stringify(draftExpense);
 
-  const handleCloseAttempt = () => {
+  const handleCloseAttempt = async () => {
     if (isSaving) return;
     if (isDirty) {
-      handleSave();
+      const isConfirmed = await confirmAction({
+        title: "Descartar alterações?",
+        message: "Você tem alterações não salvas. Tem certeza que deseja fechar sem salvar?",
+        confirmText: "Sim, descartar",
+        cancelText: "Continuar editando"
+      });
+      if (isConfirmed) {
+        setActiveExpense(null);
+      }
     } else {
       setActiveExpense(null);
     }
@@ -61,10 +71,6 @@ export function ExpenseModal() {
       showError("startDate", "A data de início é obrigatória.");
       hasError = true;
     }
-    if (!draftExpense.recurrence) {
-      showError("recurrence", "A recorrência é obrigatória.");
-      hasError = true;
-    }
 
     if (hasError) return;
 
@@ -73,6 +79,7 @@ export function ExpenseModal() {
       const isNew = !draftExpense.id;
       
       const payload: any = { ...draftExpense };
+      payload.recurrence = payload.recurrence || 'Mensal';
       payload.value = Number(payload.value) || 0;
       payload.startDate = toISODate(payload.startDate);
       payload.endDate = toISODate(payload.endDate) || null;
