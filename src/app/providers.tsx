@@ -9,6 +9,7 @@ import { VehicleModal } from "../components/VehicleModal";
 import { ClientModal } from "../components/ClientModal";
 import { ExpenseModal } from "../components/ExpenseModal";
 import { EmployeeModal } from "../components/EmployeeModal";
+import { AuthGuard } from "../components/AuthGuard";
 import { defaultTenant } from "../utils/tenantConfig";
 
 import { ConfirmProvider } from "../context/ConfirmContext";
@@ -26,14 +27,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
           {isAuthPage ? (
             children
           ) : (
-            <div className="flex min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-blue-100 print:bg-white">
-              <Sidebar />
-              {children}
-              <VehicleModal />
-              <ClientModal />
-              <ExpenseModal />
-              <EmployeeModal />
-            </div>
+            <AuthGuard>
+              <div className="flex min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-blue-100 print:bg-white">
+                <Sidebar />
+                {children}
+                <VehicleModal />
+                <ClientModal />
+                <ExpenseModal />
+                <EmployeeModal />
+              </div>
+            </AuthGuard>
           )}
         </DataProvider>
       </ConfirmProvider>

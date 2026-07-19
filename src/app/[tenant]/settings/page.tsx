@@ -4,6 +4,7 @@ import { useData } from "@/context/DataContext";
 import { Header } from "@/components/Header";
 import { Settings as SettingsIcon, FileText, Info, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { AdminGuard } from "@/components/AdminGuard";
 
 export default function SettingsPage() {
   const { contractTemplate, setContractTemplate, whatsappTemplates, setWhatsappTemplates } = useData();
@@ -32,9 +33,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 pb-20 print:pb-0 h-screen overflow-y-auto bg-white">
-      <Header />
-      <main className="p-6 lg:p-10 max-w-4xl mx-auto w-full">
+    <AdminGuard>
+      <div className="flex-1 flex flex-col min-w-0 pb-20 print:pb-0 h-screen overflow-y-auto bg-white">
+        <Header />
+        <main className="p-6 lg:p-10 max-w-4xl mx-auto w-full">
         <div className="flex items-center gap-3 mb-8">
           <div className="p-3 bg-stone-100 text-stone-700 rounded-xl">
             <SettingsIcon size={24} />
@@ -199,5 +201,6 @@ export default function SettingsPage() {
         </section>
       </main>
     </div>
+    </AdminGuard>
   );
 }

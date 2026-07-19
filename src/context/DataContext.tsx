@@ -11,6 +11,7 @@ interface DataContextType {
   tenantConfig: TenantConfig;
   currentUser: Employee | null;
   setCurrentUser: Dispatch<SetStateAction<Employee | null>>;
+  isLoadingAuth: boolean;
   employees: Employee[];
   setEmployees: Dispatch<SetStateAction<Employee[]>>;
   vehicles: Vehicle[];
@@ -100,6 +101,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
 
   // Authenticated user
   const [currentUser, setCurrentUser] = useState<Employee | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
   const [activeClient, setActiveClient] = useState<Client | null>(null);
@@ -131,6 +133,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
           setAuthToken(null);
         }
       }
+      setIsLoadingAuth(false);
     };
     checkAuth();
   }, []);
@@ -142,6 +145,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
     <DataContext.Provider value={{
       tenantId, tenantConfig,
       currentUser, setCurrentUser,
+      isLoadingAuth,
       employees, setEmployees,
       vehicles, setVehicles,
       fixedExpenses, setFixedExpenses,

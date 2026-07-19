@@ -8,7 +8,7 @@ import { useData } from "../context/DataContext";
 import { useState } from "react";
 
 export function Sidebar() {
-  const { isMobileMenuOpen, setIsMobileMenuOpen, tenantId, tenantConfig } = useData();
+  const { isMobileMenuOpen, setIsMobileMenuOpen, tenantId, tenantConfig, currentUser } = useData();
   const pathname = usePathname();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -18,8 +18,11 @@ export function Sidebar() {
     { id: 'veiculos', href: `/${tenantId}/vehicles`, label: 'Inventário', icon: CarFront },
     { id: 'clientes', href: `/${tenantId}/clients`, label: 'Clientes', icon: Users },
     { id: 'financeiro', href: `/${tenantId}/finance`, label: 'Financeiro', icon: Wallet },
-    { id: 'funcionarios', href: `/${tenantId}/employees`, label: 'Funcionários', icon: Users },
   ];
+
+  if (currentUser?.role === 'Admin') {
+    navItems.push({ id: 'funcionarios', href: `/${tenantId}/employees`, label: 'Funcionários', icon: Users });
+  }
 
   const getIsActive = (href: string) => {
     if (href === `/${tenantId}`) return pathname === `/${tenantId}`;
@@ -77,13 +80,15 @@ export function Sidebar() {
             </div>
           )}
 
-          <button 
-            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
-          >
-            <Settings size={16} className="text-stone-400" />
-            Configurações
-          </button>
+          {currentUser?.role === 'Admin' && (
+            <button 
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
+            >
+              <Settings size={16} className="text-stone-400" />
+              Configurações
+            </button>
+          )}
           <button 
             onClick={() => router.push(`/${tenantId}/login`)}
             className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
@@ -154,13 +159,15 @@ export function Sidebar() {
                 </div>
               )}
 
-              <button 
-                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
-              >
-                <Settings size={16} className="text-stone-400" />
-                Configurações
-              </button>
+              {currentUser?.role === 'Admin' && (
+                <button 
+                  onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
+                >
+                  <Settings size={16} className="text-stone-400" />
+                  Configurações
+                </button>
+              )}
               <button 
                 onClick={() => {
                   setIsMobileMenuOpen(false);
