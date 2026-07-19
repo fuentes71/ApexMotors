@@ -210,7 +210,7 @@ export function ExpenseModal() {
             <div>
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Categoria</label>
               <select 
-                value={draftExpense.category}
+                value={draftExpense.category || ""}
                 onChange={e => setDraftExpense({...draftExpense, category: e.target.value as Category})}
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
               >
