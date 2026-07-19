@@ -188,3 +188,9 @@ export const generateWhatsAppLink = (client: Client, withMessage: boolean = true
   const encodedMessage = encodeURIComponent(message);
   return `https://wa.me/${fullPhone}?text=${encodedMessage}`;
 };
+
+export const toISODate = (dateStr?: string | null): string | null => {
+  if (!dateStr) return null;
+  if (dateStr.includes('T')) return dateStr;
+  return `T12:00:00.000Z`;
+};

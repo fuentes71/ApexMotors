@@ -7,6 +7,7 @@ import { Expense, RecurrenceType, Category } from "../types";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { DateInput } from "./DateInput";
+import { toISODate } from "../utils";
 
 export function ExpenseModal() {
   const { activeExpense, setActiveExpense, fixedExpenses, setFixedExpenses } = useData();
@@ -71,8 +72,11 @@ export function ExpenseModal() {
     try {
       const isNew = !draftExpense.id;
       
-      const payload = { ...draftExpense };
+      const payload: any = { ...draftExpense };
       payload.value = Number(payload.value) || 0;
+      payload.startDate = toISODate(payload.startDate);
+      payload.endDate = toISODate(payload.endDate) || null;
+      if (payload.dueDate) payload.dueDate = toISODate(new Date(new Date().getFullYear(), new Date().getMonth(), Number(payload.dueDate)).toISOString().split('T')[0]);
 
       if (isNew) {
         delete payload.id;

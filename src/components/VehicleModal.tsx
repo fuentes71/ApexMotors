@@ -8,7 +8,7 @@ import { Vehicle, Expense, Category, RecurrenceType } from "../types";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { DateInput } from "./DateInput";
-import { formatCurrency, getCategoryColor, getCategoryIcon } from "../utils";
+import { formatCurrency, getCategoryColor, getCategoryIcon, toISODate } from "../utils";
 import { generateContractPDF } from "../utils/pdfExport";
 
 export function VehicleModal() {
@@ -109,6 +109,16 @@ export function VehicleModal() {
       const payload = { ...draftVehicle };
       payload.purchaseValue = Number(payload.purchaseValue) || 0;
       payload.saleValue = Number(payload.saleValue) || 0;
+      payload.entryDate = toISODate(payload.entryDate) || payload.entryDate;
+      if (payload.saleDate) payload.saleDate = toISODate(payload.saleDate);
+      
+      if (payload.expenses?.length) {
+        payload.expenses = payload.expenses.map((exp: any) => ({
+          ...exp,
+          startDate: toISODate(exp.startDate),
+          endDate: toISODate(exp.endDate) || null,
+        }));
+      }
 
       if (!payload.buyerDoc) delete payload.buyerDoc;
       if (!payload.buyerName) delete payload.buyerName;
@@ -227,7 +237,7 @@ export function VehicleModal() {
 
   const handleAddExpense = () => {
     const isRecurrent = newExpenseRecurrence !== 'Única';
-    if (!newExpenseName || !newExpenseValue || (isRecurrent && (!newExpenseStartDate || !newExpenseEndDate))) return;
+    if (!newExpenseName || !newExpenseValue || (isRecurrent && !newExpenseStartDate)) return;
 
     const multiplier = getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate || "");
     const unitValue = Number(newExpenseValue);
@@ -243,7 +253,7 @@ export function VehicleModal() {
       recurrence: newExpenseRecurrence,
       linkedVehicleId: draftVehicle.id,
       startDate: newExpenseStartDate,
-      endDate: newExpenseEndDate || undefined
+      endDate: newExpenseEndDate || null
     };
 
     setDraftVehicle({
@@ -639,7 +649,7 @@ export function VehicleModal() {
                           />
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider mb-1.5 block">Data Fim (Necessária p/ Total)</label>
+                          <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider mb-1.5 block">Data Fim (Opcional)</label>
                             <DateInput
                               value={newExpenseEndDate}
                               onChangeDate={val => setNewExpenseEndDate(val)}
@@ -675,7 +685,7 @@ export function VehicleModal() {
                     <div className="flex justify-end pt-4 border-t border-stone-200">
                       <button
                         onClick={handleAddExpense}
-                        disabled={!newExpenseName || !newExpenseValue || (newExpenseRecurrence !== 'Única' && (!newExpenseStartDate || !newExpenseEndDate))}
+                        disabled={!newExpenseName || !newExpenseValue || (newExpenseRecurrence !== 'Única' && !newExpenseStartDate)}
                         className="w-full sm:w-auto bg-stone-900 disabled:bg-stone-200 disabled:text-stone-400 text-white px-6 py-2.5 rounded-xl hover:bg-stone-800 hover:-translate-y-[1px] active:translate-y-0 transition-all font-semibold flex items-center justify-center gap-2 shadow-sm disabled:shadow-none"
                       >
                         <Plus size={16} /> <span>Adicionar Despesa</span>

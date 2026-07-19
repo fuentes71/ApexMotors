@@ -5,6 +5,7 @@ import { Employee, Role } from "../types";
 import { useToast } from "../context/ToastContext";
 import api from "../services/api";
 import { DateInput } from "./DateInput";
+import { toISODate } from "../utils";
 
 export function EmployeeModal() {
   const { activeEmployee, setActiveEmployee, employees, setEmployees } = useData();
@@ -66,6 +67,7 @@ export function EmployeeModal() {
       const isNew = !draftEmployee.id;
       let res;
       const payload = { ...draftEmployee };
+      if (payload.createdAt) payload.createdAt = toISODate(payload.createdAt);
 
       if (isNew) {
         delete payload.id;
