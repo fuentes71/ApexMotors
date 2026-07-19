@@ -11,7 +11,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoadingAuth && currentUser && currentUser.role !== 'Admin') {
-      router.push(/);
+      router.push(`/${tenantId}`);
     }
   }, [isLoadingAuth, currentUser, router, tenantId]);
 

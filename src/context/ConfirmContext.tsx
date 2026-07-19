@@ -44,52 +44,53 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     <ConfirmContext.Provider value={{ confirm }}>
       {children}
       {isOpen && options && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" onClick={handleCancel}></div>
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6">
-              <div className="flex items-start gap-4">
-                <div className={`flex-shrink-0 p-3 rounded-full ${
-                  options.type === 'danger' ? 'bg-rose-100 text-rose-600' :
-                  options.type === 'warning' ? 'bg-amber-100 text-amber-600' :
-                  'bg-blue-100 text-blue-600'
-                }`}>
-                  {options.type === 'danger' && <Trash2 size={24} />}
-                  {options.type === 'warning' && <AlertTriangle size={24} />}
-                  {(!options.type || options.type === 'info') && <Info size={24} />}
-                </div>
-                <div className="flex-1 mt-1">
-                  <h3 className="text-lg font-bold text-stone-900">
-                    {options.title || "Confirmar ação"}
-                  </h3>
-                  <p className="mt-2 text-sm text-stone-500 leading-relaxed">
-                    {options.message}
-                  </p>
-                </div>
-                <button 
-                  onClick={handleCancel}
-                  className="text-stone-400 hover:text-stone-600 hover:bg-stone-100 p-1.5 rounded-lg transition-colors"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="bg-stone-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-stone-100">
-              <button
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-md" onClick={handleCancel}></div>
+          <div className="relative bg-white/90 backdrop-blur-xl border border-white/50 rounded-3xl p-8 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.15)] w-full max-w-md animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+            <div className="absolute top-4 right-4">
+              <button 
                 onClick={handleCancel}
-                className="px-4 py-2 text-sm font-semibold text-stone-600 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 hover:text-stone-900 transition-colors shadow-sm"
+                className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100/80 rounded-full transition-all"
               >
-                {options.cancelText || "Cancelar"}
+                <X size={20} />
               </button>
+            </div>
+            
+            <div className="flex flex-col items-center text-center mb-8">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg mb-5 text-white ${
+                  options.type === 'danger' ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-rose-500/30' :
+                  options.type === 'warning' ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-amber-500/30' :
+                  'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/30'
+                }`}>
+                {options.type === 'danger' && <Trash2 size={32} />}
+                {options.type === 'warning' && <AlertTriangle size={32} />}
+                {(!options.type || options.type === 'info') && <Info size={32} />}
+              </div>
+              <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-stone-900 to-stone-600 mb-3">
+                {options.title || "Confirmar ação"}
+              </h3>
+              <p className="text-stone-500 text-sm leading-relaxed px-4">
+                {options.message}
+              </p>
+            </div>
+            
+            <div className="flex flex-col gap-3">
               <button
                 onClick={handleConfirm}
-                className={`px-4 py-2 text-sm font-semibold text-white rounded-xl shadow-sm transition-colors ${
-                  options.type === 'danger' ? 'bg-rose-600 hover:bg-rose-700' :
-                  options.type === 'warning' ? 'bg-amber-600 hover:bg-amber-700' :
-                  'bg-blue-600 hover:bg-blue-700'
+                className={`relative overflow-hidden w-full px-4 py-3.5 rounded-2xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5 cursor-pointer flex justify-center items-center ${
+                  options.type === 'danger' ? 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 shadow-rose-500/25' :
+                  options.type === 'warning' ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-500/25' :
+                  'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25'
                 }`}
               >
-                {options.confirmText || "Confirmar"}
+                <span className="drop-shadow-sm">{options.confirmText || "Confirmar"}</span>
+              </button>
+              
+              <button
+                onClick={handleCancel}
+                className="w-full px-4 py-3 rounded-2xl font-semibold text-stone-600 hover:text-stone-900 bg-stone-100/80 hover:bg-stone-200/80 backdrop-blur-sm transition-all cursor-pointer"
+              >
+                {options.cancelText || "Cancelar"}
               </button>
             </div>
           </div>

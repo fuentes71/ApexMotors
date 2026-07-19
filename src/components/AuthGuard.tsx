@@ -11,7 +11,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoadingAuth && !currentUser) {
-      router.push(//login);
+      router.push(`/${tenantId}/login`);
     }
   }, [isLoadingAuth, currentUser, router, tenantId]);
 

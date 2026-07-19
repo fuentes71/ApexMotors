@@ -1,17 +1,27 @@
 "use client";
 
-import { LayoutDashboard, CarFront, Wallet, Settings, LogOut, X, Users } from "lucide-react";
+import { LayoutDashboard, CarFront, Settings, LogOut, X, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
+import { setAuthToken } from "../services/api";
 
 export function Sidebar() {
-  const { isMobileMenuOpen, setIsMobileMenuOpen, tenantId, tenantConfig, currentUser } = useData();
+  const { isMobileMenuOpen, setIsMobileMenuOpen, tenantId, tenantConfig, currentUser, setCurrentUser } = useData();
   const pathname = usePathname();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const handleLogout = () => {
+    setAuthToken(null);
+    setCurrentUser(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('@apexMotors:whatsappTemplates_v2');
+    }
+    router.push(`/${tenantId}/login`);
+  };
   
   const navItems = [
     { id: 'dashboard', href: `/${tenantId}`, label: 'Dashboard', icon: LayoutDashboard },
@@ -90,7 +100,7 @@ export function Sidebar() {
             </button>
           )}
           <button 
-            onClick={() => router.push(`/${tenantId}/login`)}
+            onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
           >
             <LogOut size={16} className="text-rose-400" />
@@ -171,7 +181,7 @@ export function Sidebar() {
               <button 
                 onClick={() => {
                   setIsMobileMenuOpen(false);
-                  router.push(`/${tenantId}/login`);
+                  handleLogout();
                 }}
                 className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
               >

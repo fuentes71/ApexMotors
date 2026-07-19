@@ -26,11 +26,43 @@ export const setAuthToken = (token: string | null) => {
   }
 };
 
+export const setTenantSlug = (slug: string) => {
+  api.defaults.headers.common['x-tenant-slug'] = slug;
+  authApi.defaults.headers.common['x-tenant-slug'] = slug;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('@apexMotors:tenant', slug);
+  }
+};
+
+if (typeof window !== 'undefined') {
+  const storedTenant = localStorage.getItem('@apexMotors:tenant');
+  if (storedTenant) {
+    api.defaults.headers.common['x-tenant-slug'] = storedTenant;
+    authApi.defaults.headers.common['x-tenant-slug'] = storedTenant;
+  }
+}
+
 let activeRequests = 0;
 
 const handleRequestStart = (config: any) => {
   activeRequests++;
   if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('@apexMotors:token');
+    const tenant = localStorage.getItem('@apexMotors:tenant');
+    if (token) {
+      if (typeof config.headers.set === 'function') {
+        config.headers.set('Authorization', `Bearer ${token}`);
+      } else {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    if (tenant) {
+      if (typeof config.headers.set === 'function') {
+        config.headers.set('x-tenant-slug', tenant);
+      } else {
+        config.headers['x-tenant-slug'] = tenant;
+      }
+    }
     window.dispatchEvent(new Event('api-load-start'));
   }
   return config;
@@ -51,7 +83,13 @@ const handleError = (error: any) => {
   }
   if (error.response?.status === 401) {
     // Optionally handle unauthorized (e.g., redirect to login)
-    setAuthToken(null);
+    if (typeof window !== 'undefined') {
+      setAuthToken(null);
+      const tenant = localStorage.getItem('@apexMotors:tenant');
+      if (tenant && !window.location.pathname.includes('/login')) {
+        window.location.href = `/${tenant}/login`;
+      }
+    }
   }
   return Promise.reject(error);
 };

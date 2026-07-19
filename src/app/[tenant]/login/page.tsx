@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CarFront, Mail, Lock, Loader2, ArrowRight, Shield, User, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
@@ -11,26 +11,30 @@ import { jwtDecode } from "jwt-decode";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setCurrentUser, tenantId, tenantConfig } = useData();
+  const { setCurrentUser, tenantId, tenantConfig, currentUser, isLoadingAuth, fetchData } = useData();
+  
+  useEffect(() => {
+    if (!isLoadingAuth && currentUser) {
+      router.push(`/${tenantId}`);
+    }
+  }, [isLoadingAuth, currentUser, tenantId, router]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+        <Loader2 size={40} className="animate-spin text-white opacity-50" />
+      </div>
+    );
+  }
 
-  const handleMockLogin = (role: 'Admin' | 'Seller') => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setCurrentUser({
-        id: 'user-' + Date.now(),
-        name: role === 'Admin' ? 'Admin (Mock)' : 'Vendedor (Mock)',
-        email: role === 'Admin' ? 'admin@apexmotors.com' : 'vendedor@apexmotors.com',
-        role,
-        createdAt: new Date().toISOString()
-      });
-      setIsLoading(false);
-      router.push(`/${tenantId}`);
-    }, 800);
-  };
+  if (currentUser) {
+    return null;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +58,8 @@ export default function LoginPage() {
         role: decoded.role || 'Seller',
         createdAt: new Date().toISOString()
       });
+      
+      await fetchData();
       
       router.push(`/${tenantId}`);
     } catch (error) {
@@ -186,34 +192,6 @@ export default function LoginPage() {
                 </button>
               </div>
             </form>
-
-            <div className="mt-10 relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-stone-200"></div>
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-4 text-stone-400 font-bold uppercase tracking-widest">Contas de Teste</span>
-              </div>
-            </div>
-
-            <div className="mt-8 grid grid-cols-2 gap-3">
-              <button 
-                type="button" 
-                onClick={() => handleMockLogin('Admin')} 
-                className="flex flex-col items-center justify-center gap-1.5 py-3.5 px-4 bg-white border border-stone-200 hover:border-stone-300 hover:bg-stone-50 text-stone-700 text-sm font-bold rounded-2xl transition-all shadow-sm"
-              >
-                <Shield size={18} className="text-stone-400" />
-                <span>Logar como Admin</span>
-              </button>
-              <button 
-                type="button" 
-                onClick={() => handleMockLogin('Seller')} 
-                className="flex flex-col items-center justify-center gap-1.5 py-3.5 px-4 bg-indigo-50/50 border border-indigo-100 hover:border-indigo-200 hover:bg-indigo-50 text-indigo-700 text-sm font-bold rounded-2xl transition-all shadow-sm"
-              >
-                <User size={18} className="text-indigo-400" />
-                <span>Logar Vendedor</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>

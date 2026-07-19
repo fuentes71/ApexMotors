@@ -17,11 +17,10 @@ export default function VeiculosPage() {
     return v.entryDate <= `${endMonth}-31`;
   });
 
-  const handleAddVehicle = async () => {
+  const handleAddVehicle = () => {
     const newV: Vehicle = {
-      id: Date.now().toString(),
-      name: "Novo Veículo",
-      description: "Adicione uma descrição",
+      name: "",
+      description: "",
       image: "",
       gallery: [],
       purchaseValue: 0,
@@ -30,16 +29,7 @@ export default function VeiculosPage() {
       status: "Em Estoque",
       entryDate: new Date().toISOString().split('T')[0]
     };
-    try {
-      const res = await api.post('/vehicles', newV);
-      setVehicles([...vehicles, res.data]);
-      setActiveVehicle(res.data);
-    } catch (e) {
-      console.error(e);
-      // Fallback local
-      setVehicles([...vehicles, newV]);
-      setActiveVehicle(newV);
-    }
+    setActiveVehicle(newV);
   };
 
   return (

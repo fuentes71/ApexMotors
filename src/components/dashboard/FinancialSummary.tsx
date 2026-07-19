@@ -2,6 +2,8 @@ import { DollarSign, Wallet, PiggyBank, TrendingUp } from "lucide-react";
 import { formatCurrency } from "../../utils";
 import { TrendIndicator } from "./TrendIndicator";
 import { Tooltip } from "../ui/Tooltip";
+import Link from "next/link";
+import { useData } from "../../context/DataContext";
 
 interface FinancialSummaryProps {
   netBalance: number;
@@ -17,9 +19,11 @@ export function FinancialSummary({
   totalVehicleProfit, prevTotalVehicleProfit, 
   totalFixed, prevTotalFixed
 }: FinancialSummaryProps) {
+  const { tenantId } = useData();
+
   return (
     <div className="lg:col-span-4 flex flex-col gap-6">
-      <div className="bg-gradient-to-br from-stone-900 via-stone-800 to-stone-950 rounded-3xl p-8 flex flex-col relative overflow-hidden group shadow-2xl shadow-stone-900/10 border border-stone-800 min-w-0">
+      <Link href={`/${tenantId}/finance`} className="bg-gradient-to-br from-stone-900 via-stone-800 to-stone-950 rounded-3xl p-8 flex flex-col relative overflow-hidden group shadow-2xl shadow-stone-900/10 border border-stone-800 min-w-0 cursor-pointer hover:border-stone-600 transition-colors">
         <div className="absolute -top-6 -right-6 p-4 opacity-5 transform group-hover:scale-110 group-hover:-rotate-6 transition-all duration-700 ease-out pointer-events-none">
           <DollarSign size={160} />
         </div>
@@ -42,10 +46,10 @@ export function FinancialSummary({
             <p className="text-sm text-stone-400 mt-2 w-full truncate">Saldo líquido do período atual</p>
           </Tooltip>
         </div>
-      </div>
+      </Link>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
-        <div className="bg-white rounded-3xl p-6 flex flex-col border border-stone-100 shadow-sm hover:shadow-md transition-shadow min-w-0">
+        <Link href={`/${tenantId}/vehicles`} className="bg-white rounded-3xl p-6 flex flex-col border border-stone-100 shadow-sm hover:shadow-md transition-shadow min-w-0 cursor-pointer hover:border-blue-200">
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-3 w-full min-w-0 pr-4">
               <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600 flex-shrink-0">
@@ -62,9 +66,9 @@ export function FinancialSummary({
               <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate w-full">{formatCurrency(totalVehicleProfit)}</p>
             </Tooltip>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-3xl p-6 flex flex-col border border-stone-100 shadow-sm hover:shadow-md transition-shadow min-w-0">
+        <Link href={`/${tenantId}/finance`} className="bg-white rounded-3xl p-6 flex flex-col border border-stone-100 shadow-sm hover:shadow-md transition-shadow min-w-0 cursor-pointer hover:border-blue-200">
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-3 w-full min-w-0 pr-4">
               <div className="p-2 bg-rose-50 rounded-xl text-rose-600 flex-shrink-0">
@@ -81,7 +85,7 @@ export function FinancialSummary({
               <p className="text-2xl sm:text-3xl font-bold text-stone-900 mt-3 tracking-tight truncate w-full">{formatCurrency(totalFixed)}</p>
             </Tooltip>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   );

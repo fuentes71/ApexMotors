@@ -65,11 +65,38 @@ export function Header() {
   const isVehicles = pathname.includes('/vehicles');
 
   // --- Lista Dinâmica de Meses para o Filtro ---
-  const monthOptions = Array.from({length: 12}).map((_, i) => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 11 + i);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  let minMonth = new Date().toISOString().substring(0, 7);
+  
+  vehicles.forEach(v => {
+    const entryM = v.entryDate?.substring(0, 7);
+    if (entryM && entryM < minMonth) minMonth = entryM;
+    if (v.saleDate) {
+      const saleM = v.saleDate.substring(0, 7);
+      if (saleM < minMonth) minMonth = saleM;
+    }
   });
+
+  fixedExpenses.forEach(e => {
+    if (e.dueDate) {
+      const dueM = e.dueDate.substring(0, 7);
+      if (dueM < minMonth) minMonth = dueM;
+    }
+  });
+
+  const currentMonth = new Date().toISOString().substring(0, 7);
+  const monthOptions: string[] = [];
+  
+  let current = new Date(minMonth + '-02'); // dia 02 para evitar fuso
+  const end = new Date(currentMonth + '-02');
+  
+  while (current <= end) {
+    monthOptions.push(`${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`);
+    current.setMonth(current.getMonth() + 1);
+  }
+  
+  if (monthOptions.length === 0) {
+    monthOptions.push(currentMonth);
+  }
 
   const filteredVehicles = vehicles.filter(v => {
     if (v.status === "Vendido" && v.saleDate) {
