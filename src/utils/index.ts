@@ -62,12 +62,12 @@ export const calculateTotalFixedForPeriod = (expenses: Expense[], startMonth: st
       return;
     }
     
-    const [sy, sm, sd] = exp.startDate.split('-');
+    const [sy, sm, sd] = exp.startDate.split('T')[0].split('-');
     const current = new Date(Number(sy), Number(sm) - 1, Number(sd), 12, 0, 0);
 
     let endBound = rangeEnd;
     if (exp.endDate) {
-       const [edy, edm, edd] = exp.endDate.split('-');
+       const [edy, edm, edd] = exp.endDate.split('T')[0].split('-');
        endBound = new Date(Number(edy), Number(edm) - 1, Number(edd), 23, 59, 59);
     }
     const maxDate = endBound > rangeEnd ? rangeEnd : endBound;
