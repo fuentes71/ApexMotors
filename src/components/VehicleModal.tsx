@@ -286,14 +286,20 @@ export function VehicleModal() {
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
-    const url = URL.createObjectURL(e.target.files[0]);
-    setDraftVehicle({
-      ...draftVehicle,
-      image: draftVehicle.image || url,
-      gallery: [...draftVehicle.gallery, url]
-    });
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Str = reader.result as string;
+      setDraftVehicle({
+        ...draftVehicle,
+        image: draftVehicle.image || base64Str,
+        gallery: [...draftVehicle.gallery, base64Str]
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCloseAttempt = () => {

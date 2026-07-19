@@ -250,8 +250,11 @@ export function ExpenseModal() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const url = URL.createObjectURL(file);
-                        setDraftExpense({...draftExpense, image: url});
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setDraftExpense({...draftExpense, image: reader.result as string});
+                        };
+                        reader.readAsDataURL(file);
                       }
                     }} 
                     className="absolute inset-0 opacity-0 cursor-pointer" 
