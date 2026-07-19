@@ -6,6 +6,8 @@ import { CarFront, Mail, Lock, Loader2, ArrowRight, Shield, User, Eye, EyeOff } 
 import Image from "next/image";
 import Link from "next/link";
 import { useData } from "@/context/DataContext";
+import { authApi, setAuthToken } from "@/services/api";
+import { jwtDecode } from "jwt-decode";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,11 +35,32 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    
+    try {
+      const response = await authApi.post('/auth/login', {
+        email,
+        password
+      });
+      
+      const token = response.data.access_token;
+      setAuthToken(token);
+      
+      // Decode JWT to get user info
+      const decoded: any = jwtDecode(token);
+      setCurrentUser({
+        id: decoded.sub,
+        name: decoded.name || 'User',
+        email: decoded.email,
+        role: decoded.role || 'Seller',
+        createdAt: new Date().toISOString()
+      });
+      
       router.push(`/${tenantId}`);
-    }, 1200);
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Falha no login. Verifique suas credenciais.");
+      setIsLoading(false);
+    }
   };
 
   return (

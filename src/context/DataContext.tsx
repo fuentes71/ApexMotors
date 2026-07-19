@@ -3,7 +3,8 @@
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from "react";
 import { Vehicle, Expense, Client, WhatsAppTemplates, Employee, Role } from "../types";
 import { getTenantConfig, TenantConfig } from "../utils/tenantConfig";
-import api from "../services/api";
+import api, { setAuthToken } from "../services/api";
+import { jwtDecode } from "jwt-decode";
 
 interface DataContextType {
   tenantId: string;
@@ -97,14 +98,8 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
   const [clients, setClients] = useState<Client[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
 
-  // Mock logged in user as Admin
-  const [currentUser, setCurrentUser] = useState<Employee | null>({
-    id: 'user-1',
-    name: 'Admin Teste',
-    email: 'admin@apexmotors.com',
-    role: 'Admin',
-    createdAt: new Date().toISOString()
-  });
+  // Authenticated user
+  const [currentUser, setCurrentUser] = useState<Employee | null>(null);
 
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
   const [activeClient, setActiveClient] = useState<Client | null>(null);
@@ -112,10 +107,32 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
   const [activeEmployee, setActiveEmployee] = useState<Employee | null>(null);
 
   useEffect(() => {
-    // Fetch initial data from mock API
-    api.get('/vehicles').then(res => setVehicles(res.data)).catch(console.error);
-    api.get('/expenses').then(res => setFixedExpenses(res.data)).catch(console.error);
-    api.get('/clients').then(res => setClients(res.data)).catch(console.error);
+    // Check local storage for token on mount
+    const checkAuth = async () => {
+      const token = localStorage.getItem('@apexMotors:token');
+      if (token) {
+        try {
+          const decoded: any = jwtDecode(token);
+          setAuthToken(token);
+          setCurrentUser({
+            id: decoded.sub,
+            name: decoded.name || 'User',
+            email: decoded.email,
+            role: decoded.role || 'Seller',
+            createdAt: new Date().toISOString()
+          });
+          
+          // Fetch initial data from real API since we are authenticated
+          api.get('/vehicles').then(res => setVehicles(res.data)).catch(console.error);
+          api.get('/expenses').then(res => setFixedExpenses(res.data)).catch(console.error);
+          api.get('/clients').then(res => setClients(res.data)).catch(console.error);
+        } catch (e) {
+          console.error("Invalid token:", e);
+          setAuthToken(null);
+        }
+      }
+    };
+    checkAuth();
   }, []);
 
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
