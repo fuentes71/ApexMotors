@@ -190,7 +190,7 @@ export function ExpenseModal() {
                 {errors.value && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.value}</p>}
               </div>
               <div>
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Recorrência <span className="text-red-500">*</span></label>
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Recorrência</label>
                 <select 
                   value={draftExpense.recurrence || 'Mensal'}
                   onChange={e => setDraftExpense({...draftExpense, recurrence: e.target.value as RecurrenceType})}

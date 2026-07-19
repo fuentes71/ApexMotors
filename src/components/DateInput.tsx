@@ -1,33 +1,48 @@
 import React from "react";
+import { PatternFormat } from "react-number-format";
 
-interface DateInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface DateInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value'> {
   value: string;
   onChangeDate: (isoString: string) => void;
 }
 
 export const DateInput: React.FC<DateInputProps> = ({ value, onChangeDate, className, ...props }) => {
-  // Extract just the YYYY-MM-DD part to safely pass to <input type="date" />
-  const displayValue = value && typeof value === 'string' ? value.split('T')[0] : "";
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawDate = e.target.value; // YYYY-MM-DD
-    if (!rawDate) {
-      onChangeDate("");
-      return;
+  let displayValue = "";
+  if (value && typeof value === 'string') {
+    const ymd = value.split('T')[0]; // "2026-07-19"
+    const [y, m, d] = ymd.split('-');
+    if (y && m && d) {
+      displayValue = `${d}${m}${y}`;
     }
-    // Convert directly to ISO string representing midnight UTC
-    // new Date("YYYY-MM-DD") naturally parses as UTC midnight
-    const isoDate = new Date(rawDate).toISOString();
-    onChangeDate(isoDate);
-  };
+  }
 
   return (
-    <input
-      type="date"
+    <PatternFormat
+      format="##/##/####"
+      mask="_"
       value={displayValue}
-      onChange={handleChange}
+      onValueChange={(values) => {
+        if (values.value.length === 8) {
+          const d = values.value.substring(0, 2);
+          const m = values.value.substring(2, 4);
+          const y = values.value.substring(4, 8);
+          
+          if (Number(d) > 31 || Number(m) > 12) return;
+          
+          try {
+            // Force it to a valid UTC ISO string at noon to avoid timezone shift issues
+            const isoDate = new Date(`${y}-${m}-${d}T12:00:00.000Z`).toISOString();
+            onChangeDate(isoDate);
+          } catch (e) {
+            // Ignore if invalid
+          }
+        } else if (values.value.length === 0) {
+          onChangeDate("");
+        }
+      }}
+      placeholder="DD/MM/AAAA"
       className={className || "w-full p-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"}
-      {...props}
+      {...props as any}
     />
   );
 };
