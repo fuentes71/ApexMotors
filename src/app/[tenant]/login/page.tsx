@@ -4,17 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CarFront, Mail, Lock, Loader2, ArrowRight, Shield, User, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
-import { useData } from "../../context/DataContext";
+import Link from "next/link";
+import { useData } from "@/context/DataContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setCurrentUser } = useData();
+  const { setCurrentUser, tenantId, tenantConfig } = useData();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleMockLogin = (role: 'Admin' | 'Vendedor') => {
+  const handleMockLogin = (role: 'Admin' | 'Seller') => {
     setIsLoading(true);
     setTimeout(() => {
       setCurrentUser({
@@ -25,7 +26,7 @@ export default function LoginPage() {
         createdAt: new Date().toISOString()
       });
       setIsLoading(false);
-      router.push("/");
+      router.push(`/${tenantId}`);
     }, 800);
   };
 
@@ -35,7 +36,7 @@ export default function LoginPage() {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      router.push("/");
+      router.push(`/${tenantId}`);
     }, 1200);
   };
 
@@ -62,7 +63,7 @@ export default function LoginPage() {
           {/* Brand art */}
           <div className="relative z-10 w-full max-w-sm flex flex-col items-center text-center mt-[-40px]">
             <div className="inline-flex items-center justify-center p-1 bg-white/5 border border-white/10 rounded-3xl mb-8 backdrop-blur-xl shadow-2xl">
-              <Image src="/logo.jpg" alt="ApexMotors Logo" width={96} height={96} className="rounded-2xl object-cover" />
+              {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={96} height={96} className="rounded-2xl object-cover" />}
             </div>
             <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-stone-400 mb-4 leading-tight tracking-tight">
               Acelere a gestão<br />do seu estoque.
@@ -89,9 +90,9 @@ export default function LoginPage() {
           <div className="w-full max-w-[360px] mx-auto relative z-10">
             <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
               <div className="p-0.5 bg-stone-100 rounded-xl shadow-sm border border-stone-200">
-                <Image src="/logo.jpg" alt="ApexMotors Logo" width={48} height={48} className="rounded-[10px] object-cover" />
+                {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={48} height={48} className="rounded-[10px] object-cover" />}
               </div>
-              <span className="text-2xl font-extrabold tracking-tight text-stone-900">ApexMotors</span>
+              <span className="text-2xl font-extrabold tracking-tight text-stone-900">{tenantConfig.name}</span>
             </div>
 
             <div className="mb-10 text-center lg:text-left">
@@ -120,7 +121,7 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between ml-1">
                   <label className="text-sm font-bold text-stone-700 block">Sua senha</label>
-                  <a href="#" className="text-sm text-indigo-600 font-bold hover:text-indigo-800 transition-colors">Esqueceu a senha?</a>
+                  <Link href={`/${tenantId}/forgot-password`} className="text-sm text-indigo-600 font-bold hover:text-indigo-800 transition-colors">Esqueceu a senha?</Link>
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400 group-focus-within:text-indigo-600 transition-colors">
@@ -183,7 +184,7 @@ export default function LoginPage() {
               </button>
               <button 
                 type="button" 
-                onClick={() => handleMockLogin('Vendedor')} 
+                onClick={() => handleMockLogin('Seller')} 
                 className="flex flex-col items-center justify-center gap-1.5 py-3.5 px-4 bg-indigo-50/50 border border-indigo-100 hover:border-indigo-200 hover:bg-indigo-50 text-indigo-700 text-sm font-bold rounded-2xl transition-all shadow-sm"
               >
                 <User size={18} className="text-indigo-400" />

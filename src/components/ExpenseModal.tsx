@@ -35,6 +35,25 @@ export function ExpenseModal() {
 
   const handleSave = async () => {
     if (!draftExpense) return;
+    
+    // Validations (BAS-24)
+    if (!draftExpense.name?.trim()) {
+      showToast("O nome da despesa é obrigatório.", "error");
+      return;
+    }
+    if (!draftExpense.value || draftExpense.value <= 0) {
+      showToast("O valor da despesa é obrigatório.", "error");
+      return;
+    }
+    if (!draftExpense.startDate) {
+      showToast("A data de início é obrigatória.", "error");
+      return;
+    }
+    if (!draftExpense.recurrence) {
+      showToast("A recorrência é obrigatória.", "error");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const isNew = draftExpense.id === "new";

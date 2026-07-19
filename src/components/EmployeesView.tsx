@@ -8,29 +8,13 @@ import { ViewLayout } from "./ui/ViewLayout";
 import { Employee, Role } from "../types";
 
 export function EmployeesView() {
-  const { employees, setEmployees, currentUser } = useData();
+  const { employees, setEmployees, setActiveEmployee, currentUser } = useData();
   const [searchTerm, setSearchTerm] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newEmp, setNewEmp] = useState<{name: string, email: string, role: Role}>({ name: "", email: "", role: "Vendedor" });
 
   const filteredEmployees = employees.filter(e => 
     e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const handleAddEmployee = () => {
-    if (!newEmp.name || !newEmp.email) return;
-    const emp: Employee = {
-      id: Date.now().toString(),
-      name: newEmp.name,
-      email: newEmp.email,
-      role: newEmp.role,
-      createdAt: new Date().toISOString()
-    };
-    setEmployees(prev => [...prev, emp]);
-    setShowAddModal(false);
-    setNewEmp({ name: "", email: "", role: "Vendedor" });
-  };
 
   const removeEmployee = (id: string) => {
     setEmployees(prev => prev.filter(e => e.id !== id));
@@ -46,7 +30,7 @@ export function EmployeesView() {
         floatingAction={{
           icon: <Plus size={24} />,
           label: "Novo Funcionário",
-          onClick: () => setShowAddModal(true),
+          onClick: () => setActiveEmployee({ id: "new", name: "", email: "", role: "Seller", createdAt: "" }),
           colorClass: "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/40"
         }}
       >
@@ -61,7 +45,7 @@ export function EmployeesView() {
               </TableHeader>
               <TableBody>
                 {filteredEmployees.map(emp => (
-                  <TableRow key={emp.id} className="group cursor-default hover:bg-stone-50/50">
+                  <TableRow key={emp.id} interactive onClick={() => setActiveEmployee(emp)} className="group">
                     <TableCell>
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-105 transition-transform">
@@ -117,7 +101,8 @@ export function EmployeesView() {
               {filteredEmployees.map(emp => (
                 <div 
                   key={emp.id}
-                  className="bg-white p-6 rounded-2xl border border-stone-200 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/10 transition-all group flex flex-col h-full relative"
+                  onClick={() => setActiveEmployee(emp)}
+                  className="bg-white p-6 rounded-2xl border border-stone-200 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col h-full relative"
                 >
                   <div className="absolute top-4 right-4">
                     <button 
@@ -164,64 +149,6 @@ export function EmployeesView() {
           )
         )}
       </ViewLayout>
-
-      {/* Add Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
-          <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowAddModal(false)}></div>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative z-10 animate-in zoom-in-95 duration-200">
-            <h3 className="text-2xl font-extrabold text-stone-900 mb-6 tracking-tight">Novo Funcionário</h3>
-            <div className="space-y-5">
-              <div>
-                <label className="text-xs text-stone-500 uppercase tracking-wider font-bold mb-2 block ml-1">Nome completo</label>
-                <input 
-                  type="text" 
-                  value={newEmp.name}
-                  onChange={e => setNewEmp({...newEmp, name: e.target.value})}
-                  className="w-full bg-stone-50 border border-stone-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-2xl px-4 py-3.5 outline-none transition-all font-medium shadow-sm"
-                  placeholder="Nome do colaborador"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-stone-500 uppercase tracking-wider font-bold mb-2 block ml-1">E-mail corporativo</label>
-                <input 
-                  type="email" 
-                  value={newEmp.email}
-                  onChange={e => setNewEmp({...newEmp, email: e.target.value})}
-                  className="w-full bg-stone-50 border border-stone-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-2xl px-4 py-3.5 outline-none transition-all font-medium shadow-sm"
-                  placeholder="email@apexmotors.com"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-stone-500 uppercase tracking-wider font-bold mb-2 block ml-1">Nível de Acesso</label>
-                <select 
-                  value={newEmp.role}
-                  onChange={e => setNewEmp({...newEmp, role: e.target.value as Role})}
-                  className="w-full bg-stone-50 border border-stone-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-2xl px-4 py-3.5 outline-none transition-all font-medium cursor-pointer shadow-sm appearance-none"
-                >
-                  <option value="Vendedor">Vendedor (Acesso Limitado)</option>
-                  <option value="Admin">Admin (Acesso Total)</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-10">
-              <button 
-                onClick={() => setShowAddModal(false)}
-                className="flex-1 px-4 py-3.5 text-stone-600 font-bold hover:bg-stone-100 rounded-2xl transition-colors"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleAddEmployee}
-                disabled={!newEmp.name || !newEmp.email}
-                className="flex-1 px-4 py-3.5 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 disabled:opacity-50 hover:shadow-lg hover:shadow-indigo-600/30 hover:-translate-y-0.5 active:translate-y-0 transition-all"
-              >
-                Cadastrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

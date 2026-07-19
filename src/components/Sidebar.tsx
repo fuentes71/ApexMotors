@@ -8,21 +8,21 @@ import { useData } from "../context/DataContext";
 import { useState } from "react";
 
 export function Sidebar() {
-  const { isMobileMenuOpen, setIsMobileMenuOpen } = useData();
+  const { isMobileMenuOpen, setIsMobileMenuOpen, tenantId, tenantConfig } = useData();
   const pathname = usePathname();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const navItems = [
-    { id: 'dashboard', href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'veiculos', href: '/vehicles', label: 'Inventário', icon: CarFront },
-    { id: 'clientes', href: '/clients', label: 'Clientes', icon: Users },
-    { id: 'financeiro', href: '/finance', label: 'Financeiro', icon: Wallet },
-    { id: 'funcionarios', href: '/employees', label: 'Funcionários', icon: Users },
+    { id: 'dashboard', href: `/${tenantId}`, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'veiculos', href: `/${tenantId}/vehicles`, label: 'Inventário', icon: CarFront },
+    { id: 'clientes', href: `/${tenantId}/clients`, label: 'Clientes', icon: Users },
+    { id: 'financeiro', href: `/${tenantId}/finance`, label: 'Financeiro', icon: Wallet },
+    { id: 'funcionarios', href: `/${tenantId}/employees`, label: 'Funcionários', icon: Users },
   ];
 
   const getIsActive = (href: string) => {
-    if (href === '/') return pathname === '/';
+    if (href === `/${tenantId}`) return pathname === `/${tenantId}`;
     return pathname.startsWith(href);
   };
 
@@ -31,8 +31,8 @@ export function Sidebar() {
       {/* --- SIDEBAR (DESKTOP) --- */}
       <aside className="w-64 bg-[#FAFAFA] border-r border-stone-200/60 hidden lg:flex flex-col sticky top-0 h-screen print:hidden z-40">
         <div className="p-6 flex items-center gap-3">
-          <Image src="/logo.jpg" alt="ApexMotors Logo" width={28} height={28} className="rounded-md object-cover" />
-          <span className="font-semibold text-[15px] text-stone-900 tracking-tight">ApexMotors</span>
+          {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={28} height={28} className="rounded-md object-cover" />}
+          <span className="font-semibold text-[15px] text-stone-900 tracking-tight">{tenantConfig.name}</span>
         </div>
         
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
@@ -62,7 +62,7 @@ export function Sidebar() {
           {isSettingsOpen && (
             <div className="absolute bottom-[80px] left-4 right-4 bg-white border border-stone-200 rounded-xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in z-50">
               <Link 
-                href="/settings" 
+                href={`/${tenantId}/settings`} 
                 onClick={() => setIsSettingsOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors"
               >
@@ -85,7 +85,7 @@ export function Sidebar() {
             Configurações
           </button>
           <button 
-            onClick={() => router.push('/login')}
+            onClick={() => router.push(`/${tenantId}/login`)}
             className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
           >
             <LogOut size={16} className="text-rose-400" />
@@ -101,8 +101,8 @@ export function Sidebar() {
           <aside className="relative w-64 bg-[#FAFAFA] h-full flex flex-col shadow-2xl animate-in slide-in-from-left">
             <div className="p-6 flex items-center justify-between border-b border-stone-200/60">
               <div className="flex items-center gap-3">
-                <Image src="/logo.jpg" alt="ApexMotors Logo" width={28} height={28} className="rounded-md object-cover" />
-                <span className="font-semibold text-[15px] text-stone-900 tracking-tight">ApexMotors</span>
+                {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={28} height={28} className="rounded-md object-cover" />}
+                <span className="font-semibold text-[15px] text-stone-900 tracking-tight">{tenantConfig.name}</span>
               </div>
               <button onClick={() => setIsMobileMenuOpen(false)} className="text-stone-400 hover:text-stone-600 p-1">
                 <X size={18} />
@@ -136,7 +136,7 @@ export function Sidebar() {
               {isSettingsOpen && (
                 <div className="absolute bottom-[80px] left-4 right-4 bg-white border border-stone-200 rounded-xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in z-50">
                   <Link 
-                    href="/settings" 
+                    href={`/${tenantId}/settings`} 
                     onClick={() => {
                       setIsSettingsOpen(false);
                       setIsMobileMenuOpen(false);
@@ -164,7 +164,7 @@ export function Sidebar() {
               <button 
                 onClick={() => {
                   setIsMobileMenuOpen(false);
-                  router.push('/login');
+                  router.push(`/${tenantId}/login`);
                 }}
                 className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
               >

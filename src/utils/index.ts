@@ -76,6 +76,7 @@ export const calculateTotalFixedForPeriod = (expenses: Expense[], startMonth: st
     while (current <= maxDate && iterations < 10000) {
       iterations++;
       
+
       const currentMonthStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
       
       if (currentMonthStr >= startMonth && currentMonthStr <= endMonth) {
@@ -91,9 +92,17 @@ export const calculateTotalFixedForPeriod = (expenses: Expense[], startMonth: st
       } else if (exp.recurrence === "Quinzenal") {
         current.setDate(current.getDate() + 14);
       } else if (exp.recurrence === "Mensal") {
+        const expectedMonth = (current.getMonth() + 1) % 12;
         current.setMonth(current.getMonth() + 1);
+        if (current.getMonth() !== expectedMonth) {
+          current.setDate(0);
+        }
       } else if (exp.recurrence === "Anual") {
+        const expectedMonth = current.getMonth();
         current.setFullYear(current.getFullYear() + 1);
+        if (current.getMonth() !== expectedMonth) {
+          current.setDate(0);
+        }
       } else {
         break;
       }

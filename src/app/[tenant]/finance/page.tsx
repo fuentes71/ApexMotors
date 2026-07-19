@@ -1,10 +1,10 @@
 "use client";
 
-import { useData } from "../../context/DataContext";
-import { Header } from "../../components/Header";
-import { FinanceView } from "../../components/FinanceView";
+import { useData } from "@/context/DataContext";
+import { Header } from "@/components/Header";
+import { FinanceView } from "@/components/FinanceView";
 
-import { calculateTotalFixedForPeriod } from "../../utils";
+import { calculateTotalFixedForPeriod } from "@/utils";
 
 export default function FinanceiroPage() {
   const { fixedExpenses, setFixedExpenses, startMonth, endMonth } = useData();

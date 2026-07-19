@@ -16,12 +16,12 @@ export function VehicleModal() {
     fixedExpenses, setFixedExpenses,
     contractTemplate, currentUser
   } = useData();
-  const isVendedor = currentUser?.role === 'Vendedor';
+  const isVendedor = currentUser?.role === 'Seller';
 
   const { showToast } = useToast();
   const [draftVehicle, setDraftVehicle] = useState<Vehicle | null>(null);
   const [prevActiveVehicle, setPrevActiveVehicle] = useState<Vehicle | null>(null);
-  const [isConsulting, setIsConsulting] = useState(false);
+
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpenseValue, setNewExpenseValue] = useState("");
   const [newExpenseCat, setNewExpenseCat] = useState<Category>("Mecânica");
@@ -78,10 +78,10 @@ export function VehicleModal() {
     
     let galeria = [fullscreenImage];
     if (draftVehicle) {
-      galeria = draftVehicle.galeria;
+      galeria = draftVehicle.gallery;
     } else {
-      const vehicle = vehicles.find(v => v.galeria.includes(fullscreenImage));
-      if (vehicle) galeria = vehicle.galeria;
+      const vehicle = vehicles.find(v => v.gallery.includes(fullscreenImage));
+      if (vehicle) galeria = vehicle.gallery;
     }
     
     const currentIndex = Math.max(0, galeria.indexOf(fullscreenImage));
@@ -139,23 +139,6 @@ export function VehicleModal() {
     setDraftVehicle(prev => prev ? { ...prev, [field]: value } : null);
   };
 
-  const handleConsultarDebitos = () => {
-    if (!draftVehicle?.placa) {
-      alert("Preencha a placa primeiro!");
-      return;
-    }
-    setIsConsulting(true);
-    setTimeout(() => {
-      // Mock API call to public/free API (Simulated)
-      const mockDebts = [
-        { id: "d1", type: "IPVA", amount: 1540.50, dueDate: "2026-08-15", description: "IPVA 2026 - Cota Única" },
-        { id: "d2", type: "Multa", amount: 130.16, dueDate: "2026-07-20", description: "Excesso de Velocidade" }
-      ] as Vehicle['debts'];
-      setDraftVehicle({ ...draftVehicle, debts: mockDebts });
-      setIsConsulting(false);
-    }, 1500);
-  };
-
   const getMultiplier = (recurrence: string, startDate: string, endDate: string) => {
     if (recurrence === 'Única' || !startDate || !endDate) return 1;
     const start = new Date(startDate);
@@ -201,7 +184,7 @@ export function VehicleModal() {
 
     setDraftVehicle({
       ...draftVehicle,
-      despesas: [...draftVehicle.despesas, newExp]
+      expenses: [...draftVehicle.expenses, newExp]
     });
 
     setNewExpenseName("");
@@ -214,7 +197,7 @@ export function VehicleModal() {
   const handleRemoveExpense = (id: string) => {
     setDraftVehicle({
       ...draftVehicle,
-      despesas: draftVehicle.despesas.filter(e => e.id !== id)
+      expenses: draftVehicle.expenses.filter(e => e.id !== id)
     });
   };
 
@@ -234,7 +217,7 @@ export function VehicleModal() {
     setDraftVehicle({
       ...draftVehicle,
       image: draftVehicle.image || url,
-      galeria: [...draftVehicle.galeria, url]
+      gallery: [...draftVehicle.gallery, url]
     });
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -260,7 +243,9 @@ export function VehicleModal() {
         <div className="relative w-full max-w-2xl bg-[#FDFBF7] h-full shadow-2xl animate-in slide-in-from-right flex flex-col z-10">
           <div className="flex justify-between items-center p-6 border-b border-stone-200/60 bg-white">
             <h2 className="text-xl font-bold tracking-tight text-stone-900">
-              {draftVehicle.name === "Novo Veículo" && draftVehicle.valorCompra === 0 ? "Adicionar Veículo" : "Editar Veículo"}
+              {draftVehicle.name === "Novo Veículo" && draftVehicle.purchaseValue === 0 
+                ? "Adicionar Veículo" 
+                : activeVehicle?.status === 'Vendido' ? "Visualizar Veículo Vendido" : "Editar Veículo"}
             </h2>
             <button onClick={handleCloseAttempt} className="text-stone-400 hover:text-stone-700 p-2 rounded-full hover:bg-stone-100 transition-colors">
               <X size={20} />
@@ -277,8 +262,9 @@ export function VehicleModal() {
                   <input 
                     type="text" 
                     value={draftVehicle.name}
+                    disabled={activeVehicle?.status === 'Vendido'}
                     onChange={(e) => handleUpdate("name", e.target.value)}
-                    className="w-full text-lg font-bold text-stone-900 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-3 pl-11 pr-4 transition-all"
+                    className="w-full text-lg font-bold text-stone-900 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-3 pl-11 pr-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -289,9 +275,10 @@ export function VehicleModal() {
                   <input 
                     type="text" 
                     placeholder="ABC-1234"
-                    value={draftVehicle.placa || ""}
-                    onChange={(e) => handleUpdate("placa", e.target.value.toUpperCase())}
-                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all uppercase"
+                    value={draftVehicle.licensePlate || ""}
+                    disabled={activeVehicle?.status === 'Vendido'}
+                    onChange={(e) => handleUpdate("licensePlate", e.target.value.toUpperCase())}
+                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all uppercase disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -299,8 +286,9 @@ export function VehicleModal() {
                   <input 
                     type="text" 
                     value={draftVehicle.renavam || ""}
+                    disabled={activeVehicle?.status === 'Vendido'}
                     onChange={(e) => handleUpdate("renavam", e.target.value)}
-                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all"
+                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
                 {!isVendedor && (
@@ -308,9 +296,10 @@ export function VehicleModal() {
                     <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Compra (R$)</label>
                     <input 
                       type="number" 
-                      value={draftVehicle.valorCompra || ""}
-                      onChange={(e) => handleUpdate("valorCompra", Number(e.target.value))}
-                      className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all"
+                      value={draftVehicle.purchaseValue || ""}
+                      disabled={activeVehicle?.status === 'Vendido'}
+                      onChange={(e) => handleUpdate("purchaseValue", Number(e.target.value))}
+                      className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                     />
                   </div>
                 )}
@@ -318,18 +307,20 @@ export function VehicleModal() {
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Venda (R$)</label>
                   <input 
                     type="number" 
-                    value={draftVehicle.valorVenda || ""}
-                    onChange={(e) => handleUpdate("valorVenda", Number(e.target.value))}
-                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all"
+                    value={draftVehicle.saleValue || ""}
+                    disabled={activeVehicle?.status === 'Vendido'}
+                    onChange={(e) => handleUpdate("saleValue", Number(e.target.value))}
+                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Data de Entrada</label>
                   <input 
                     type="date" 
-                    value={draftVehicle.dataEntrada}
-                    onChange={(e) => handleUpdate("dataEntrada", e.target.value)}
-                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all"
+                    value={draftVehicle.entryDate}
+                    disabled={activeVehicle?.status === 'Vendido'}
+                    onChange={(e) => handleUpdate("entryDate", e.target.value)}
+                    className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -341,10 +332,10 @@ export function VehicleModal() {
                       const newStatus = e.target.value as "Em Estoque" | "Manutenção" | "Vendido";
                       if (newStatus === "Vendido") {
                         handleUpdate("status", "Vendido");
-                        handleUpdate("dataVenda", new Date().toISOString().split('T')[0]);
+                        handleUpdate("saleDate", new Date().toISOString().split('T')[0]);
                       } else {
                         handleUpdate("status", newStatus);
-                        handleUpdate("dataVenda", undefined);
+                        handleUpdate("saleDate", undefined);
                       }
                     }}
                     className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all ${activeVehicle?.status === 'Vendido' ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -371,12 +362,13 @@ export function VehicleModal() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="text-xs text-emerald-700 uppercase tracking-wider font-semibold mb-2 block">Data de Venda</label>
+                        <label className="text-xs text-emerald-700 uppercase tracking-wider font-semibold mb-2 block">Data de Saída</label>
                         <input 
                           type="date" 
-                          value={draftVehicle.dataVenda || ""}
-                          onChange={(e) => handleUpdate("dataVenda", e.target.value)}
-                          className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all"
+                          value={draftVehicle.saleDate || ""}
+                          disabled={activeVehicle?.status === 'Vendido'}
+                          onChange={(e) => handleUpdate("saleDate", e.target.value)}
+                          className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         />
                       </div>
                       <div>
@@ -385,8 +377,9 @@ export function VehicleModal() {
                           type="text" 
                           placeholder="Ex: João da Silva"
                           value={draftVehicle.buyerName || ""}
+                          disabled={activeVehicle?.status === 'Vendido'}
                           onChange={(e) => handleUpdate("buyerName", e.target.value)}
-                          className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all"
+                          className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         />
                       </div>
                       <div>
@@ -395,8 +388,9 @@ export function VehicleModal() {
                           type="text" 
                           placeholder="000.000.000-00"
                           value={draftVehicle.buyerDoc || ""}
+                          disabled={activeVehicle?.status === 'Vendido'}
                           onChange={(e) => handleUpdate("buyerDoc", e.target.value)}
-                          className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all"
+                          className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
@@ -405,82 +399,39 @@ export function VehicleModal() {
               </div>
             </div>
 
-            {/* Debts & IPVA (Integration Placeholder) */}
-            <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-stone-800 uppercase tracking-wider flex items-center gap-2">
-                  <FileWarning size={16} className="text-amber-500" />
-                  Histórico e Débitos (IPVA/Multas)
-                </h3>
-                <button 
-                  onClick={handleConsultarDebitos}
-                  disabled={isConsulting || !draftVehicle.placa}
-                  className="flex items-center gap-2 text-sm bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-800 disabled:opacity-50 transition-all"
-                >
-                  {isConsulting ? (
-                    <span className="animate-pulse">Consultando Sinesp/Detran...</span>
-                  ) : (
-                    <>
-                      <Search size={14} />
-                      Consultar
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {draftVehicle.debts && draftVehicle.debts.length > 0 ? (
-                <div className="space-y-3">
-                  {draftVehicle.debts.map(debt => (
-                    <div key={debt.id} className="flex justify-between items-center bg-amber-50 border border-amber-200/60 p-3 rounded-xl">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-amber-900 text-sm">{debt.type} - {debt.description}</span>
-                        <span className="text-xs text-amber-700">Vencimento: {debt.dueDate}</span>
-                      </div>
-                      <span className="font-bold text-amber-700">{formatCurrency(debt.amount)}</span>
-                    </div>
-                  ))}
-                  <div className="pt-2 border-t border-stone-100 flex justify-end gap-4 font-semibold text-stone-800">
-                    <span>Total em Débitos:</span>
-                    <span className="text-rose-600">{formatCurrency(draftVehicle.debts.reduce((a, b) => a + b.amount, 0))}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-6 bg-stone-50 rounded-xl border border-dashed border-stone-200">
-                  <p className="text-sm text-stone-500">
-                    {draftVehicle.debts ? "Nenhum débito encontrado." : "Consulte a placa para verificar IPVA, Licenciamento e Multas."}
-                  </p>
-                </div>
-              )}
-            </div>
 
             {/* Gallery */}
             <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
               <h3 className="text-sm font-semibold text-stone-800 mb-4 uppercase tracking-wider">Galeria de Imagens</h3>
               <div className="grid grid-cols-4 gap-3">
-                {draftVehicle.galeria.map((img, i) => (
+                {draftVehicle.gallery.map((img, i) => (
                   <div key={i} className="aspect-square bg-stone-100 rounded-lg overflow-hidden group relative shadow-sm border border-stone-200">
-                    <Image src={img} fill className="object-cover cursor-pointer hover:scale-105 transition-transform" alt="Galeria" onClick={() => setFullscreenImage(img)} unoptimized />
-                    <button 
-                      onClick={() => {
-                        const newGal = draftVehicle.galeria.filter((_, idx) => idx !== i);
-                        handleUpdate("galeria", newGal);
-                        if (draftVehicle.image === img) {
-                          handleUpdate("image", newGal[0] || "");
-                        }
-                      }}
-                      className="absolute top-2 right-2 bg-rose-500/90 text-white lg:opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-rose-600 transition-all shadow-sm backdrop-blur-sm"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <Image src={img} fill className="object-cover cursor-pointer hover:scale-105 transition-transform" alt="gallery" onClick={() => setFullscreenImage(img)} unoptimized />
+                    {activeVehicle?.status !== 'Vendido' && (
+                      <button 
+                        onClick={() => {
+                          const newGal = draftVehicle.gallery.filter((_, idx) => idx !== i);
+                          handleUpdate("gallery", newGal);
+                          if (draftVehicle.image === img) {
+                            handleUpdate("image", newGal[0] || "");
+                          }
+                        }}
+                        className="absolute top-2 right-2 bg-rose-500/90 text-white lg:opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-rose-600 transition-all shadow-sm backdrop-blur-sm"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 ))}
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-square bg-stone-50 border-2 border-dashed border-stone-300 hover:border-blue-400 hover:bg-blue-50/50 rounded-lg flex flex-col items-center justify-center text-stone-400 hover:text-blue-500 transition-all cursor-pointer"
-                >
-                  <Camera size={24} className="mb-2" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider">Adicionar</span>
-                </button>
+                {activeVehicle?.status !== 'Vendido' && (
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="aspect-square bg-stone-50 border-2 border-dashed border-stone-300 hover:border-blue-400 hover:bg-blue-50/50 rounded-lg flex flex-col items-center justify-center text-stone-400 hover:text-blue-500 transition-all cursor-pointer"
+                  >
+                    <Camera size={24} className="mb-2" />
+                    <span className="text-[11px] font-semibold uppercase tracking-wider">Adicionar</span>
+                  </button>
+                )}
                 <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
               </div>
             </div>
@@ -491,7 +442,7 @@ export function VehicleModal() {
                 <h3 className="text-sm font-semibold text-stone-800 mb-4 uppercase tracking-wider">Despesas do Veículo</h3>
               
               <div className="space-y-3 mb-6">
-                {draftVehicle.despesas.map((exp) => (
+                {draftVehicle.expenses.map((exp) => (
                   <div key={exp.id} className="flex justify-between items-center p-3.5 bg-stone-50 hover:bg-[#FDFBF7] border border-stone-200 hover:border-stone-300 rounded-xl group transition-colors">
                     <div className="flex items-center gap-4">
                       <div className={`p-2 rounded-lg ${getCategoryColor(exp.category || "Outros")} bg-white shadow-sm border border-stone-100`}>
@@ -501,28 +452,31 @@ export function VehicleModal() {
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="font-bold text-stone-900">{formatCurrency(exp.value)}</span>
-                    <div className="flex items-center gap-2 lg:opacity-0 group-hover:opacity-100 transition-all">
-                      <button onClick={() => handleEditExpense(exp)} className="text-stone-300 hover:text-blue-500 p-1.5 bg-white border border-stone-200 rounded-md hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm">
-                        <Pencil size={14} />
-                      </button>
-                      <button onClick={() => handleRemoveExpense(exp.id)} className="text-stone-300 hover:text-rose-500 p-1.5 bg-white border border-stone-200 rounded-md hover:border-rose-200 hover:bg-rose-50 transition-colors shadow-sm">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    {activeVehicle?.status !== 'Vendido' && (
+                      <div className="flex items-center gap-2 lg:opacity-0 group-hover:opacity-100 transition-all">
+                        <button onClick={() => handleEditExpense(exp)} className="text-stone-300 hover:text-blue-500 p-1.5 bg-white border border-stone-200 rounded-md hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => handleRemoveExpense(exp.id)} className="text-stone-300 hover:text-rose-500 p-1.5 bg-white border border-stone-200 rounded-md hover:border-rose-200 hover:bg-rose-50 transition-colors shadow-sm">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
                     </div>
                   </div>
                 ))}
-                {draftVehicle.despesas.length === 0 && (
+                {draftVehicle.expenses.length === 0 && (
                   <div className="text-center py-8 border-2 border-dashed border-stone-200 rounded-xl bg-stone-50/50">
                     <p className="text-sm font-medium text-stone-500">Nenhuma despesa registrada para este veículo.</p>
                   </div>
                 )}
               </div>
               {/* Nova Despesa Form */}
-              <div className="bg-stone-50 border border-stone-200 rounded-2xl p-5 shadow-sm mt-4">
-                <h4 className="text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                  <Plus size={14} /> Registrar Nova Despesa
-                </h4>
+              {activeVehicle?.status !== 'Vendido' && (
+                <div className="bg-stone-50 border border-stone-200 rounded-2xl p-5 shadow-sm mt-4">
+                  <h4 className="text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                    <Plus size={14} /> Registrar Nova Despesa
+                  </h4>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-4">
                   <div className="sm:col-span-5">
@@ -622,11 +576,12 @@ export function VehicleModal() {
                   </button>
                 </div>
                 </div>
+              )}
               </div>
             )}
           </div>
           
-          {!isVendedor && (
+          {!isVendedor && activeVehicle?.status !== 'Vendido' && (
             <div className="p-6 border-t border-stone-200 bg-white mt-auto">
               <button 
                 onClick={handleSave}

@@ -46,21 +46,21 @@ export type Vehicle = {
   name: string;
   description: string;
   image: string;
-  galeria: string[];
-  valorCompra: number;
-  valorVenda: number;
-  despesas: Expense[];
+  gallery: string[];
+  purchaseValue: number;
+  saleValue: number;
+  expenses: Expense[];
   status: "Em Estoque" | "Manutenção" | "Vendido";
-  dataEntrada: string;
-  dataVenda?: string;
-  placa?: string;
+  entryDate: string;
+  saleDate?: string;
+  licensePlate?: string;
   renavam?: string;
   debts?: VehicleDebt[];
   buyerName?: string;
   buyerDoc?: string;
 };
 
-export type Role = "Admin" | "Vendedor";
+export type Role = "Admin" | "Seller" | "Accounting";
 
 export interface Employee {
   id: string;

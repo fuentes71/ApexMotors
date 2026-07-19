@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 
 import { DataProvider } from "../context/DataContext";
 import { ToastProvider } from "../context/ToastContext";
@@ -8,17 +8,21 @@ import { Sidebar } from "../components/Sidebar";
 import { VehicleModal } from "../components/VehicleModal";
 import { ClientModal } from "../components/ClientModal";
 import { ExpenseModal } from "../components/ExpenseModal";
+import { EmployeeModal } from "../components/EmployeeModal";
+import { defaultTenant } from "../utils/tenantConfig";
 
 import { ConfirmProvider } from "../context/ConfirmContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname?.startsWith('/login');
+  const params = useParams();
+  const tenantId = (params?.tenant as string) || defaultTenant;
+  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/forgot-password');
 
   return (
     <ToastProvider>
       <ConfirmProvider>
-        <DataProvider>
+        <DataProvider tenantId={tenantId}>
           {isAuthPage ? (
             children
           ) : (
@@ -28,6 +32,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               <VehicleModal />
               <ClientModal />
               <ExpenseModal />
+              <EmployeeModal />
             </div>
           )}
         </DataProvider>

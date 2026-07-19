@@ -1,20 +1,20 @@
 "use client";
 
-import { useData } from "../../context/DataContext";
-import { Header } from "../../components/Header";
-import { InventoryView } from "../../components/InventoryView";
-import { Vehicle } from "../../types";
-import api from "../../services/api";
+import { useData } from "@/context/DataContext";
+import { Header } from "@/components/Header";
+import { InventoryView } from "@/components/InventoryView";
+import { Vehicle } from "@/types";
+import api from "@/services/api";
 
 export default function VeiculosPage() {
   const { vehicles, setVehicles, setActiveVehicle, startMonth, endMonth } = useData();
 
   const filteredVehicles = vehicles.filter(v => {
-    if (v.status === "Vendido" && v.dataVenda) {
-      const vendaMonth = v.dataVenda.substring(0, 7);
+    if (v.status === "Vendido" && v.saleDate) {
+      const vendaMonth = v.saleDate.substring(0, 7);
       return vendaMonth >= startMonth && vendaMonth <= endMonth;
     }
-    return v.dataEntrada <= `${endMonth}-31`;
+    return v.entryDate <= `${endMonth}-31`;
   });
 
   const handleAddVehicle = async () => {
@@ -23,12 +23,12 @@ export default function VeiculosPage() {
       name: "Novo Veículo",
       description: "Adicione uma descrição",
       image: "",
-      galeria: [],
-      valorCompra: 0,
-      valorVenda: 0,
-      despesas: [],
+      gallery: [],
+      purchaseValue: 0,
+      saleValue: 0,
+      expenses: [],
       status: "Em Estoque",
-      dataEntrada: new Date().toISOString().split('T')[0]
+      entryDate: new Date().toISOString().split('T')[0]
     };
     try {
       const res = await api.post('/vehicles', newV);

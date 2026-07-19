@@ -25,7 +25,7 @@ export function InventoryView({
   filteredVehicles, vehicles, setVehicles, setActiveVehicle, handleAddVehicle
 }: InventoryViewProps) {
   const { fixedExpenses, setFixedExpenses, contractTemplate, setFullscreenImage, currentUser } = useData();
-  const isVendedor = currentUser?.role === 'Vendedor';
+  const isVendedor = currentUser?.role === 'Seller';
   const { showToast } = useToast();
   const { confirm: confirmAction } = useConfirm();
 
@@ -42,21 +42,21 @@ export function InventoryView({
 
   const displayVehicles = filteredVehicles.filter(v => 
     v.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (v.placa && v.placa.toLowerCase().includes(searchTerm.toLowerCase()))
+    (v.licensePlate && v.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const { sortColumn, sortDirection, handleSort, sortedData: sortedVehicles } = useSort(displayVehicles, {
     cost: (a, b) => {
-      const costA = a.valorCompra + a.despesas.reduce((acc, e) => acc + e.value, 0);
-      const costB = b.valorCompra + b.despesas.reduce((acc, e) => acc + e.value, 0);
+      const costA = a.purchaseValue + a.expenses.reduce((acc, e) => acc + e.value, 0);
+      const costB = b.purchaseValue + b.expenses.reduce((acc, e) => acc + e.value, 0);
       return costA - costB;
     },
     profit: (a, b) => {
-      const costA = a.valorCompra + a.despesas.reduce((acc, e) => acc + e.value, 0);
-      const profitA = a.valorVenda - costA;
+      const costA = a.purchaseValue + a.expenses.reduce((acc, e) => acc + e.value, 0);
+      const profitA = a.saleValue - costA;
       
-      const costB = b.valorCompra + b.despesas.reduce((acc, e) => acc + e.value, 0);
-      const profitB = b.valorVenda - costB;
+      const costB = b.purchaseValue + b.expenses.reduce((acc, e) => acc + e.value, 0);
+      const profitB = b.saleValue - costB;
       
       return profitA - profitB;
     }
@@ -68,7 +68,7 @@ export function InventoryView({
       setBuyerName(v.buyerName || "");
       setBuyerDoc(v.buyerDoc || "");
     } else {
-      const updatedV = { ...v, status: newStatus as Vehicle['status'], dataVenda: undefined, buyerName: undefined, buyerDoc: undefined };
+      const updatedV = { ...v, status: newStatus as Vehicle['status'], saleDate: undefined, buyerName: undefined, buyerDoc: undefined };
       try {
         const res = await api.put(`/vehicles/${v.id}`, updatedV);
         setVehicles(vehicles.map(vh => vh.id === v.id ? res.data : vh));
@@ -87,7 +87,7 @@ export function InventoryView({
     const updatedV = { 
       ...sellingVehicle, 
       status: 'Vendido' as const, 
-      dataVenda: new Date().toISOString().split('T')[0],
+      saleDate: new Date().toISOString().split('T')[0],
       buyerName,
       buyerDoc
     };
@@ -190,23 +190,23 @@ export function InventoryView({
                   {sortedVehicles
                     .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                     .map(v => {
-                    const expenses = v.despesas.reduce((acc, e) => acc + e.value, 0);
-                    const totalCost = v.valorCompra + expenses;
-                    const profit = v.valorVenda - totalCost;
+                    const expenses = v.expenses.reduce((acc, e) => acc + e.value, 0);
+                    const totalCost = v.purchaseValue + expenses;
+                    const profit = v.saleValue - totalCost;
                     
                     return (
                       <TableRow 
                         key={v.id}
                         onClick={() => {
-                          if (v.status !== 'Vendido') setActiveVehicle(v);
+                          setActiveVehicle(v);
                         }}
-                        interactive={v.status !== 'Vendido'}
+                        interactive={true}
                         className={v.status === 'Vendido' ? 'bg-stone-100/50' : ''}
                       >
                         <TableCell>
                           <div className="flex items-center gap-4">
                             {(() => {
-                              const hasPhoto = Boolean(v.image || (v.galeria && v.galeria.length > 0));
+                              const hasPhoto = Boolean(v.image || (v.gallery && v.gallery.length > 0));
                               return (
                                 <div 
                                   className={`w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center border relative transition-all ${
@@ -217,12 +217,12 @@ export function InventoryView({
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if (hasPhoto) {
-                                      setFullscreenImage(v.image || v.galeria[0]);
+                                      setFullscreenImage(v.image || v.gallery[0]);
                                     }
                                   }}
                                 >
                                   {hasPhoto ? (
-                                    <Image src={v.image || v.galeria[0]} alt={v.name} fill className={`object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} unoptimized />
+                                    <Image src={v.image || v.gallery[0]} alt={v.name} fill className={`object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} unoptimized />
                                   ) : (
                                     <CarFront size={20} className="text-stone-300" />
                                   )}
@@ -245,7 +245,7 @@ export function InventoryView({
                                 )}
                               </div>
                               <p className="text-xs text-stone-500 truncate max-w-[150px] sm:max-w-[200px]">
-                                {v.placa ? `Placa: ${v.placa} - ` : ''} 
+                                {v.licensePlate ? `Placa: ${v.licensePlate} - ` : ''} 
                                 {v.description || 'Sem descrição'}
                               </p>
                             </div>
@@ -304,8 +304,8 @@ export function InventoryView({
                         </TableCell>
                         {isVendedor ? (
                           <>
-                            <TableCell>{v.placa || 'N/A'}</TableCell>
-                            <TableCell className="font-semibold text-stone-900">{formatCurrency(v.valorVenda)}</TableCell>
+                            <TableCell>{v.licensePlate || 'N/A'}</TableCell>
+                            <TableCell className="font-semibold text-stone-900">{formatCurrency(v.saleValue)}</TableCell>
                           </>
                         ) : (
                           <>
@@ -323,7 +323,7 @@ export function InventoryView({
                                   <span className={`font-bold text-sm ${profit > 0 ? 'text-emerald-600' : profit < 0 ? 'text-rose-600' : 'text-stone-600'}`}>
                                     {profit > 0 ? '+' : ''}{formatCurrency(profit)}
                                   </span>
-                                  <span className="text-[10px] text-stone-500 font-medium">Vendido por {formatCurrency(v.valorVenda)}</span>
+                                  <span className="text-[10px] text-stone-500 font-medium">Vendido por {formatCurrency(v.saleValue)}</span>
                                 </div>
                               ) : (
                                 <span className="text-sm font-medium text-stone-400 italic">Estoque</span>
@@ -400,18 +400,18 @@ export function InventoryView({
               {sortedVehicles
                 .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                 .map(v => {
-                  const expenses = v.despesas.reduce((acc, e) => acc + e.value, 0);
-                  const totalCost = v.valorCompra + expenses;
-                  const profit = v.valorVenda - totalCost;
-                  const hasPhoto = Boolean(v.image || (v.galeria && v.galeria.length > 0));
+                  const expenses = v.expenses.reduce((acc, e) => acc + e.value, 0);
+                  const totalCost = v.purchaseValue + expenses;
+                  const profit = v.saleValue - totalCost;
+                  const hasPhoto = Boolean(v.image || (v.gallery && v.gallery.length > 0));
 
                   return (
                     <div 
                       key={v.id}
                       onClick={() => {
-                        if (v.status !== 'Vendido') setActiveVehicle(v);
+                        setActiveVehicle(v);
                       }}
-                      className={`bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group flex flex-col gap-4 relative ${v.status !== 'Vendido' ? 'cursor-pointer' : ''}`}
+                      className={`bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group flex flex-col gap-4 relative cursor-pointer`}
                     >
 
                       <div className="absolute top-4 right-4 flex gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity z-20">
@@ -476,17 +476,17 @@ export function InventoryView({
                           onClick={(e) => {
                             e.stopPropagation();
                             if (hasPhoto) {
-                              setFullscreenImage(v.image || v.galeria[0]);
+                              setFullscreenImage(v.image || v.gallery[0]);
                             }
                           }}
                         >
                           {hasPhoto ? (
-                            <Image src={v.image || v.galeria[0]} alt={v.name} fill className={`object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} unoptimized />
+                            <Image src={v.image || v.gallery[0]} alt={v.name} fill className={`object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} unoptimized />
                           ) : (
                             <CarFront size={24} className="text-stone-300" />
                           )}
                           {v.status === 'Vendido' && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-900/30 cursor-pointer" onClick={(e) => { e.stopPropagation(); if (hasPhoto) setFullscreenImage(v.image || v.galeria[0]); }}>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-900/30 cursor-pointer" onClick={(e) => { e.stopPropagation(); if (hasPhoto) setFullscreenImage(v.image || v.gallery[0]); }}>
                               <CheckCircle2 size={18} className="text-emerald-300 drop-shadow" />
                               <span className="text-[9px] font-bold text-white uppercase tracking-wide mt-0.5 drop-shadow">Vendido</span>
                             </div>
@@ -502,7 +502,7 @@ export function InventoryView({
                               <span title="Possui Débitos"><AlertTriangle size={14} className="text-amber-500" /></span>
                             )}
                           </div>
-                          <p className="text-xs text-stone-500 mt-0.5 truncate">{v.placa ? `Placa: ${v.placa}` : 'Sem placa'}</p>
+                          <p className="text-xs text-stone-500 mt-0.5 truncate">{v.licensePlate ? `Placa: ${v.licensePlate}` : 'Sem placa'}</p>
                           <p className="text-xs text-stone-400 mt-1 truncate">{v.description || 'Sem descrição'}</p>
                         </div>
                       </div>
@@ -521,7 +521,7 @@ export function InventoryView({
                               <p className={`text-sm font-bold ${profit > 0 ? 'text-emerald-600' : profit < 0 ? 'text-rose-600' : 'text-stone-600'}`}>
                                 {profit > 0 ? '+' : ''}{formatCurrency(profit)}
                               </p>
-                              <p className="text-[10px] text-stone-500">Venda: {formatCurrency(v.valorVenda)}</p>
+                              <p className="text-[10px] text-stone-500">Venda: {formatCurrency(v.saleValue)}</p>
                             </>
                           ) : (
                             <div className="relative inline-block w-full mt-1">

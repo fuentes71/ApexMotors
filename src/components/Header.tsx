@@ -49,20 +49,20 @@ function CustomSelect({ value, onChange, options, minStr }: { value: string, onC
 }
 
 export function Header() {
-  const { vehicles, fixedExpenses, setIsMobileMenuOpen, startMonth, setStartMonth, endMonth, setEndMonth } = useData();
+  const { vehicles, fixedExpenses, setIsMobileMenuOpen, startMonth, setStartMonth, endMonth, setEndMonth, tenantConfig, tenantId } = useData();
   const pathname = usePathname();
 
   const getTitle = () => {
-    if (pathname.startsWith('/vehicles')) return 'Inventário de Veículos';
-    if (pathname.startsWith('/finance')) return 'Controle Financeiro';
-    if (pathname.startsWith('/clients')) return 'Gestão de Clientes';
+    if (pathname.includes('/vehicles')) return 'Inventário de Veículos';
+    if (pathname.includes('/finance')) return 'Controle Financeiro';
+    if (pathname.includes('/clients')) return 'Gestão de Clientes';
     return 'Dashboard';
   };
 
-  const isDashboard = pathname === '/';
-  const isFinance = pathname.startsWith('/finance');
-  const isClients = pathname.startsWith('/clients');
-  const isVehicles = pathname.startsWith('/vehicles');
+  const isDashboard = pathname === `/${tenantId}` || pathname === `/${tenantId}/`;
+  const isFinance = pathname.includes('/finance');
+  const isClients = pathname.includes('/clients');
+  const isVehicles = pathname.includes('/vehicles');
 
   // --- Lista Dinâmica de Meses para o Filtro ---
   const monthOptions = Array.from({length: 12}).map((_, i) => {
@@ -72,19 +72,19 @@ export function Header() {
   });
 
   const filteredVehicles = vehicles.filter(v => {
-    if (v.status === "Vendido" && v.dataVenda) {
-      const vendaMonth = v.dataVenda.substring(0, 7);
+    if (v.status === "Vendido" && v.saleDate) {
+      const vendaMonth = v.saleDate.substring(0, 7);
       return vendaMonth >= startMonth && vendaMonth <= endMonth;
     }
-    return v.dataEntrada <= `${endMonth}-31`;
+    return v.entryDate <= `${endMonth}-31`;
   });
 
   const totalFixed = calculateTotalFixedForPeriod(fixedExpenses, startMonth, endMonth);
   
   const totalVehicleProfit = filteredVehicles.reduce((acc, v) => {
     if (v.status !== 'Vendido') return acc;
-    const expenses = v.despesas.reduce((sum, e) => sum + e.value, 0);
-    return acc + (v.valorVenda - v.valorCompra - expenses);
+    const expenses = v.expenses.reduce((sum, e) => sum + e.value, 0);
+    return acc + (v.saleValue - v.purchaseValue - expenses);
   }, 0);
 
   const netBalance = totalVehicleProfit - totalFixed;
@@ -114,9 +114,9 @@ export function Header() {
             </button>
           </div>
           <div className="hidden print:flex items-center gap-4 mb-6 pb-6 border-b border-stone-200">
-            <Image src="/logo.jpg" alt="ApexMotors Logo" width={48} height={48} className="rounded-lg object-cover" />
+            {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={48} height={48} className="rounded-lg object-cover" />}
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-stone-900">Relatório ApexMotors</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-stone-900">Relatório {tenantConfig.name}</h1>
               <p className="text-stone-500">{getTitle()} • {startMonth === endMonth ? formatMonth(startMonth) : `${formatMonth(startMonth)} a ${formatMonth(endMonth)}`}</p>
             </div>
           </div>

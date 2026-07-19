@@ -26,7 +26,7 @@ export function NotificationsWidget() {
   // 1. Stock > 60 days
   vehicles.forEach(v => {
     if (v.status === "Em Estoque" || v.status === "Manutenção") {
-      const entrada = new Date(v.dataEntrada).getTime();
+      const entrada = new Date(v.entryDate).getTime();
       const now = new Date().getTime();
       const diffDays = Math.ceil((now - entrada) / (1000 * 3600 * 24));
       

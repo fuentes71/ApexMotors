@@ -53,14 +53,14 @@ export const generateStructuredPDF = ({
     finalY += 6;
 
     const vehicleRows = soldVehicles.map(v => {
-      const expenses = v.despesas.reduce((acc, e) => acc + e.value, 0);
-      const profit = v.valorVenda - v.valorCompra - expenses;
+      const expenses = v.expenses.reduce((acc, e) => acc + e.value, 0);
+      const profit = v.saleValue - v.purchaseValue - expenses;
       return [
         v.name,
-        v.dataVenda ? new Date(v.dataVenda).toLocaleDateString('pt-BR') : '-',
-        formatCurrency(v.valorCompra),
+        v.saleDate ? new Date(v.saleDate).toLocaleDateString('pt-BR') : '-',
+        formatCurrency(v.purchaseValue),
         formatCurrency(expenses),
-        formatCurrency(v.valorVenda),
+        formatCurrency(v.saleValue),
         formatCurrency(profit)
       ];
     });
@@ -135,8 +135,8 @@ export const generateContractPDF = (vehicle: Vehicle, template: string) => {
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
   
-  const dateStr = vehicle.dataVenda 
-    ? new Date(vehicle.dataVenda).toLocaleDateString('pt-BR') 
+  const dateStr = vehicle.saleDate 
+    ? new Date(vehicle.saleDate).toLocaleDateString('pt-BR') 
     : new Date().toLocaleDateString('pt-BR');
 
   const buyerName = vehicle.buyerName || "_________________________________";
@@ -150,9 +150,9 @@ export const generateContractPDF = (vehicle: Vehicle, template: string) => {
     .replace(/\{\{sellerName\}\}/g, sellerName)
     .replace(/\{\{sellerDoc\}\}/g, sellerDoc)
     .replace(/\{\{vehicleName\}\}/g, vehicle.name)
-    .replace(/\{\{vehiclePlaca\}\}/g, vehicle.placa || 'N/A')
+    .replace(/\{\{vehiclePlaca\}\}/g, vehicle.licensePlate || 'N/A')
     .replace(/\{\{vehicleRenavam\}\}/g, vehicle.renavam || 'N/A')
-    .replace(/\{\{vehiclePrice\}\}/g, formatCurrency(vehicle.valorVenda));
+    .replace(/\{\{vehiclePrice\}\}/g, formatCurrency(vehicle.saleValue));
 
   const textLines = doc.splitTextToSize(content, 180);
   doc.text(textLines, 14, 60);

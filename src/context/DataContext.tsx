@@ -2,9 +2,12 @@
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from "react";
 import { Vehicle, Expense, Client, WhatsAppTemplates, Employee, Role } from "../types";
+import { getTenantConfig, TenantConfig } from "../utils/tenantConfig";
 import api from "../services/api";
 
 interface DataContextType {
+  tenantId: string;
+  tenantConfig: TenantConfig;
   currentUser: Employee | null;
   setCurrentUser: Dispatch<SetStateAction<Employee | null>>;
   employees: Employee[];
@@ -33,11 +36,14 @@ interface DataContextType {
   setActiveExpense: (e: Expense | null) => void;
   whatsappTemplates: WhatsAppTemplates;
   setWhatsappTemplates: (templates: WhatsAppTemplates) => void;
+  activeEmployee: Employee | null;
+  setActiveEmployee: (e: Employee | null) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-export function DataProvider({ children }: { children: ReactNode }) {
+export function DataProvider({ children, tenantId }: { children: ReactNode, tenantId: string }) {
+  const tenantConfig = getTenantConfig(tenantId);
   const [contractTemplate, setContractTemplate] = useState(`Pelo presente instrumento, eu, {{buyerName}}, inscrito(a)
 no CPF/CNPJ sob o nº {{buyerDoc}}, declaro ter comprado o veículo abaixo
 descrito da empresa {{sellerName}},
@@ -103,6 +109,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
   const [activeClient, setActiveClient] = useState<Client | null>(null);
   const [activeExpense, setActiveExpense] = useState<Expense | null>(null);
+  const [activeEmployee, setActiveEmployee] = useState<Employee | null>(null);
 
   useEffect(() => {
     // Fetch initial data from mock API
@@ -116,6 +123,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
 
   return (
     <DataContext.Provider value={{
+      tenantId, tenantConfig,
       currentUser, setCurrentUser,
       employees, setEmployees,
       vehicles, setVehicles,
@@ -129,12 +137,12 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
       setContractTemplate,
       clients,
       setClients,
-
-      currentUser,
       activeClient,
       setActiveClient,
       activeExpense,
       setActiveExpense,
+      activeEmployee,
+      setActiveEmployee,
       whatsappTemplates,
       setWhatsappTemplates
     }}>
