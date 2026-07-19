@@ -44,7 +44,6 @@ export function ClientsView() {
 
   const handleAddClient = () => {
     setActiveClient({
-      id: "new",
       name: "",
       phone: "",
       email: "",
@@ -81,7 +80,7 @@ export function ClientsView() {
   const handleStatusChange = async (client: Client, newStatus: Client['status'], e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const response = await api.put(`/clients/${client.id}`, { ...client, status: newStatus });
+      const response = await api.patch(`/clients/${client.id}`, { ...client, status: newStatus });
       setClients(prev => prev.map(c => c.id === client.id ? response.data : c));
       showToast("Status alterado!", "success");
     } catch (error) {
@@ -153,7 +152,7 @@ export function ClientsView() {
                           <div className="font-semibold text-stone-900">{client.name || "-"}</div>
                         </Tooltip>
                         <div className="text-xs text-stone-400 flex items-center gap-1 mt-1">
-                          <Calendar size={12} /> {format(new Date(client.createdAt), 'dd/MM/yyyy')}
+                          <Calendar size={12} /> {client.createdAt ? format(new Date(client.createdAt), 'dd/MM/yyyy') : 'Sem data'}
                         </div>
                       </div>
                     </TableCell>

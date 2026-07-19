@@ -1,10 +1,12 @@
 import { X, Save, Loader2, Receipt, Upload, Calendar } from "lucide-react";
+import { NumericFormat } from "react-number-format";
 import Image from "next/image";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { Expense, RecurrenceType, Category } from "../types";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
+import { DateInput } from "./DateInput";
 
 export function ExpenseModal() {
   const { activeExpense, setActiveExpense, fixedExpenses, setFixedExpenses } = useData();
@@ -12,6 +14,7 @@ export function ExpenseModal() {
   const [draftExpense, setDraftExpense] = useState<Expense | null>(null);
   const [prevActiveExpense, setPrevActiveExpense] = useState<Expense | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   if (activeExpense !== prevActiveExpense) {
     setPrevActiveExpense(activeExpense);
@@ -33,36 +36,51 @@ export function ExpenseModal() {
     }
   };
 
+  const showError = (field: string, msg: string) => {
+    setErrors(prev => ({ ...prev, [field]: msg }));
+    setTimeout(() => {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }, 4000);
+  };
+
   const handleSave = async () => {
     if (!draftExpense) return;
     
     // Validations (BAS-24)
+    let hasError = false;
     if (!draftExpense.name?.trim()) {
-      showToast("O nome da despesa é obrigatório.", "error");
-      return;
+      showError("name", "O nome da despesa é obrigatório.");
+      hasError = true;
     }
     if (!draftExpense.value || draftExpense.value <= 0) {
-      showToast("O valor da despesa é obrigatório.", "error");
-      return;
+      showError("value", "O valor da despesa é obrigatório.");
+      hasError = true;
     }
     if (!draftExpense.startDate) {
-      showToast("A data de início é obrigatória.", "error");
-      return;
+      showError("startDate", "A data de início é obrigatória.");
+      hasError = true;
     }
     if (!draftExpense.recurrence) {
-      showToast("A recorrência é obrigatória.", "error");
-      return;
+      showError("recurrence", "A recorrência é obrigatória.");
+      hasError = true;
     }
+
+    if (hasError) return;
 
     setIsSaving(true);
     try {
-      const isNew = draftExpense.id === "new";
-      if (!isNew && fixedExpenses.find(e => e.id === draftExpense.id)) {
-        const res = await api.put(`/expenses/${draftExpense.id}`, draftExpense);
-        setFixedExpenses(fixedExpenses.map(e => e.id === draftExpense.id ? res.data : e));
-      } else {
-        const res = await api.post(`/expenses`, draftExpense);
+      const isNew = !draftExpense.id;
+      
+      const payload = { ...draftExpense };
+      payload.value = Number(payload.value) || 0;
+
+      if (isNew) {
+        delete payload.id;
+        const res = await api.post('/expenses', payload);
         setFixedExpenses([...fixedExpenses, res.data]);
+      } else {
+        const res = await api.patch(`/expenses/${payload.id}`, payload);
+        setFixedExpenses(fixedExpenses.map(e => e.id === payload.id ? res.data : e));
       }
       setActiveExpense(null);
       showToast(isNew ? "Despesa adicionada com sucesso!" : "Despesa atualizada com sucesso!", "success");
@@ -92,7 +110,7 @@ export function ExpenseModal() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-stone-800">
-                {activeExpense.id === "new" ? "Nova Despesa" : "Editar Despesa"}
+                {!activeExpense.id ? "Nova Despesa" : "Editar Despesa"}
               </h2>
             </div>
           </div>
@@ -107,32 +125,32 @@ export function ExpenseModal() {
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Nome da Despesa</label>
+              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Nome da Despesa <span className="text-red-500">*</span></label>
               <input 
                 type="text" 
                 value={draftExpense.name}
                 onChange={e => setDraftExpense({...draftExpense, name: e.target.value})}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                className={`w-full bg-stone-50 border ${errors.name ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all`}
                 placeholder="Ex: Aluguel, Água..."
               />
+              {errors.name && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.name}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Data Início</label>
-                <input 
-                  type="date" 
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Data Início <span className="text-red-500">*</span></label>
+                <DateInput 
                   value={draftExpense.startDate || ''}
-                  onChange={e => setDraftExpense({...draftExpense, startDate: e.target.value})}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  onChangeDate={val => setDraftExpense({...draftExpense, startDate: val})}
+                  className={`w-full bg-stone-50 border ${errors.startDate ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all`}
                 />
+                {errors.startDate && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.startDate}</p>}
               </div>
               <div>
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Data Fim (Opcional)</label>
-                <input 
-                  type="date" 
+                <DateInput 
                   value={draftExpense.endDate || ''}
-                  onChange={e => setDraftExpense({...draftExpense, endDate: e.target.value})}
+                  onChangeDate={val => setDraftExpense({...draftExpense, endDate: val})}
                   className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
@@ -140,21 +158,32 @@ export function ExpenseModal() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Valor</label>
-                <input 
-                  type="number" 
-                  value={draftExpense.value || ''}
-                  onChange={e => setDraftExpense({...draftExpense, value: Number(e.target.value)})}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Valor <span className="text-red-500">*</span></label>
+                <NumericFormat 
+                  value={draftExpense.value}
+                  onFocus={(e) => e.target.select()}
+                  onValueChange={(values) => {
+                    if (values.floatValue === undefined) {
+                      setDraftExpense({...draftExpense, value: undefined as any});
+                      setTimeout(() => setDraftExpense(prev => ({...prev, value: 0})), 0);
+                    } else {
+                      setDraftExpense({...draftExpense, value: values.floatValue});
+                    }
+                  }}
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  prefix="R$ "
+                  className={`w-full bg-stone-50 border ${errors.value ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all`}
                   placeholder="R$ 0,00"
                 />
+                {errors.value && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.value}</p>}
               </div>
               <div>
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Recorrência</label>
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Recorrência <span className="text-red-500">*</span></label>
                 <select 
                   value={draftExpense.recurrence || 'Mensal'}
                   onChange={e => setDraftExpense({...draftExpense, recurrence: e.target.value as RecurrenceType})}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
+                  className={`w-full bg-stone-50 border ${errors.recurrence ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none`}
                 >
                   <option value="Única">Única</option>
                   <option value="Diária">Diária</option>
@@ -163,6 +192,7 @@ export function ExpenseModal() {
                   <option value="Mensal">Mensal</option>
                   <option value="Anual">Anual</option>
                 </select>
+                {errors.recurrence && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.recurrence}</p>}
               </div>
             </div>
             

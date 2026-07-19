@@ -30,7 +30,7 @@ export function EmployeesView() {
         floatingAction={{
           icon: <Plus size={24} />,
           label: "Novo Funcionário",
-          onClick: () => setActiveEmployee({ id: "new", name: "", email: "", role: "Seller", createdAt: "" }),
+          onClick: () => setActiveEmployee({ name: "", email: "", role: "Seller", createdAt: "" }),
           colorClass: "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/40"
         }}
       >

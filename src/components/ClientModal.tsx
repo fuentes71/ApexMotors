@@ -1,10 +1,12 @@
 import { X, Save, Loader2, User, MessageCircle } from "lucide-react";
+import { IMaskInput } from "react-imask";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { Client } from "../types";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { generateWhatsAppLink } from "../utils";
+import { DateInput } from "./DateInput";
 
 export function ClientModal() {
   const { activeClient, setActiveClient, clients, setClients, whatsappTemplates } = useData();
@@ -12,6 +14,7 @@ export function ClientModal() {
   const [draftClient, setDraftClient] = useState<Client | null>(null);
   const [prevActiveClient, setPrevActiveClient] = useState<Client | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleWhatsApp = (client: Client) => {
     const link = generateWhatsAppLink(client, true, whatsappTemplates);
@@ -38,18 +41,46 @@ export function ClientModal() {
     }
   };
 
+  const showError = (field: string, msg: string) => {
+    setErrors(prev => ({ ...prev, [field]: msg }));
+    setTimeout(() => {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }, 4000);
+  };
+
   const handleSave = async () => {
     if (!draftClient) return;
+
+    let hasError = false;
+    if (!draftClient.name?.trim()) {
+      showError("name", "O nome do cliente é obrigatório.");
+      hasError = true;
+    }
+    if (!draftClient.email?.trim()) {
+      showError("email", "O e-mail do cliente é obrigatório.");
+      hasError = true;
+    }
+    if (!draftClient.phone?.trim()) {
+      showError("phone", "O telefone do cliente é obrigatório.");
+      hasError = true;
+    }
+
+    if (hasError) return;
+
     setIsSaving(true);
     try {
-      const isNew = draftClient.id === "new";
-      if (!isNew && clients.find(c => c.id === draftClient.id)) {
-        const res = await api.put(`/clients/${draftClient.id}`, draftClient);
-        setClients(clients.map(c => c.id === draftClient.id ? res.data : c));
-      } else {
-        const res = await api.post(`/clients`, draftClient);
+      const isNew = !draftClient.id;
+      const payload = { ...draftClient };
+      
+      if (isNew) {
+        delete payload.id;
+        const res = await api.post(`/clients`, payload);
         setClients([...clients, res.data]);
+      } else {
+        const res = await api.patch(`/clients/${draftClient.id}`, payload);
+        setClients(clients.map(c => c.id === draftClient.id ? res.data : c));
       }
+      
       setActiveClient(null);
       showToast(isNew ? "Cliente cadastrado com sucesso!" : "Cliente atualizado com sucesso!", "success");
     } catch (e) {
@@ -78,7 +109,7 @@ export function ClientModal() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-stone-800">
-                {activeClient.id === "new" ? "Novo Cliente" : "Editar Cliente"}
+                {!activeClient.id ? "Novo Cliente" : "Editar Cliente"}
               </h2>
             </div>
           </div>
@@ -93,25 +124,30 @@ export function ClientModal() {
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Nome do Cliente</label>
+              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Nome do Cliente <span className="text-red-500">*</span></label>
               <input 
                 type="text" 
                 value={draftClient.name}
                 onChange={e => setDraftClient({...draftClient, name: e.target.value})}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className={`w-full bg-stone-50 border ${errors.name ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all`}
                 placeholder="Ex: Roberto Silva"
               />
+              {errors.name && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.name}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Telefone</label>
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Telefone <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <input 
+                  <IMaskInput 
+                    mask={[
+                      { mask: '(00) 0000-0000' },
+                      { mask: '(00) 00000-0000' }
+                    ]}
                     type="text" 
                     value={draftClient.phone}
-                    onChange={e => setDraftClient({...draftClient, phone: e.target.value})}
-                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 pr-10 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    onAccept={(value) => setDraftClient({...draftClient, phone: value})}
+                    className={`w-full bg-stone-50 border ${errors.phone ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 pr-10 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all`}
                     placeholder="(00) 00000-0000"
                   />
                   {draftClient.phone && (
@@ -124,16 +160,18 @@ export function ClientModal() {
                     </button>
                   )}
                 </div>
+                {errors.phone && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.phone}</p>}
               </div>
               <div>
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">E-mail</label>
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">E-mail <span className="text-red-500">*</span></label>
                 <input 
                   type="email" 
                   value={draftClient.email}
                   onChange={e => setDraftClient({...draftClient, email: e.target.value})}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  className={`w-full bg-stone-50 border ${errors.email ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all`}
                   placeholder="email@exemplo.com"
                 />
+                {errors.email && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.email}</p>}
               </div>
             </div>
 
@@ -165,10 +203,9 @@ export function ClientModal() {
 
             <div>
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Data de Cadastro</label>
-              <input 
-                type="date" 
+              <DateInput 
                 value={draftClient.createdAt}
-                onChange={e => setDraftClient({...draftClient, createdAt: e.target.value})}
+                onChangeDate={val => setDraftClient({...draftClient, createdAt: val})}
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               />
             </div>

@@ -70,7 +70,7 @@ export function InventoryView({
     } else {
       const updatedV = { ...v, status: newStatus as Vehicle['status'], saleDate: undefined, buyerName: undefined, buyerDoc: undefined };
       try {
-        const res = await api.put(`/vehicles/${v.id}`, updatedV);
+        const res = await api.patch(`/vehicles/${v.id}`, updatedV);
         setVehicles(vehicles.map(vh => vh.id === v.id ? res.data : vh));
         showToast("Status alterado com sucesso!", "success");
       } catch(e) {
@@ -93,7 +93,7 @@ export function InventoryView({
     };
     
     try {
-      const res = await api.put(`/vehicles/${sellingVehicle.id}`, updatedV);
+      const res = await api.patch(`/vehicles/${sellingVehicle.id}`, updatedV);
       setVehicles(vehicles.map(vh => vh.id === sellingVehicle.id ? res.data : vh));
       showToast("Veículo vendido!", "success");
     } catch(e) {
@@ -357,12 +357,15 @@ export function InventoryView({
                                       setIsDeletingId(v.id);
                                       try {
                                         await api.delete(`/vehicles/${v.id}`);
-                                      } catch(err) {
+                                        setVehicles(vehicles.filter(ve => ve.id !== v.id));
+                                        setFixedExpenses(fixedExpenses.filter(exp => exp.linkedVehicleId !== v.id));
+                                        showToast("Veículo excluído com sucesso!", "success");
+                                      } catch(err: any) {
                                         console.error(err);
+                                        showToast(err.response?.data?.message || "Erro ao excluir veículo", "error");
+                                      } finally {
+                                        setIsDeletingId(null);
                                       }
-                                      setVehicles(vehicles.filter(ve => ve.id !== v.id));
-                                      setFixedExpenses(fixedExpenses.filter(exp => exp.linkedVehicleId !== v.id));
-                                      setIsDeletingId(null);
                                     }
                                   }}
                                   disabled={isDeletingId === v.id}

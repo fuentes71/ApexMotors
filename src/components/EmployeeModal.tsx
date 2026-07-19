@@ -3,6 +3,8 @@ import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { Employee, Role } from "../types";
 import { useToast } from "../context/ToastContext";
+import api from "../services/api";
+import { DateInput } from "./DateInput";
 
 export function EmployeeModal() {
   const { activeEmployee, setActiveEmployee, employees, setEmployees } = useData();
@@ -10,6 +12,7 @@ export function EmployeeModal() {
   const [draftEmployee, setDraftEmployee] = useState<Employee | null>(null);
   const [prevActiveEmployee, setPrevActiveEmployee] = useState<Employee | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   if (activeEmployee !== prevActiveEmployee) {
     setPrevActiveEmployee(activeEmployee);
@@ -31,36 +34,60 @@ export function EmployeeModal() {
     }
   };
 
+  const showError = (field: string, msg: string) => {
+    setErrors(prev => ({ ...prev, [field]: msg }));
+    setTimeout(() => {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }, 4000);
+  };
+
   const handleSave = async () => {
     if (!draftEmployee) return;
     
     // Validations
-    if (!draftEmployee.name.trim() || !draftEmployee.email.trim()) {
-      showToast("Preencha nome e e-mail", "error");
-      return;
+    let hasError = false;
+    if (!draftEmployee.name.trim()) {
+      showError("name", "O nome é obrigatório.");
+      hasError = true;
     }
+    if (!draftEmployee.email.trim()) {
+      showError("email", "O e-mail é obrigatório.");
+      hasError = true;
+    }
+    if (!draftEmployee.id && (!draftEmployee.password || draftEmployee.password.length < 6)) {
+      showError("password", "A senha inicial deve ter no mínimo 6 caracteres.");
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     setIsSaving(true);
     try {
-      // Mock API call to save employee
-      setTimeout(() => {
-        const isNew = draftEmployee.id === "new";
-        
-        if (isNew) {
-          const newEmp = { ...draftEmployee, id: Date.now().toString() };
-          setEmployees([...employees, newEmp]);
-          showToast("Funcionário cadastrado com sucesso!", "success");
-        } else {
-          setEmployees(employees.map(e => e.id === draftEmployee.id ? draftEmployee : e));
-          showToast("Funcionário atualizado com sucesso!", "success");
-        }
-        
-        setActiveEmployee(null);
-        setIsSaving(false);
-      }, 500);
+      const isNew = !draftEmployee.id;
+      let res;
+      const payload = { ...draftEmployee };
+
+      if (isNew) {
+        delete payload.id;
+        res = await api.post(`/users`, payload);
+        setEmployees([...employees, res.data]);
+        showToast("Funcionário cadastrado com sucesso!", "success");
+      } else {
+        res = await api.patch(`/users/${draftEmployee.id}`, payload);
+        setEmployees(employees.map(e => e.id === draftEmployee.id ? res.data : e));
+        showToast("Funcionário atualizado com sucesso!", "success");
+      }
+      
+      setActiveEmployee(null);
     } catch (e) {
       console.error(e);
-      showToast("Erro ao salvar funcionário", "error");
+      // Fallback local caso dê erro (opcional, mantendo comportamento parecido com os outros módulos)
+      if (draftEmployee.id !== "new") {
+        setEmployees(employees.map(e => e.id === draftEmployee.id ? draftEmployee : e));
+      }
+      setActiveEmployee(null);
+      showToast("Erro na API: Funcionário salvo localmente", "warning");
+    } finally {
       setIsSaving(false);
     }
   };
@@ -83,7 +110,7 @@ export function EmployeeModal() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-stone-800">
-                {activeEmployee.id === "new" ? "Novo Funcionário" : "Editar Funcionário"}
+                {!activeEmployee.id ? "Novo Funcionário" : "Editar Funcionário"}
               </h2>
             </div>
           </div>
@@ -98,26 +125,42 @@ export function EmployeeModal() {
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Nome Completo</label>
+              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Nome Completo <span className="text-red-500">*</span></label>
               <input 
                 type="text" 
                 value={draftEmployee.name}
                 onChange={e => setDraftEmployee({...draftEmployee, name: e.target.value})}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className={`w-full bg-stone-50 border ${errors.name ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all`}
                 placeholder="Ex: Roberto Silva"
               />
+              {errors.name && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.name}</p>}
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">E-mail Corporativo</label>
+              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">E-mail Corporativo <span className="text-red-500">*</span></label>
               <input 
                 type="email" 
                 value={draftEmployee.email}
                 onChange={e => setDraftEmployee({...draftEmployee, email: e.target.value})}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className={`w-full bg-stone-50 border ${errors.email ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all`}
                 placeholder="email@apexmotors.com"
               />
+              {errors.email && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.email}</p>}
             </div>
+
+            {!activeEmployee.id && (
+              <div>
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Senha Inicial <span className="text-red-500">*</span></label>
+                <input 
+                  type="password" 
+                  value={draftEmployee.password || ""}
+                  onChange={e => setDraftEmployee({...draftEmployee, password: e.target.value})}
+                  className={`w-full bg-stone-50 border ${errors.password ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all`}
+                  placeholder="Mínimo de 6 caracteres"
+                />
+                {errors.password && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.password}</p>}
+              </div>
+            )}
 
             <div>
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Nível de Acesso</label>
@@ -133,12 +176,11 @@ export function EmployeeModal() {
 
             <div>
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Data de Cadastro</label>
-              <input 
-                type="date" 
-                value={draftEmployee.createdAt ? new Date(draftEmployee.createdAt).toISOString().split('T')[0] : ''}
-                onChange={e => setDraftEmployee({...draftEmployee, createdAt: new Date(e.target.value).toISOString()})}
+              <DateInput 
+                value={draftEmployee.createdAt}
+                onChangeDate={val => setDraftEmployee({...draftEmployee, createdAt: val})}
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                disabled={activeEmployee.id !== "new"}
+                disabled={!!activeEmployee.id}
               />
             </div>
           </div>

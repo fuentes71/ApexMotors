@@ -46,7 +46,6 @@ export function FinanceView({
 
   const handleAddFixedExpense = () => {
     setActiveExpense({
-      id: "new",
       name: '',
       value: 0,
       recurrence: 'Mensal',
