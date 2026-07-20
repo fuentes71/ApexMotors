@@ -1,5 +1,5 @@
 import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileText, Download, X, ChevronRight, Pencil, AlertTriangle, Loader2, TrendingDown, Search } from "lucide-react";
-import { formatCurrency, calculateTotalFixedForPeriod } from "../utils";
+import { formatCurrency, calculateTotalFixedForPeriod, RecurrenceEnum } from "../utils";
 import { Expense, Category } from "../types";
 import Image from "next/image";
 import { useState, Fragment } from "react";
@@ -48,7 +48,7 @@ export function FinanceView({
     setActiveExpense({
       name: '',
       value: 0,
-      recurrence: 'Mensal',
+      recurrence: 'Monthly',
       startDate: new Date().toISOString().split('T')[0],
       endDate: ''
     });
@@ -155,18 +155,18 @@ export function FinanceView({
                     .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                     .map(exp => {
                     const recurrenceColor = {
-                      'Única': 'bg-stone-100 text-stone-600',
-                      'Diária': 'bg-orange-50 text-orange-600',
-                      'Semanal': 'bg-amber-50 text-amber-600',
-                      'Quinzenal': 'bg-purple-50 text-purple-600',
-                      'Mensal': 'bg-blue-50 text-blue-600',
-                      'Anual': 'bg-emerald-50 text-emerald-600'
-                    }[exp.recurrence || 'Mensal'] || 'bg-blue-50 text-blue-600';
+                      'One-time': 'bg-stone-100 text-stone-600',
+                      'Daily': 'bg-orange-50 text-orange-600',
+                      'Weekly': 'bg-amber-50 text-amber-600',
+                      'Biweekly': 'bg-purple-50 text-purple-600',
+                      'Monthly': 'bg-blue-50 text-blue-600',
+                      'Yearly': 'bg-emerald-50 text-emerald-600'
+                    }[exp.recurrence || 'Monthly'] || 'bg-blue-50 text-blue-600';
 
                     let isWarning = false;
-                    if (exp.linkedVehicleId && exp.recurrence && exp.recurrence !== 'Única') {
+                    if (exp.linkedVehicleId && exp.recurrence && exp.recurrence !== 'One-time') {
                       const linkedVehicle = vehicles.find(v => v.id === exp.linkedVehicleId);
-                      if (linkedVehicle && linkedVehicle.status === 'Vendido') {
+                      if (linkedVehicle && linkedVehicle.status === 'Sold') {
                         isWarning = true;
                       }
                     }
@@ -190,7 +190,7 @@ export function FinanceView({
                         </TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider ${recurrenceColor}`}>
-                            {exp.recurrence || 'Mensal'}
+                            {RecurrenceEnum[exp.recurrence || 'Monthly'] || exp.recurrence}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -219,7 +219,7 @@ export function FinanceView({
                         <TableCell className="text-right print:hidden">
                           <div className="flex items-center justify-end gap-2">
                             <button 
-                              onClick={(e) => { e.stopPropagation(); handleDelete(exp.id); }}
+                              onClick={(e) => { e.stopPropagation(); if (exp.id) handleDelete(exp.id); }}
                               disabled={isDeletingId === exp.id}
                               className="p-1.5 rounded-lg transition-all text-stone-400 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-50 disabled:hover:bg-transparent"
                               title="Excluir"
@@ -252,18 +252,18 @@ export function FinanceView({
                 .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                 .map(exp => {
                   const recurrenceColor = {
-                    'Única': 'bg-stone-100 text-stone-600',
-                    'Diária': 'bg-orange-50 text-orange-600',
-                    'Semanal': 'bg-amber-50 text-amber-600',
-                    'Quinzenal': 'bg-purple-50 text-purple-600',
-                    'Mensal': 'bg-blue-50 text-blue-600',
-                    'Anual': 'bg-emerald-50 text-emerald-600'
-                  }[exp.recurrence || 'Mensal'] || 'bg-blue-50 text-blue-600';
+                    'One-time': 'bg-stone-100 text-stone-600',
+                    'Daily': 'bg-orange-50 text-orange-600',
+                    'Weekly': 'bg-amber-50 text-amber-600',
+                    'Biweekly': 'bg-purple-50 text-purple-600',
+                    'Monthly': 'bg-blue-50 text-blue-600',
+                    'Yearly': 'bg-emerald-50 text-emerald-600'
+                  }[exp.recurrence || 'Monthly'] || 'bg-blue-50 text-blue-600';
 
                   let isWarning = false;
-                  if (exp.linkedVehicleId && exp.recurrence && exp.recurrence !== 'Única') {
+                  if (exp.linkedVehicleId && exp.recurrence && exp.recurrence !== 'One-time') {
                     const linkedVehicle = vehicles.find(v => v.id === exp.linkedVehicleId);
-                    if (linkedVehicle && linkedVehicle.status === 'Vendido') {
+                    if (linkedVehicle && linkedVehicle.status === 'Sold') {
                       isWarning = true;
                     }
                   }
@@ -285,7 +285,7 @@ export function FinanceView({
                           </button>
                         )}
                         <button 
-                          onClick={(e) => { e.stopPropagation(); handleDelete(exp.id); }}
+                          onClick={(e) => { e.stopPropagation(); if (exp.id) handleDelete(exp.id); }}
                           disabled={isDeletingId === exp.id}
                           className="text-stone-400 hover:text-rose-500 bg-white shadow-sm border border-stone-100 p-2 rounded-full hover:bg-rose-50"
                           title="Excluir"
@@ -318,7 +318,7 @@ export function FinanceView({
                           </div>
                           <div className="mt-1 flex items-center gap-2">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${recurrenceColor}`}>
-                              {exp.recurrence || 'Mensal'}
+                              {RecurrenceEnum[exp.recurrence || 'Monthly'] || exp.recurrence}
                             </span>
                           </div>
                         </div>

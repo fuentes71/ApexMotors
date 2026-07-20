@@ -5,7 +5,7 @@ import { useData } from "../context/DataContext";
 import { useSort } from "../hooks/useSort";
 import { useToast } from "../context/ToastContext";
 import { useConfirm } from "../context/ConfirmContext";
-import { generateWhatsAppLink } from "../utils";
+import { generateWhatsAppLink, ClientStatusEnum } from "../utils";
 import { Search, ChevronRight, Phone, Mail, Calendar, CarFront, Edit2, Trash2, Plus, Loader2, ChevronDown, Check, MessageCircle, Users } from "lucide-react";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "./ui/Table";
 import { ViewLayout } from "./ui/ViewLayout";
@@ -173,16 +173,16 @@ export function ClientsView() {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            setOpenDropdownId(openDropdownId === client.id ? null : client.id);
+                            setOpenDropdownId(openDropdownId === client.id ? null : (client.id || null));
                           }}
                           className={`w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap cursor-pointer hover:shadow-sm ${
-                            client.status === 'Lead' || client.status === 'Frio' ? 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' :
-                            client.status === 'Negociando' ? 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200' :
-                            client.status === 'Cliente' || client.status === 'Fechado' ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200' :
+                            client.status === 'Lead' || client.status === 'Cold' ? 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200' :
+                            client.status === 'Negotiating' ? 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200' :
+                            client.status === 'Customer' || client.status === 'Closed' ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200' :
                             'bg-stone-100 text-stone-800 border-stone-200 hover:bg-stone-200'
                           }`}
                         >
-                          <span>{client.status}</span>
+                          <span>{ClientStatusEnum[client.status as keyof typeof ClientStatusEnum] || client.status}</span>
                           <ChevronDown size={12} className="opacity-50 shrink-0" />
                         </button>
   
@@ -190,14 +190,14 @@ export function ClientsView() {
                           <>
                             <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }} />
                             <div className="absolute top-full mt-2 left-0 w-36 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
-                              {['Lead', 'Frio', 'Negociando', 'Cliente', 'Fechado'].map((statusOption) => (
+                              {Object.keys(ClientStatusEnum).map((statusOption) => (
                                 <button 
-                                  key={statusOption}
+                                  key={ClientStatusEnum[statusOption as keyof typeof ClientStatusEnum]}
                                   onClick={(e) => handleStatusChange(client, statusOption as Client['status'], e)}
                                   className="w-full text-left px-4 py-2.5 text-sm hover:bg-stone-50 flex items-center justify-between group transition-colors"
                                 >
                                   <span className={`font-medium ${client.status === statusOption ? 'text-indigo-600' : 'text-stone-700'}`}>
-                                    {statusOption}
+                                    {ClientStatusEnum[statusOption as keyof typeof ClientStatusEnum]}
                                   </span>
                                   {client.status === statusOption && <Check size={14} className="text-indigo-600" />}
                                 </button>
@@ -210,13 +210,19 @@ export function ClientsView() {
                     <TableCell className="hidden md:table-cell">
                       <div className="max-w-[200px]">
                         <div className="font-medium text-stone-800 line-clamp-1">{client.interest || "-"}</div>
-                        <div className="text-xs text-stone-500 line-clamp-2 mt-1" title={client.notes}>{client.notes}</div>
+                        {client.notes ? (
+                          <Tooltip content={client.notes} position="bottom">
+                            <div className="text-xs text-stone-500 line-clamp-2 mt-1 cursor-default">{client.notes}</div>
+                          </Tooltip>
+                        ) : (
+                          <div className="text-xs text-stone-500 line-clamp-2 mt-1">-</div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 
-                              onClick={(e) => { e.stopPropagation(); deleteClient(client.id); }}
+                              onClick={(e) => { e.stopPropagation(); if (client.id) deleteClient(client.id); }}
                               disabled={isDeletingId === client.id}
                               className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors disabled:opacity-50"
                               title="Excluir cliente"
@@ -228,7 +234,7 @@ export function ClientsView() {
                                 <button 
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setWhatsappDropdownId(whatsappDropdownId === client.id ? null : client.id);
+                                    setWhatsappDropdownId(whatsappDropdownId === client.id ? null : (client.id || null));
                                   }}
                                   className="p-1.5 text-stone-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
                                   title="Enviar WhatsApp"
@@ -302,7 +308,7 @@ export function ClientsView() {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            setWhatsappDropdownId(whatsappDropdownId === client.id ? null : client.id);
+                            setWhatsappDropdownId(whatsappDropdownId === client.id ? null : (client.id || null));
                           }}
                           className="text-stone-400 hover:text-green-600 bg-white shadow-sm border border-stone-100 p-2 rounded-full hover:bg-green-50"
                           title="Enviar WhatsApp"
@@ -334,7 +340,7 @@ export function ClientsView() {
                       </div>
                     )}
                     <button 
-                      onClick={(e) => { e.stopPropagation(); deleteClient(client.id); }}
+                      onClick={(e) => { e.stopPropagation(); if (client.id) deleteClient(client.id); }}
                       disabled={isDeletingId === client.id}
                       className="text-stone-400 hover:text-rose-500 bg-white shadow-sm border border-stone-100 p-2 rounded-full hover:bg-rose-50 disabled:opacity-50"
                       title="Excluir cliente"
@@ -352,7 +358,7 @@ export function ClientsView() {
 
                   <div className="flex gap-4 items-start">
                     <div className={`w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center border relative transition-all ${
-                        client.status === 'Cliente' || client.status === 'Fechado' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
+                        client.status === 'Customer' || client.status === 'Closed' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
                         'bg-stone-50 border-stone-200 text-stone-400'
                       }`}
                     >
@@ -399,16 +405,16 @@ export function ClientsView() {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          setOpenDropdownId(openDropdownId === client.id ? null : client.id);
+                          setOpenDropdownId(openDropdownId === client.id ? null : (client.id || null));
                         }}
                         className={`w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wide border transition-all ${
-                          client.status === 'Lead' || client.status === 'Frio' ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' :
-                          client.status === 'Negociando' ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100' :
-                          client.status === 'Cliente' || client.status === 'Fechado' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100' :
+                          client.status === 'Lead' || client.status === 'Cold' ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' :
+                          client.status === 'Negotiating' ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100' :
+                          client.status === 'Customer' || client.status === 'Closed' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100' :
                           'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
                         }`}
                       >
-                        <span>{client.status}</span>
+                        <span>{ClientStatusEnum[client.status as keyof typeof ClientStatusEnum] || client.status}</span>
                         <ChevronDown size={12} className="opacity-50 shrink-0" />
                       </button>
 
@@ -416,14 +422,14 @@ export function ClientsView() {
                         <>
                           <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }} />
                           <div className="absolute top-full mt-1 left-0 w-full bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
-                            {['Lead', 'Frio', 'Negociando', 'Cliente', 'Fechado'].map((statusOption) => (
+                            {Object.keys(ClientStatusEnum).map((statusOption) => (
                               <button 
-                                key={statusOption}
+                                key={ClientStatusEnum[statusOption as keyof typeof ClientStatusEnum]}
                                 onClick={(e) => handleStatusChange(client, statusOption as Client['status'], e)}
                                 className="w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase hover:bg-stone-50 flex items-center justify-between group transition-colors"
                               >
                                 <span className={`${client.status === statusOption ? 'text-indigo-600' : 'text-stone-600'}`}>
-                                  {statusOption}
+                                  {ClientStatusEnum[statusOption as keyof typeof ClientStatusEnum]}
                                 </span>
                                 {client.status === statusOption && <Check size={12} className="text-indigo-600" />}
                               </button>

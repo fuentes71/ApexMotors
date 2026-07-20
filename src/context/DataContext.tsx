@@ -69,7 +69,7 @@ export function DataProvider({ children, tenantId }: { children: ReactNode, tena
     fetchTenant();
   }, [tenantId]);
 
-  const [contractTemplate, setContractTemplate] = useState(`Pelo presente instrumento, eu, {{buyerName}}, inscrito(a)
+  const DEFAULT_CONTRACT_TEMPLATE = `Pelo presente instrumento, eu, {{buyerName}}, inscrito(a)
 no CPF/CNPJ sob o nº {{buyerDoc}}, declaro ter comprado o veículo abaixo
 descrito da empresa {{sellerName}},
 inscrita no CNPJ sob o nº {{sellerDoc}}.
@@ -82,7 +82,9 @@ DADOS DO VEÍCULO:
 
 Declaro ainda ter recebido o veículo nas condições em que se encontra e
 totalmente livre de desembaraços e débitos até a presente data, tornando-me
-responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
+responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
+
+  const [contractTemplate, setContractTemplate] = useState(DEFAULT_CONTRACT_TEMPLATE);
 
   const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplates = {
     lead_interest: "Olá, {{firstName}}! Tudo bem? Vi que você tem interesse em: *{{interest}}*. Gostaríamos de conversar sobre algumas opções que temos disponíveis!",
@@ -93,19 +95,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
     cliente_noInterest: "Olá, {{firstName}}! Tudo bem? Lembramos de você por aqui! Como estão as coisas? Se precisar de alguma manutenção ou avaliação, nos avise."
   };
 
-  const [whatsappTemplates, setWhatsappTemplates] = useState<WhatsAppTemplates>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("@apexMotors:whatsappTemplates_v2");
-      if (stored) return JSON.parse(stored);
-    }
-    return DEFAULT_WHATSAPP_TEMPLATES;
-  });
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("@apexMotors:whatsappTemplates_v2", JSON.stringify(whatsappTemplates));
-    }
-  }, [whatsappTemplates]);
+  const [whatsappTemplates, setWhatsappTemplates] = useState<WhatsAppTemplates>(DEFAULT_WHATSAPP_TEMPLATES);
 
   const [startMonth, setStartMonth] = useState(() => {
     const d = new Date();
@@ -133,17 +123,26 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`);
 
   const fetchData = async () => {
     try {
-      const [vRes, eRes, cRes, empRes] = await Promise.allSettled([
+      const [vRes, eRes, cRes, empRes, settingsRes] = await Promise.allSettled([
         api.get('/vehicles'),
         api.get('/expenses'),
         api.get('/clients'),
-        authApi.get('/users')
+        authApi.get('/users'),
+        api.get('/tenants/settings/me')
       ]);
 
       if (vRes.status === 'fulfilled') setVehicles(vRes.value.data);
       if (eRes.status === 'fulfilled') setFixedExpenses(eRes.value.data);
       if (cRes.status === 'fulfilled') setClients(cRes.value.data);
       if (empRes.status === 'fulfilled') setEmployees(empRes.value.data);
+      if (settingsRes.status === 'fulfilled') {
+        if (settingsRes.value.data.pdfTemplate) {
+          setContractTemplate(settingsRes.value.data.pdfTemplate);
+        }
+        if (settingsRes.value.data.whatsappTemplates) {
+          setWhatsappTemplates(settingsRes.value.data.whatsappTemplates);
+        }
+      }
     } catch (err) {
       console.error('Error fetching initial data:', err);
     }

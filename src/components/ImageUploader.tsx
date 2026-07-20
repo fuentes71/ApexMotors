@@ -16,6 +16,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, c
 
   return (
     <>
+      {/* eslint-disable-next-line react-hooks/refs */}
       {children({ onClick: handleClick, isUploading })}
       <input
         type="file"

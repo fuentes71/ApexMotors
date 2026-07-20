@@ -1,6 +1,6 @@
-export type Category = "Mecânica" | "Funilaria" | "Marketing" | "Documentação" | "Outros";
+export type Category = "Mechanics" | "Bodywork" | "Marketing" | "Documentation" | "Others";
 
-export type RecurrenceType = "Única" | "Diária" | "Semanal" | "Quinzenal" | "Mensal" | "Anual";
+export type RecurrenceType = "One-time" | "Daily" | "Weekly" | "Biweekly" | "Monthly" | "Yearly";
 
 export type Expense = {
   id?: string;
@@ -27,7 +27,7 @@ export interface Client {
   name: string;
   phone: string;
   email: string;
-  status: 'Lead' | 'Frio' | 'Negociando' | 'Cliente' | 'Fechado';
+  status: 'Lead' | 'Cold' | 'Negotiating' | 'Customer' | 'Closed';
   interest: string;
   notes: string;
   createdAt: string;
@@ -35,7 +35,7 @@ export interface Client {
 
 export interface VehicleDebt {
   id?: string;
-  type: 'IPVA' | 'Licenciamento' | 'Multa';
+  type: 'IPVA' | 'Licensing' | 'Fine';
   amount: number;
   dueDate: string;
   description: string;
@@ -50,7 +50,7 @@ export type Vehicle = {
   purchaseValue: number | null;
   saleValue: number | null;
   expenses: Expense[];
-  status: "Em Estoque" | "Manutenção" | "Vendido";
+  status: "In Stock" | "Maintenance" | "Sold";
   entryDate: string;
   saleDate?: string;
   licensePlate?: string;
@@ -66,6 +66,7 @@ export interface Employee {
   id?: string;
   name: string;
   email: string;
+  password?: string;
   role: Role;
   createdAt: string;
 }

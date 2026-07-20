@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Settings as SettingsIcon, FileText, Info, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AdminGuard } from "@/components/AdminGuard";
+import api from "@/services/api";
 
 export default function SettingsPage() {
   const { contractTemplate, setContractTemplate, whatsappTemplates, setWhatsappTemplates } = useData();
@@ -25,11 +26,60 @@ export default function SettingsPage() {
     setWhatsappDraft(whatsappTemplates);
   }
 
-  const handleSave = () => {
-    setContractTemplate(templateDraft);
-    setWhatsappTemplates(whatsappDraft);
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
+  const DEFAULT_CONTRACT_TEMPLATE = `Pelo presente instrumento, eu, {{buyerName}}, inscrito(a)
+no CPF/CNPJ sob o nº {{buyerDoc}}, declaro ter comprado o veículo abaixo
+descrito da empresa {{sellerName}},
+inscrita no CNPJ sob o nº {{sellerDoc}}.
+
+DADOS DO VEÍCULO:
+- Veículo: {{vehicleName}}
+- Placa: {{vehiclePlaca}}
+- Renavam: {{vehicleRenavam}}
+- Valor Acordado: {{vehiclePrice}}
+
+Declaro ainda ter recebido o veículo nas condições em que se encontra e
+totalmente livre de desembaraços e débitos até a presente data, tornando-me
+responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
+
+  const DEFAULT_WHATSAPP_TEMPLATES = {
+    lead_interest: "Olá, {{firstName}}! Tudo bem? Vi que você tem interesse em: *{{interest}}*. Gostaríamos de conversar sobre algumas opções que temos disponíveis!",
+    lead_noInterest: "Olá, {{firstName}}! Tudo bem? Em que podemos te ajudar hoje? Temos diversas opções na loja que podem te interessar!",
+    negociando_interest: "Olá, {{firstName}}! Tudo bem? Gostaria de saber se você conseguiu pensar na nossa proposta sobre o *{{interest}}*? Qualquer dúvida estou à disposição.",
+    negociando_noInterest: "Olá, {{firstName}}! Tudo bem? Como estão as coisas? Gostaria de tirar alguma dúvida sobre as opções que vimos?",
+    cliente_interest: "Olá, {{firstName}}! Tudo bem? Como está a experiência com seu novo *{{interest}}*? Estamos à disposição para qualquer dúvida ou revisão!",
+    cliente_noInterest: "Olá, {{firstName}}! Tudo bem? Lembramos de você por aqui! Como estão as coisas? Se precisar de alguma manutenção ou avaliação, nos avise."
+  };
+
+  const handleRestoreDefaults = async () => {
+    try {
+      await api.patch('/tenants/settings', {
+        pdfTemplate: null,
+        whatsappTemplates: null
+      });
+      setContractTemplate(DEFAULT_CONTRACT_TEMPLATE);
+      setWhatsappTemplates(DEFAULT_WHATSAPP_TEMPLATES);
+      setTemplateDraft(DEFAULT_CONTRACT_TEMPLATE);
+      setWhatsappDraft(DEFAULT_WHATSAPP_TEMPLATES);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (error) {
+      console.error("Error restoring settings:", error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      await api.patch('/tenants/settings', {
+        pdfTemplate: templateDraft,
+        whatsappTemplates: whatsappDraft
+      });
+      setContractTemplate(templateDraft);
+      setWhatsappTemplates(whatsappDraft);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (error) {
+      console.error("Error saving settings:", error);
+    }
   };
 
   return (
@@ -176,16 +226,7 @@ export default function SettingsPage() {
             
             <div className="flex justify-end gap-3 pt-4">
               <button
-                onClick={() => {
-                  setWhatsappDraft({
-                    lead_interest: "Olá, {{firstName}}! Tudo bem? Vi que você tem interesse em: *{{interest}}*. Gostaríamos de conversar sobre algumas opções que temos disponíveis!",
-                    lead_noInterest: "Olá, {{firstName}}! Tudo bem? Em que podemos te ajudar hoje? Temos diversas opções na loja que podem te interessar!",
-                    negociando_interest: "Olá, {{firstName}}! Tudo bem? Gostaria de saber se você conseguiu pensar na nossa proposta sobre o *{{interest}}*? Qualquer dúvida estou à disposição.",
-                    negociando_noInterest: "Olá, {{firstName}}! Tudo bem? Como estão as coisas? Gostaria de tirar alguma dúvida sobre as opções que vimos?",
-                    cliente_interest: "Olá, {{firstName}}! Tudo bem? Como está a experiência com seu novo *{{interest}}*? Estamos à disposição para qualquer dúvida ou revisão!",
-                    cliente_noInterest: "Olá, {{firstName}}! Tudo bem? Lembramos de você por aqui! Como estão as coisas? Se precisar de alguma manutenção ou avaliação, nos avise."
-                  });
-                }}
+                onClick={handleRestoreDefaults}
                 className="px-6 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-medium transition-all shadow-sm"
               >
                 Restaurar Padrões

@@ -8,7 +8,7 @@ import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { useConfirm } from "../context/ConfirmContext";
 import { DateInput } from "./DateInput";
-import { toISODate } from "../utils";
+import { toISODate, CategoryEnum, RecurrenceEnum } from "../utils";
 import { ImageUploader } from "./ImageUploader";
 
 export function ExpenseModal() {
@@ -24,11 +24,8 @@ export function ExpenseModal() {
     setPrevActiveExpense(activeExpense);
     if (activeExpense) {
       const draft = JSON.parse(JSON.stringify(activeExpense));
-      if (draft.dueDate && draft.dueDate.includes('-')) {
-        const d = new Date(draft.dueDate);
-        if (!isNaN(d.getTime())) {
-          draft.dueDate = d.getUTCDate().toString();
-        }
+      if (draft.dueDate && draft.dueDate.includes('T')) {
+        draft.dueDate = draft.dueDate.split('T')[0];
       }
       setDraftExpense(draft);
     } else {
@@ -87,22 +84,12 @@ export function ExpenseModal() {
       const isNew = !draftExpense.id;
       
       const payload: any = { ...draftExpense };
-      payload.recurrence = payload.recurrence || 'Mensal';
+      payload.recurrence = payload.recurrence || 'Monthly';
       payload.value = Number(payload.value) || 0;
       payload.startDate = toISODate(payload.startDate);
       payload.endDate = toISODate(payload.endDate) || null;
       if (payload.dueDate) {
-        const day = Number(payload.dueDate);
-        if (!isNaN(day) && day > 0 && day <= 31) {
-          const y = new Date().getFullYear();
-          const m = new Date().getMonth() + 1;
-          const yStr = y.toString();
-          const mStr = m.toString().padStart(2, '0');
-          const dStr = day.toString().padStart(2, '0');
-          payload.dueDate = toISODate(`${yStr}-${mStr}-${dStr}`);
-        } else {
-          payload.dueDate = toISODate(payload.dueDate);
-        }
+        payload.dueDate = toISODate(payload.dueDate);
       }
 
       if (isNew) {
@@ -196,7 +183,7 @@ export function ExpenseModal() {
                   onValueChange={(values) => {
                     if (values.floatValue === undefined) {
                       setDraftExpense({...draftExpense, value: undefined as any});
-                      setTimeout(() => setDraftExpense(prev => ({...prev, value: 0})), 0);
+                      setTimeout(() => setDraftExpense(prev => prev ? ({...prev, value: 0}) : null), 0);
                     } else {
                       setDraftExpense({...draftExpense, value: values.floatValue});
                     }
@@ -212,16 +199,16 @@ export function ExpenseModal() {
               <div>
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Recorrência</label>
                 <select 
-                  value={draftExpense.recurrence || 'Mensal'}
+                  value={draftExpense.recurrence || 'Monthly'}
                   onChange={e => setDraftExpense({...draftExpense, recurrence: e.target.value as RecurrenceType})}
                   className={`w-full bg-stone-50 border ${errors.recurrence ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none`}
                 >
-                  <option value="Única">Única</option>
-                  <option value="Diária">Diária</option>
-                  <option value="Semanal">Semanal</option>
-                  <option value="Quinzenal">Quinzenal</option>
-                  <option value="Mensal">Mensal</option>
-                  <option value="Anual">Anual</option>
+                  <option value="One-time">Única</option>
+                  <option value="Daily">Diária</option>
+                  <option value="Weekly">Semanal</option>
+                  <option value="Biweekly">Quinzenal</option>
+                  <option value="Monthly">Mensal</option>
+                  <option value="Yearly">Anual</option>
                 </select>
                 {errors.recurrence && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.recurrence}</p>}
               </div>
@@ -236,25 +223,22 @@ export function ExpenseModal() {
               >
                 <option value="Administrativo">Administrativo</option>
                 <option value="Marketing">Marketing</option>
-                <option value="Mecânica">Mecânica</option>
-                <option value="Funilaria">Funilaria</option>
-                <option value="Documentação">Documentação</option>
+                <option value="Mechanics">Mecânica</option>
+                <option value="Bodywork">Funilaria</option>
+                <option value="Documentation">Documentação</option>
                 <option value="Estética">Estética</option>
                 <option value="Financeiro">Financeiro</option>
-                <option value="Outros">Outros</option>
+                <option value="Others">Outros</option>
               </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Dia de Vencimento</label>
-                <input 
-                  type="number"
-                  min="1" max="31"
+                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Data de Vencimento</label>
+                <DateInput 
                   value={draftExpense.dueDate || ''}
-                  onChange={e => setDraftExpense({...draftExpense, dueDate: e.target.value})}
+                  onChangeDate={val => setDraftExpense({...draftExpense, dueDate: val})}
                   className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                  placeholder="Ex: 5"
                 />
               </div>
 

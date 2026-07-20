@@ -9,17 +9,40 @@ export const RoleEnum: Record<string, string> = {
 };
 
 export const VehicleStatusEnum: Record<string, string> = {
-  "Em Estoque": "Em Estoque", 
-  "Manutenção": "Manutenção", 
-  "Vendido": "Vendido"
+  "In Stock": "Em Estoque", 
+  "Maintenance": "Manutenção", 
+  "Sold": "Vendido"
 };
 
 export const ClientStatusEnum: Record<string, string> = {
   Lead: 'Lead',
-  Frio: 'Frio',
-  Negociando: 'Negociando',
-  Cliente: 'Cliente',
-  Fechado: 'Fechado'
+  Cold: 'Frio',
+  Negotiating: 'Negociando',
+  Customer: 'Cliente',
+  Closed: 'Fechado'
+};
+
+export const CategoryEnum: Record<string, string> = {
+  "Mechanics": "Mecânica",
+  "Bodywork": "Funilaria",
+  "Marketing": "Marketing",
+  "Documentation": "Documentação",
+  "Others": "Outros"
+};
+
+export const RecurrenceEnum: Record<string, string> = {
+  "One-time": "Única",
+  "Daily": "Diária",
+  "Weekly": "Semanal",
+  "Biweekly": "Quinzenal",
+  "Monthly": "Mensal",
+  "Yearly": "Anual"
+};
+
+export const DebtTypeEnum: Record<string, string> = {
+  "IPVA": "IPVA",
+  "Licensing": "Licenciamento",
+  "Fine": "Multa"
 };
 export const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -39,19 +62,19 @@ export const formatMonth = (yyyy_mm: string) => {
 
 export const getCategoryColor = (cat?: string) => {
   switch (cat) {
-    case "Mecânica": return "bg-blue-50 text-blue-600 border-blue-200";
+    case "Mechanics": return "bg-blue-50 text-blue-600 border-blue-200";
     case "Marketing": return "bg-emerald-50 text-emerald-600 border-emerald-200";
-    case "Funilaria": return "bg-orange-50 text-orange-600 border-orange-200";
-    case "Documentação": return "bg-purple-50 text-purple-600 border-purple-200";
+    case "Bodywork": return "bg-orange-50 text-orange-600 border-orange-200";
+    case "Documentation": return "bg-purple-50 text-purple-600 border-purple-200";
     default: return "bg-stone-100 text-stone-600 border-stone-200";
   }
 };
 
 export const getCategoryIcon = (cat?: string) => {
   switch (cat) {
-    case "Mecânica": return React.createElement(Wrench, { size: 12 });
+    case "Mechanics": return React.createElement(Wrench, { size: 12 });
     case "Marketing": return React.createElement(Megaphone, { size: 12 });
-    case "Documentação": return React.createElement(FileText, { size: 12 });
+    case "Documentation": return React.createElement(FileText, { size: 12 });
     default: return React.createElement(Tag, { size: 12 });
   }
 };
@@ -102,21 +125,24 @@ export const calculateTotalFixedForPeriod = (expenses: Expense[], startMonth: st
         total += exp.value;
       }
       
-      if (!exp.recurrence || exp.recurrence === "Única") {
+      let recurrence = exp.recurrence;
+
+
+      if (!recurrence || recurrence === "One-time") {
         break;
-      } else if (exp.recurrence === "Diária") {
+      } else if (recurrence === "Daily") {
         current.setDate(current.getDate() + 1);
-      } else if (exp.recurrence === "Semanal") {
+      } else if (recurrence === "Weekly") {
         current.setDate(current.getDate() + 7);
-      } else if (exp.recurrence === "Quinzenal") {
+      } else if (recurrence === "Biweekly") {
         current.setDate(current.getDate() + 14);
-      } else if (exp.recurrence === "Mensal") {
+      } else if (recurrence === "Monthly") {
         const expectedMonth = (current.getMonth() + 1) % 12;
         current.setMonth(current.getMonth() + 1);
         if (current.getMonth() !== expectedMonth) {
           current.setDate(0);
         }
-      } else if (exp.recurrence === "Anual") {
+      } else if (recurrence === "Yearly") {
         const expectedMonth = current.getMonth();
         current.setFullYear(current.getFullYear() + 1);
         if (current.getMonth() !== expectedMonth) {
@@ -151,19 +177,19 @@ export const generateWhatsAppLink = (client: Client, withMessage: boolean = true
         .replace(/\{\{firstName\}\}/g, firstName);
     };
     
-    if (client.status === 'Lead' || client.status === 'Frio') {
+    if (client.status === 'Lead' || client.status === 'Cold') {
       if (client.interest) {
         message = renderTemplate(templates.lead_interest);
       } else {
         message = renderTemplate(templates.lead_noInterest);
       }
-    } else if (client.status === 'Negociando') {
+    } else if (client.status === 'Negotiating') {
       if (client.interest) {
         message = renderTemplate(templates.negociando_interest);
       } else {
         message = renderTemplate(templates.negociando_noInterest);
       }
-    } else if (client.status === 'Cliente' || client.status === 'Fechado') {
+    } else if (client.status === 'Customer' || client.status === 'Closed') {
       if (client.interest) {
         message = renderTemplate(templates.cliente_interest);
       } else {
@@ -179,19 +205,19 @@ export const generateWhatsAppLink = (client: Client, withMessage: boolean = true
   } else {
     // Fallback if templates are not provided
     message = `Olá, ${firstName}! Tudo bem?`;
-    if (client.status === 'Lead' || client.status === 'Frio') {
+    if (client.status === 'Lead' || client.status === 'Cold') {
       if (client.interest) {
         message += ` Vi que você tem interesse em: *${client.interest}*. Gostaríamos de conversar sobre algumas opções que temos disponíveis!`;
       } else {
         message += ` Em que podemos te ajudar hoje? Temos diversas opções na loja que podem te interessar!`;
       }
-    } else if (client.status === 'Negociando') {
+    } else if (client.status === 'Negotiating') {
       if (client.interest) {
         message += ` Gostaria de saber se você conseguiu pensar na nossa proposta sobre o *${client.interest}*? Qualquer dúvida estou à disposição.`;
       } else {
         message += ` Como estão as coisas? Gostaria de tirar alguma dúvida sobre as opções que vimos?`;
       }
-    } else if (client.status === 'Cliente' || client.status === 'Fechado') {
+    } else if (client.status === 'Customer' || client.status === 'Closed') {
       if (client.interest) {
         message += ` Como está a experiência com seu novo *${client.interest}*? Estamos à disposição para qualquer dúvida ou revisão!`;
       } else {

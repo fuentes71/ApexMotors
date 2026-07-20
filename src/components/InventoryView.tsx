@@ -1,5 +1,5 @@
 import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2, FileText, Search, Download, Calendar, Tag, X, AlertCircle } from "lucide-react";
-import { formatCurrency, DEFAULT_CAR_IMAGE } from "../utils";
+import { formatCurrency, DEFAULT_CAR_IMAGE, VehicleStatusEnum } from "../utils";
 import Image from "next/image";
 import { Vehicle } from "../types";
 import { useData } from "../context/DataContext";
@@ -47,23 +47,23 @@ export function InventoryView({
 
   const { sortColumn, sortDirection, handleSort, sortedData: sortedVehicles } = useSort(displayVehicles, {
     cost: (a, b) => {
-      const costA = a.purchaseValue + a.expenses.reduce((acc, e) => acc + e.value, 0);
-      const costB = b.purchaseValue + b.expenses.reduce((acc, e) => acc + e.value, 0);
+      const costA = (a.purchaseValue || 0) + a.expenses.reduce((acc, e) => acc + e.value, 0);
+      const costB = (b.purchaseValue || 0) + b.expenses.reduce((acc, e) => acc + e.value, 0);
       return costA - costB;
     },
     profit: (a, b) => {
-      const costA = a.purchaseValue + a.expenses.reduce((acc, e) => acc + e.value, 0);
-      const profitA = a.saleValue - costA;
+      const costA = (a.purchaseValue || 0) + a.expenses.reduce((acc, e) => acc + e.value, 0);
+      const profitA = (a.saleValue || 0) - costA;
       
-      const costB = b.purchaseValue + b.expenses.reduce((acc, e) => acc + e.value, 0);
-      const profitB = b.saleValue - costB;
+      const costB = (b.purchaseValue || 0) + b.expenses.reduce((acc, e) => acc + e.value, 0);
+      const profitB = (b.saleValue || 0) - costB;
       
       return profitA - profitB;
     }
   });
 
   const handleStatusChange = async (v: Vehicle, newStatus: string) => {
-    if (newStatus === 'Vendido') {
+    if (newStatus === 'Sold') {
       setSellingVehicle(v);
       setBuyerName(v.buyerName || "");
       setBuyerDoc(v.buyerDoc || "");
@@ -86,7 +86,7 @@ export function InventoryView({
     setIsSelling(true);
     const updatedV = { 
       ...sellingVehicle, 
-      status: 'Vendido' as const, 
+      status: 'Sold' as const, 
       saleDate: new Date().toISOString().split('T')[0],
       buyerName,
       buyerDoc
@@ -191,8 +191,8 @@ export function InventoryView({
                     .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                     .map(v => {
                     const expenses = v.expenses.reduce((acc, e) => acc + e.value, 0);
-                    const totalCost = v.purchaseValue + expenses;
-                    const profit = v.saleValue - totalCost;
+                    const totalCost = (v.purchaseValue || 0) + expenses;
+                    const profit = (v.saleValue || 0) - totalCost;
                     
                     return (
                       <TableRow 
@@ -201,7 +201,7 @@ export function InventoryView({
                           setActiveVehicle(v);
                         }}
                         interactive={true}
-                        className={v.status === 'Vendido' ? 'bg-stone-100/50' : ''}
+                        className={v.status === 'Sold' ? 'bg-stone-100/50' : ''}
                       >
                         <TableCell>
                           <div className="flex items-center gap-4">
@@ -222,11 +222,11 @@ export function InventoryView({
                                   }}
                                 >
                                   {hasPhoto ? (
-                                    <Image src={v.image || v.gallery[0]} alt={v.name} fill className={`object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} unoptimized />
+                                    <Image src={v.image || v.gallery[0]} alt={v.name} fill className={`object-cover ${v.status === 'Sold' ? 'grayscale opacity-60' : ''}`} unoptimized />
                                   ) : (
                                     <CarFront size={20} className="text-stone-300" />
                                   )}
-                                  {v.status === 'Vendido' && (
+                                  {v.status === 'Sold' && (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-900/30">
                                       <CheckCircle2 size={12} className="text-emerald-300 drop-shadow" />
                                       <span className="text-[7px] font-bold text-white uppercase tracking-wide drop-shadow leading-tight">Vendido</span>
@@ -256,23 +256,23 @@ export function InventoryView({
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (v.status !== 'Vendido') {
-                                  setOpenDropdownId(openDropdownId === v.id ? null : v.id);
+                                if (v.status !== 'Sold') {
+                                  setOpenDropdownId(openDropdownId === v.id ? null : (v.id || null));
                                 }
                               }}
                               className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-all whitespace-nowrap w-[140px] ${
-                                v.status === 'Vendido' 
+                                v.status === 'Sold' 
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default' 
-                                  : v.status === 'Manutenção'
+                                  : v.status === 'Maintenance'
                                   ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 hover:shadow-sm cursor-pointer'
                                   : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:shadow-sm cursor-pointer'
                               }`}
                             >
                               <span className="flex items-center gap-1.5 whitespace-nowrap overflow-hidden">
-                                {v.status === 'Vendido' ? <CheckCircle2 size={12} className="shrink-0" /> : v.status === 'Manutenção' ? <Wrench size={12} className="shrink-0" /> : <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />}
-                                <span className="truncate">{v.status}</span>
+                                {v.status === 'Sold' ? <CheckCircle2 size={12} className="shrink-0" /> : v.status === 'Maintenance' ? <Wrench size={12} className="shrink-0" /> : <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />}
+                                <span className="truncate">{VehicleStatusEnum[v.status] || v.status}</span>
                               </span>
-                              {v.status !== 'Vendido' && <ChevronDown size={12} className="opacity-50 shrink-0" />}
+                              {v.status !== 'Sold' && <ChevronDown size={12} className="opacity-50 shrink-0" />}
                             </button>
     
                             {openDropdownId === v.id && (
@@ -280,19 +280,19 @@ export function InventoryView({
                                 <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }} />
                                 <div className="absolute top-full mt-2 left-6 w-44 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Em Estoque'); }}
+                                    onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'In Stock'); }}
                                     className="w-full text-left px-4 py-3 text-xs font-semibold text-stone-600 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2"
                                   >
                                     <div className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Em Estoque
                                   </button>
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Manutenção'); }}
+                                    onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Maintenance'); }}
                                     className="w-full text-left px-4 py-3 text-xs font-semibold text-stone-600 hover:bg-amber-50 hover:text-amber-700 transition-colors flex items-center gap-2"
                                   >
                                     <Wrench size={12} className="text-amber-600" /> Manutenção
                                   </button>
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Vendido'); }}
+                                    onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Sold'); }}
                                     className="w-full text-left px-4 py-3 text-xs font-semibold text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-2"
                                   >
                                     <CheckCircle2 size={12} className="text-emerald-600" /> Vendido
@@ -305,7 +305,7 @@ export function InventoryView({
                         {isVendedor ? (
                           <>
                             <TableCell>{v.licensePlate || 'N/A'}</TableCell>
-                            <TableCell className="font-semibold text-stone-900">{formatCurrency(v.saleValue)}</TableCell>
+                            <TableCell className="font-semibold text-stone-900">{formatCurrency(v.saleValue || 0)}</TableCell>
                           </>
                         ) : (
                           <>
@@ -318,12 +318,12 @@ export function InventoryView({
                               </div>
                             </TableCell>
                             <TableCell>
-                              {v.status === 'Vendido' ? (
+                              {v.status === 'Sold' ? (
                                 <div className="flex flex-col gap-0.5">
                                   <span className={`font-bold text-sm ${profit > 0 ? 'text-emerald-600' : profit < 0 ? 'text-rose-600' : 'text-stone-600'}`}>
                                     {profit > 0 ? '+' : ''}{formatCurrency(profit)}
                                   </span>
-                                  <span className="text-[10px] text-stone-500 font-medium">Vendido por {formatCurrency(v.saleValue)}</span>
+                                  <span className="text-[10px] text-stone-500 font-medium">Vendido por {formatCurrency(v.saleValue || 0)}</span>
                                 </div>
                               ) : (
                                 <span className="text-sm font-medium text-stone-400 italic">Estoque</span>
@@ -331,7 +331,7 @@ export function InventoryView({
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-2">
-                                {v.status === 'Vendido' && (v.buyerName || v.buyerDoc) && (
+                                {v.status === 'Sold' && (v.buyerName || v.buyerDoc) && (
                                   <button 
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -354,7 +354,7 @@ export function InventoryView({
                                       type: "danger"
                                     });
                                     if (isConfirmed) {
-                                      setIsDeletingId(v.id);
+                                      setIsDeletingId(v.id || null);
                                       try {
                                         await api.delete(`/vehicles/${v.id}`);
                                         setVehicles(vehicles.filter(ve => ve.id !== v.id));
@@ -379,7 +379,7 @@ export function InventoryView({
                                     e.stopPropagation();
                                     setActiveVehicle(v);
                                   }}
-                                  className={`p-2 rounded-lg transition-all print:hidden ${v.status === 'Vendido' ? 'lg:opacity-0 group-hover:opacity-100 text-stone-300 hover:text-blue-500 hover:bg-blue-50' : 'text-stone-300 hover:text-blue-500 hover:bg-blue-50'}`}
+                                  className={`p-2 rounded-lg transition-all print:hidden ${v.status === 'Sold' ? 'lg:opacity-0 group-hover:opacity-100 text-stone-300 hover:text-blue-500 hover:bg-blue-50' : 'text-stone-300 hover:text-blue-500 hover:bg-blue-50'}`}
                                   title="Ver Detalhes"
                                 >
                                   <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
@@ -404,8 +404,8 @@ export function InventoryView({
                 .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                 .map(v => {
                   const expenses = v.expenses.reduce((acc, e) => acc + e.value, 0);
-                  const totalCost = v.purchaseValue + expenses;
-                  const profit = v.saleValue - totalCost;
+                  const totalCost = (v.purchaseValue || 0) + expenses;
+                  const profit = (v.saleValue || 0) - totalCost;
                   const hasPhoto = Boolean(v.image || (v.gallery && v.gallery.length > 0));
 
                   return (
@@ -418,7 +418,7 @@ export function InventoryView({
                     >
 
                       <div className="absolute top-4 right-4 flex gap-1 lg:opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                        {v.status === 'Vendido' && (v.buyerName || v.buyerDoc) && (
+                        {v.status === 'Sold' && (v.buyerName || v.buyerDoc) && (
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
@@ -441,7 +441,7 @@ export function InventoryView({
                               type: "danger"
                             });
                             if (isConfirmed) {
-                              setIsDeletingId(v.id);
+                              setIsDeletingId(v.id || null);
                               try {
                                 await api.delete(`/vehicles/${v.id}`);
                               } catch(err) {
@@ -484,11 +484,11 @@ export function InventoryView({
                           }}
                         >
                           {hasPhoto ? (
-                            <Image src={v.image || v.gallery[0]} alt={v.name} fill className={`object-cover ${v.status === 'Vendido' ? 'grayscale opacity-60' : ''}`} unoptimized />
+                            <Image src={v.image || v.gallery[0]} alt={v.name} fill className={`object-cover ${v.status === 'Sold' ? 'grayscale opacity-60' : ''}`} unoptimized />
                           ) : (
                             <CarFront size={24} className="text-stone-300" />
                           )}
-                          {v.status === 'Vendido' && (
+                          {v.status === 'Sold' && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-900/30 cursor-pointer" onClick={(e) => { e.stopPropagation(); if (hasPhoto) setFullscreenImage(v.image || v.gallery[0]); }}>
                               <CheckCircle2 size={18} className="text-emerald-300 drop-shadow" />
                               <span className="text-[9px] font-bold text-white uppercase tracking-wide mt-0.5 drop-shadow">Vendido</span>
@@ -519,29 +519,29 @@ export function InventoryView({
                         
                         <div>
                           <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-0.5">Lucro / Status</p>
-                          {v.status === 'Vendido' ? (
+                          {v.status === 'Sold' ? (
                             <>
                               <p className={`text-sm font-bold ${profit > 0 ? 'text-emerald-600' : profit < 0 ? 'text-rose-600' : 'text-stone-600'}`}>
                                 {profit > 0 ? '+' : ''}{formatCurrency(profit)}
                               </p>
-                              <p className="text-[10px] text-stone-500">Venda: {formatCurrency(v.saleValue)}</p>
+                              <p className="text-[10px] text-stone-500">Venda: {formatCurrency(v.saleValue || 0)}</p>
                             </>
                           ) : (
                             <div className="relative inline-block w-full mt-1">
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setOpenDropdownId(openDropdownId === v.id ? null : v.id);
+                                  setOpenDropdownId(openDropdownId === v.id ? null : (v.id || null));
                                 }}
                                 className={`flex items-center justify-between gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all w-full ${
-                                  v.status === 'Manutenção'
+                                  v.status === 'Maintenance'
                                     ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'
                                     : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
                                 }`}
                               >
                                 <span className="flex items-center gap-1.5 truncate">
-                                  {v.status === 'Manutenção' ? <Wrench size={10} className="shrink-0" /> : <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />}
-                                  <span className="truncate">{v.status}</span>
+                                  {v.status === 'Maintenance' ? <Wrench size={10} className="shrink-0" /> : <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />}
+                                  <span className="truncate">{VehicleStatusEnum[v.status] || v.status}</span>
                                 </span>
                                 <ChevronDown size={12} className="opacity-50 shrink-0" />
                               </button>
@@ -551,19 +551,19 @@ export function InventoryView({
                                   <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }} />
                                   <div className="absolute top-full mt-1 right-0 w-36 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
                                     <button 
-                                      onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Em Estoque'); }}
+                                      onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'In Stock'); }}
                                       className="w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase text-stone-600 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2"
                                     >
                                       <div className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Em Estoque
                                     </button>
                                     <button 
-                                      onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Manutenção'); }}
+                                      onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Maintenance'); }}
                                       className="w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase text-stone-600 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2"
                                     >
                                       <Wrench size={10} className="text-amber-600" /> Manutenção
                                     </button>
                                     <button 
-                                      onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Vendido'); }}
+                                      onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Sold'); }}
                                       className="w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2"
                                     >
                                       <CheckCircle2 size={10} className="text-emerald-600" /> Vendido

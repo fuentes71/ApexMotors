@@ -10,7 +10,7 @@ export default function VeiculosPage() {
   const { vehicles, setVehicles, setActiveVehicle, startMonth, endMonth } = useData();
 
   const filteredVehicles = vehicles.filter(v => {
-    if (v.status === "Vendido" && v.saleDate) {
+    if (v.status === "Sold" && v.saleDate) {
       const vendaMonth = v.saleDate.substring(0, 7);
       return vendaMonth >= startMonth && vendaMonth <= endMonth;
     }
@@ -26,7 +26,7 @@ export default function VeiculosPage() {
       purchaseValue: 0,
       saleValue: 0,
       expenses: [],
-      status: "Em Estoque",
+      status: "In Stock",
       entryDate: new Date().toISOString().split('T')[0]
     };
     setActiveVehicle(newV);

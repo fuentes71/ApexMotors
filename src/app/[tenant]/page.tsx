@@ -3,14 +3,14 @@
 import { useData } from "@/context/DataContext";
 import { Header } from "@/components/Header";
 import { DashboardView } from "@/components/DashboardView";
-import { calculateTotalFixedForPeriod } from "@/utils";
+import { calculateTotalFixedForPeriod, CategoryEnum } from "@/utils";
 import { getPreviousPeriod } from "@/utils/period";
 
 export default function DashboardPage() {
   const { vehicles, fixedExpenses, startMonth, endMonth } = useData();
 
   const filteredVehicles = vehicles.filter(v => {
-    if (v.status === "Vendido" && v.saleDate) {
+    if (v.status === "Sold" && v.saleDate) {
       const vendaMonth = v.saleDate.substring(0, 7);
       return vendaMonth >= startMonth && vendaMonth <= endMonth;
     }
@@ -20,9 +20,9 @@ export default function DashboardPage() {
   const totalFixed = calculateTotalFixedForPeriod(fixedExpenses, startMonth, endMonth);
   
   const totalVehicleProfit = filteredVehicles.reduce((acc, v) => {
-    if (v.status !== 'Vendido') return acc;
+    if (v.status !== "Sold") return acc;
     const expenses = v.expenses.reduce((sum, e) => sum + e.value, 0);
-    return acc + (v.saleValue - v.purchaseValue - expenses);
+    return acc + ((v.saleValue || 0) - (v.purchaseValue || 0) - expenses);
   }, 0);
 
   const netBalance = totalVehicleProfit - totalFixed;
@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const { prevStart, prevEnd } = getPreviousPeriod(startMonth, endMonth);
   
   const prevFilteredVehicles = vehicles.filter(v => {
-    if (v.status === "Vendido" && v.saleDate) {
+    if (v.status === "Sold" && v.saleDate) {
       const vendaMonth = v.saleDate.substring(0, 7);
       return vendaMonth >= prevStart && vendaMonth <= prevEnd;
     }
@@ -41,28 +41,28 @@ export default function DashboardPage() {
   const prevTotalFixed = calculateTotalFixedForPeriod(fixedExpenses, prevStart, prevEnd);
   
   const prevTotalVehicleProfit = prevFilteredVehicles.reduce((acc, v) => {
-    if (v.status !== 'Vendido') return acc;
+    if (v.status !== "Sold") return acc;
     const expenses = v.expenses.reduce((sum, e) => sum + e.value, 0);
-    return acc + (v.saleValue - v.purchaseValue - expenses);
+    return acc + ((v.saleValue || 0) - (v.purchaseValue || 0) - expenses);
   }, 0);
 
   const prevNetBalance = prevTotalVehicleProfit - prevTotalFixed;
 
-  const soldVehiclesCount = filteredVehicles.filter(v => v.status === "Vendido").length;
-  const inStockVehiclesCount = filteredVehicles.filter(v => v.status === "Em Estoque" || v.status === "Manutenção").length;
-  const soldVehicles = filteredVehicles.filter(v => v.status === "Vendido");
-  const prevSoldVehicles = prevFilteredVehicles.filter(v => v.status === "Vendido");
+  const soldVehiclesCount = filteredVehicles.filter(v => v.status === "Sold").length;
+  const inStockVehiclesCount = filteredVehicles.filter(v => v.status === "In Stock" || v.status === "Maintenance").length;
+  const soldVehicles = filteredVehicles.filter(v => v.status === "Sold");
+  const prevSoldVehicles = prevFilteredVehicles.filter(v => v.status === "Sold");
   
   const avgProfit = soldVehiclesCount > 0 
-    ? soldVehicles.reduce((acc, v) => acc + (v.saleValue - v.purchaseValue - v.expenses.reduce((s, e) => s + e.value, 0)), 0) / soldVehiclesCount
+    ? soldVehicles.reduce((acc, v) => acc + ((v.saleValue || 0) - (v.purchaseValue || 0) - v.expenses.reduce((s, e) => s + e.value, 0)), 0) / soldVehiclesCount
     : 0;
 
   const avgTicket = soldVehiclesCount > 0
-    ? soldVehicles.reduce((acc, v) => acc + v.saleValue, 0) / soldVehiclesCount
+    ? soldVehicles.reduce((acc, v) => acc + (v.saleValue || 0), 0) / soldVehiclesCount
     : 0;
 
   const prevAvgTicket = prevSoldVehicles.length > 0
-    ? prevSoldVehicles.reduce((acc, v) => acc + v.saleValue, 0) / prevSoldVehicles.length
+    ? prevSoldVehicles.reduce((acc, v) => acc + (v.saleValue || 0), 0) / prevSoldVehicles.length
     : 0;
 
   const calculateDays = (entrada: string, venda: string) => {
@@ -79,11 +79,11 @@ export default function DashboardPage() {
     : 0;
 
   const expenseDistribution: Record<string, number> = {
-    "Mecânica": 0,
-    "Funilaria": 0,
+    "Mechanics": 0,
+    "Bodywork": 0,
     "Marketing": 0,
-    "Documentação": 0,
-    "Outros": 0,
+    "Documentation": 0,
+    "Others": 0,
     "Fixas": totalFixed
   };
 
@@ -92,14 +92,14 @@ export default function DashboardPage() {
       if (exp.category && expenseDistribution[exp.category] !== undefined) {
         expenseDistribution[exp.category] += exp.value;
       } else {
-        expenseDistribution["Outros"] += exp.value;
+        expenseDistribution["Others"] += exp.value;
       }
     });
   });
 
   const pieData = Object.entries(expenseDistribution)
     .filter(([_, value]) => value > 0)
-    .map(([name, value]) => ({ name, value }));
+    .map(([name, value]) => ({ name: CategoryEnum[name as keyof typeof CategoryEnum] || name, value }));
 
   const pieColors: Record<string, string> = {
     "Mecânica": "#3b82f6",
@@ -114,7 +114,7 @@ export default function DashboardPage() {
     const expenses = v.expenses.reduce((acc, e) => acc + e.value, 0);
     return {
       name: v.name.length > 12 ? v.name.substring(0, 12) + "..." : v.name,
-      Lucro: v.status === 'Vendido' ? (v.saleValue - v.purchaseValue - expenses) : 0,
+      Lucro: v.status === "Sold" ? ((v.saleValue || 0) - (v.purchaseValue || 0) - expenses) : 0,
       Despesas: expenses
     };
   });
@@ -126,9 +126,9 @@ export default function DashboardPage() {
   });
 
   const salesTrendData = last6Months.map(monthStr => {
-    const monthVehicles = vehicles.filter(v => v.status === "Vendido" && v.saleDate?.startsWith(monthStr));
-    const revenue = monthVehicles.reduce((acc, v) => acc + v.saleValue, 0);
-    const profit = monthVehicles.reduce((acc, v) => acc + (v.saleValue - v.purchaseValue - v.expenses.reduce((s, e) => s + e.value, 0)), 0);
+    const monthVehicles = vehicles.filter(v => v.status === "Sold" && v.saleDate?.startsWith(monthStr));
+    const revenue = monthVehicles.reduce((acc, v) => acc + (v.saleValue || 0), 0);
+    const profit = monthVehicles.reduce((acc, v) => acc + ((v.saleValue || 0) - (v.purchaseValue || 0) - v.expenses.reduce((s, e) => s + e.value, 0)), 0);
     return {
       name: monthStr.substring(5, 7) + "/" + monthStr.substring(2, 4),
       Receita: revenue,
@@ -143,7 +143,7 @@ export default function DashboardPage() {
     { name: "+90 dias", count: 0 },
   ];
 
-  vehicles.filter(v => v.status !== "Vendido").forEach(v => {
+  vehicles.filter(v => v.status !== "Sold").forEach(v => {
     const days = calculateDays(v.entryDate, new Date().toISOString());
     if (days <= 30) inventoryAgingData[0].count++;
     else if (days <= 60) inventoryAgingData[1].count++;

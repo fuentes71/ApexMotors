@@ -8,7 +8,7 @@ import { Vehicle, Expense, Category, RecurrenceType } from "../types";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { DateInput } from "./DateInput";
-import { formatCurrency, getCategoryColor, getCategoryIcon, toISODate } from "../utils";
+import { formatCurrency, getCategoryColor, getCategoryIcon, toISODate, VehicleStatusEnum, CategoryEnum, RecurrenceEnum } from "../utils";
 import { generateContractPDF } from "../utils/pdfExport";
 import { ImageUploader } from "./ImageUploader";
 
@@ -28,8 +28,8 @@ export function VehicleModal() {
 
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpenseValue, setNewExpenseValue] = useState("");
-  const [newExpenseCat, setNewExpenseCat] = useState<Category>("Mecânica");
-  const [newExpenseRecurrence, setNewExpenseRecurrence] = useState<NonNullable<Expense["recurrence"]>>("Única");
+  const [newExpenseCat, setNewExpenseCat] = useState<Category>("Mechanics");
+  const [newExpenseRecurrence, setNewExpenseRecurrence] = useState<NonNullable<Expense["recurrence"]>>("One-time");
   const [newExpenseStartDate, setNewExpenseStartDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [newExpenseEndDate, setNewExpenseEndDate] = useState("");
   const [showConfirmClose, setShowConfirmClose] = useState(false);
@@ -111,7 +111,7 @@ export function VehicleModal() {
       payload.purchaseValue = Number(payload.purchaseValue) || 0;
       payload.saleValue = Number(payload.saleValue) || 0;
       payload.entryDate = toISODate(payload.entryDate) || payload.entryDate;
-      if (payload.saleDate) payload.saleDate = toISODate(payload.saleDate);
+      if (payload.saleDate) payload.saleDate = toISODate(payload.saleDate) || payload.saleDate;
       
       if (payload.expenses?.length) {
         payload.expenses = payload.expenses.map((exp: any) => ({
@@ -215,7 +215,7 @@ export function VehicleModal() {
   };
 
   const getMultiplier = (recurrence: string, startDate: string, endDate: string) => {
-    if (recurrence === 'Única' || !startDate || !endDate) return 1;
+    if (recurrence === 'One-time' || !startDate || !endDate) return 1;
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (end < start) return 1;
@@ -227,17 +227,17 @@ export function VehicleModal() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
     switch (recurrence) {
-      case 'Diária': return diffDays;
-      case 'Semanal': return Math.ceil(diffDays / 7);
-      case 'Quinzenal': return Math.ceil(diffDays / 15);
-      case 'Mensal': return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
-      case 'Anual': return end.getFullYear() - start.getFullYear() + 1;
+      case 'Daily': return diffDays;
+      case 'Weekly': return Math.ceil(diffDays / 7);
+      case 'Biweekly': return Math.ceil(diffDays / 15);
+      case 'Monthly': return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+      case 'Yearly': return end.getFullYear() - start.getFullYear() + 1;
       default: return 1;
     }
   };
 
   const handleAddExpense = () => {
-    const isRecurrent = newExpenseRecurrence !== 'Única';
+    const isRecurrent = newExpenseRecurrence !== 'One-time';
     if (!newExpenseName || !newExpenseValue || (isRecurrent && !newExpenseStartDate)) return;
 
     const multiplier = getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate || "");
@@ -254,7 +254,7 @@ export function VehicleModal() {
       recurrence: newExpenseRecurrence,
       linkedVehicleId: draftVehicle.id,
       startDate: newExpenseStartDate,
-      endDate: newExpenseEndDate || null
+      endDate: newExpenseEndDate || undefined
     };
 
     setDraftVehicle({
@@ -264,7 +264,7 @@ export function VehicleModal() {
 
     setNewExpenseName("");
     setNewExpenseValue("");
-    setNewExpenseRecurrence("Única");
+    setNewExpenseRecurrence("One-time");
     setNewExpenseStartDate(new Date().toISOString().split('T')[0]);
     setNewExpenseEndDate("");
   };
@@ -279,11 +279,11 @@ export function VehicleModal() {
   const handleEditExpense = (expense: Expense) => {
     setNewExpenseName(expense.name);
     setNewExpenseValue((expense.unitValue || expense.value).toString());
-    setNewExpenseCat(expense.category || "Mecânica");
-    setNewExpenseRecurrence(expense.recurrence || "Única");
+    setNewExpenseCat(expense.category || "Mechanics");
+    setNewExpenseRecurrence(expense.recurrence || "One-time");
     setNewExpenseStartDate(expense.startDate || new Date().toISOString().split('T')[0]);
     setNewExpenseEndDate(expense.endDate || "");
-    handleRemoveExpense(expense.id);
+    if (expense.id) handleRemoveExpense(expense.id);
   };
 
   const handleCloseAttempt = () => {
@@ -307,7 +307,7 @@ export function VehicleModal() {
         <div className="relative w-full max-w-2xl bg-[#FDFBF7] h-full shadow-2xl animate-in slide-in-from-right flex flex-col z-10">
           <div className="flex justify-between items-center p-6 border-b border-stone-200/60 bg-white">
             <h2 className="text-xl font-bold tracking-tight text-stone-900">
-              {!draftVehicle.id ? "Adicionar Veículo" : activeVehicle?.status === 'Vendido' ? "Visualizar Veículo Vendido" : "Editar Veículo"}
+              {!draftVehicle.id ? "Adicionar Veículo" : activeVehicle?.status === "Sold" ? "Visualizar Veículo Vendido" : "Editar Veículo"}
             </h2>
             <button onClick={handleCloseAttempt} className="text-stone-400 hover:text-stone-700 p-2 rounded-full hover:bg-stone-100 transition-colors">
               <X size={20} />
@@ -324,7 +324,7 @@ export function VehicleModal() {
                   <input
                     type="text"
                     value={draftVehicle.name}
-                    disabled={activeVehicle?.status === 'Vendido'}
+                    disabled={activeVehicle?.status === "Sold"}
                     onChange={(e) => handleUpdate("name", e.target.value)}
                     className={`w-full text-lg font-bold text-stone-900 bg-stone-50 outline-none border ${errors.name ? 'border-red-500' : 'border-stone-200'} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-3 pl-11 pr-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed`}
                   />
@@ -336,7 +336,7 @@ export function VehicleModal() {
                 <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Descrição (Opcional)</label>
                 <textarea
                   value={draftVehicle.description || ""}
-                  disabled={activeVehicle?.status === 'Vendido'}
+                  disabled={activeVehicle?.status === "Sold"}
                   onChange={(e) => handleUpdate("description", e.target.value)}
                   placeholder="Detalhes adicionais sobre o veículo..."
                   rows={2}
@@ -356,7 +356,7 @@ export function VehicleModal() {
                     type="text"
                     placeholder="ABC-1234"
                     value={draftVehicle.licensePlate || ""}
-                    disabled={activeVehicle?.status === 'Vendido'}
+                    disabled={activeVehicle?.status === "Sold"}
                     onAccept={(value) => handleUpdate("licensePlate", value.toUpperCase())}
                     className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border ${errors.licensePlate ? 'border-red-500' : 'border-stone-200'} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all uppercase disabled:opacity-70 disabled:cursor-not-allowed`}
                   />
@@ -368,7 +368,7 @@ export function VehicleModal() {
                     mask="00000000000"
                     type="text"
                     value={draftVehicle.renavam || ""}
-                    disabled={activeVehicle?.status === 'Vendido'}
+                    disabled={activeVehicle?.status === "Sold"}
                     onAccept={(value) => handleUpdate("renavam", value)}
                     className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border ${errors.renavam ? 'border-red-500' : 'border-stone-200'} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed`}
                   />
@@ -379,11 +379,11 @@ export function VehicleModal() {
                     <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Compra (R$) <span className="text-red-500">*</span></label>
                     <NumericFormat
                       value={draftVehicle.purchaseValue}
-                      disabled={activeVehicle?.status === 'Vendido'}
+                      disabled={activeVehicle?.status === "Sold"}
                       onFocus={(e) => e.target.select()}
                       onValueChange={(values) => {
                         if (values.floatValue === undefined) {
-                          handleUpdate("purchaseValue", undefined);
+                          handleUpdate("purchaseValue", null);
                           setTimeout(() => handleUpdate("purchaseValue", 0), 0);
                         } else {
                           handleUpdate("purchaseValue", values.floatValue);
@@ -401,11 +401,11 @@ export function VehicleModal() {
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Venda (R$) <span className="text-red-500">*</span></label>
                   <NumericFormat
                     value={draftVehicle.saleValue}
-                    disabled={activeVehicle?.status === 'Vendido'}
+                    disabled={activeVehicle?.status === "Sold"}
                     onFocus={(e) => e.target.select()}
                     onValueChange={(values) => {
                       if (values.floatValue === undefined) {
-                        handleUpdate("saleValue", undefined);
+                        handleUpdate("saleValue", null);
                         setTimeout(() => handleUpdate("saleValue", 0), 0);
                       } else {
                         handleUpdate("saleValue", values.floatValue);
@@ -422,7 +422,7 @@ export function VehicleModal() {
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Data de Entrada</label>
                   <DateInput
                     value={draftVehicle.entryDate}
-                    disabled={activeVehicle?.status === 'Vendido'}
+                    disabled={activeVehicle?.status === "Sold"}
                     onChangeDate={(val) => handleUpdate("entryDate", val)}
                     className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   />
@@ -431,25 +431,25 @@ export function VehicleModal() {
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Status</label>
                   <select
                     value={draftVehicle.status}
-                    disabled={activeVehicle?.status === 'Vendido'}
+                    disabled={activeVehicle?.status === "Sold"}
                     onChange={(e) => {
-                      const newStatus = e.target.value as "Em Estoque" | "Manutenção" | "Vendido";
-                      if (newStatus === "Vendido") {
-                        handleUpdate("status", "Vendido");
+                      const newStatus = e.target.value as "In Stock" | "Maintenance" | "Sold";
+                      if (newStatus === "Sold") {
+                        handleUpdate("status", "Sold");
                         handleUpdate("saleDate", new Date().toISOString().split('T')[0]);
                       } else {
                         handleUpdate("status", newStatus);
                         handleUpdate("saleDate", undefined);
                       }
                     }}
-                    className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all ${activeVehicle?.status === 'Vendido' ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all ${activeVehicle?.status === "Sold" ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    <option value="Em Estoque">Em Estoque</option>
-                    <option value="Manutenção">Manutenção</option>
-                    <option value="Vendido">Vendido</option>
+                    {Object.entries(VehicleStatusEnum).map(([key, value]) => (
+                      <option key={key} value={key}>{value}</option>
+                    ))}
                   </select>
                 </div>
-                {draftVehicle.status === "Vendido" && (
+                {draftVehicle.status === "Sold" && (
                   <div className="md:col-span-2 p-5 bg-emerald-50 rounded-xl border border-emerald-100 space-y-4">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-emerald-800 flex items-center gap-2">
@@ -469,7 +469,7 @@ export function VehicleModal() {
                         <label className="text-xs text-emerald-700 uppercase tracking-wider font-semibold mb-2 block">Data de Saída</label>
                         <DateInput
                           value={draftVehicle.saleDate || ""}
-                          disabled={activeVehicle?.status === 'Vendido'}
+                          disabled={activeVehicle?.status === "Sold"}
                           onChangeDate={(val) => handleUpdate("saleDate", val)}
                           className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         />
@@ -480,7 +480,7 @@ export function VehicleModal() {
                           type="text"
                           placeholder="Ex: João da Silva"
                           value={draftVehicle.buyerName || ""}
-                          disabled={activeVehicle?.status === 'Vendido'}
+                          disabled={activeVehicle?.status === "Sold"}
                           onChange={(e) => handleUpdate("buyerName", e.target.value)}
                           className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         />
@@ -494,7 +494,7 @@ export function VehicleModal() {
                           ]}
                           placeholder="000.000.000-00"
                           value={draftVehicle.buyerDoc || ""}
-                          disabled={activeVehicle?.status === 'Vendido'}
+                          disabled={activeVehicle?.status === "Sold"}
                           onAccept={(value) => handleUpdate("buyerDoc", value)}
                           className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         />
@@ -513,7 +513,7 @@ export function VehicleModal() {
                 {draftVehicle.gallery.map((img, i) => (
                   <div key={i} className="aspect-square bg-stone-100 rounded-lg overflow-hidden group relative shadow-sm border border-stone-200">
                     <Image src={img} fill className="object-cover cursor-pointer hover:scale-105 transition-transform" alt="gallery" onClick={() => setFullscreenImage(img)} unoptimized />
-                    {activeVehicle?.status !== 'Vendido' && (
+                    {activeVehicle?.status !== 'Sold' && (
                       <button
                         onClick={() => {
                           const newGal = draftVehicle.gallery.filter((_, idx) => idx !== i);
@@ -529,7 +529,7 @@ export function VehicleModal() {
                     )}
                   </div>
                 ))}
-                {activeVehicle?.status !== 'Vendido' && (
+                {activeVehicle?.status !== 'Sold' && (
                   <ImageUploader 
                     onImageUploaded={(base64Str) => {
                       setDraftVehicle({
@@ -563,19 +563,19 @@ export function VehicleModal() {
                   {draftVehicle.expenses.map((exp) => (
                     <div key={exp.id} className="flex justify-between items-center p-3.5 bg-stone-50 hover:bg-[#FDFBF7] border border-stone-200 hover:border-stone-300 rounded-xl group transition-colors">
                       <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-lg ${getCategoryColor(exp.category || "Outros")} bg-white shadow-sm border border-stone-100`}>
-                          {getCategoryIcon(exp.category || "Outros")}
+                        <div className={`p-2 rounded-lg ${getCategoryColor(exp.category || "Others")} bg-white shadow-sm border border-stone-100`}>
+                          {getCategoryIcon(exp.category || "Others")}
                         </div>
                         <span className="font-semibold text-stone-800 text-sm">{exp.name}</span>
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="font-bold text-stone-900">{formatCurrency(exp.value)}</span>
-                        {activeVehicle?.status !== 'Vendido' && (
+                        {activeVehicle?.status !== 'Sold' && (
                           <div className="flex items-center gap-2 lg:opacity-0 group-hover:opacity-100 transition-all">
                             <button onClick={() => handleEditExpense(exp)} className="text-stone-300 hover:text-blue-500 p-1.5 bg-white border border-stone-200 rounded-md hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm">
                               <Pencil size={14} />
                             </button>
-                            <button onClick={() => handleRemoveExpense(exp.id)} className="text-stone-300 hover:text-rose-500 p-1.5 bg-white border border-stone-200 rounded-md hover:border-rose-200 hover:bg-rose-50 transition-colors shadow-sm">
+                            <button onClick={() => exp.id && handleRemoveExpense(exp.id)} className="text-stone-300 hover:text-rose-500 p-1.5 bg-white border border-stone-200 rounded-md hover:border-rose-200 hover:bg-rose-50 transition-colors shadow-sm">
                               <Trash2 size={14} />
                             </button>
                           </div>
@@ -590,7 +590,7 @@ export function VehicleModal() {
                   )}
                 </div>
                 {/* Nova Despesa Form */}
-                {activeVehicle?.status !== 'Vendido' && (
+                {activeVehicle?.status !== 'Sold' && (
                   <div className="bg-stone-50 border border-stone-200 rounded-2xl p-5 shadow-sm mt-4">
                     <h4 className="text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-4 flex items-center gap-1.5">
                       <Plus size={14} /> Registrar Nova Despesa
@@ -615,11 +615,9 @@ export function VehicleModal() {
                           onChange={e => setNewExpenseCat(e.target.value as Category)}
                           className="w-full bg-white outline-none border border-stone-200 rounded-lg px-3.5 py-2 text-sm font-medium text-stone-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer transition-shadow shadow-sm"
                         >
-                          <option value="Mecânica">Mecânica</option>
-                          <option value="Funilaria">Funilaria</option>
-                          <option value="Marketing">Marketing</option>
-                          <option value="Documentação">Documentação</option>
-                          <option value="Outros">Outros</option>
+                          {Object.entries(CategoryEnum).map(([key, value]) => (
+                            <option key={key} value={key}>{value}</option>
+                          ))}
                         </select>
                       </div>
 
@@ -630,17 +628,14 @@ export function VehicleModal() {
                           onChange={e => setNewExpenseRecurrence(e.target.value as RecurrenceType)}
                           className="w-full bg-white outline-none border border-stone-200 rounded-lg px-3.5 py-2 text-sm font-medium text-stone-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 cursor-pointer transition-shadow shadow-sm"
                         >
-                          <option value="Única">Única</option>
-                          <option value="Diária">Diária</option>
-                          <option value="Semanal">Semanal</option>
-                          <option value="Quinzenal">Quinzenal</option>
-                          <option value="Mensal">Mensal</option>
-                          <option value="Anual">Anual</option>
+                          {Object.entries(RecurrenceEnum).map(([key, value]) => (
+                            <option key={key} value={key}>{value}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
 
-                    {newExpenseRecurrence !== 'Única' && (
+                    {newExpenseRecurrence !== 'One-time' && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 p-4 bg-stone-100/50 rounded-xl border border-stone-200 shadow-inner animate-in fade-in slide-in-from-top-2 duration-200">
                         <div>
                           <label className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider mb-1.5 block">Data Início</label>
@@ -664,7 +659,7 @@ export function VehicleModal() {
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-5 items-end">
                       <div className="sm:col-span-4">
                         <label className="text-[11px] font-semibold text-stone-500 uppercase mb-1.5 block">
-                          {newExpenseRecurrence === 'Única' ? 'Valor (R$)' : 'Valor Unitário (R$)'}
+                          {newExpenseRecurrence === 'One-time' ? 'Valor (R$)' : 'Valor Unitário (R$)'}
                         </label>
                         <NumericFormat
                           placeholder="R$ 0,00"
@@ -676,7 +671,7 @@ export function VehicleModal() {
                           className="w-full bg-white outline-none border border-stone-200 rounded-lg px-3.5 py-2 text-sm font-medium focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-shadow shadow-sm"
                         />
                       </div>
-                      {newExpenseRecurrence !== 'Única' && (
+                      {newExpenseRecurrence !== 'One-time' && (
                         <div className="sm:col-span-8 bg-blue-50 p-3 rounded-lg border border-blue-100 flex flex-col justify-center shadow-sm">
                           <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider mb-0.5">Total Estimado ({getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate || "")}x ocorrências)</span>
                           <span className="text-base font-bold text-blue-900">{formatCurrency(Number(newExpenseValue) * getMultiplier(newExpenseRecurrence, newExpenseStartDate, newExpenseEndDate || ""))}</span>
@@ -687,7 +682,7 @@ export function VehicleModal() {
                     <div className="flex justify-end pt-4 border-t border-stone-200">
                       <button
                         onClick={handleAddExpense}
-                        disabled={!newExpenseName || !newExpenseValue || (newExpenseRecurrence !== 'Única' && !newExpenseStartDate)}
+                        disabled={!newExpenseName || !newExpenseValue || (newExpenseRecurrence !== 'One-time' && !newExpenseStartDate)}
                         className="w-full sm:w-auto bg-stone-900 disabled:bg-stone-200 disabled:text-stone-400 text-white px-6 py-2.5 rounded-xl hover:bg-stone-800 hover:-translate-y-[1px] active:translate-y-0 transition-all font-semibold flex items-center justify-center gap-2 shadow-sm disabled:shadow-none"
                       >
                         <Plus size={16} /> <span>Adicionar Despesa</span>
@@ -699,7 +694,7 @@ export function VehicleModal() {
             )}
           </div>
 
-          {!isVendedor && activeVehicle?.status !== 'Vendido' && (
+          {!isVendedor && activeVehicle?.status !== 'Sold' && (
             <div className="p-6 border-t border-stone-200 bg-white mt-auto">
               <button
                 onClick={handleSave}

@@ -74,7 +74,7 @@ export function EmployeesView() {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <button 
-                          onClick={(e) => { e.stopPropagation(); removeEmployee(emp.id); }}
+                          onClick={(e) => { e.stopPropagation(); if (emp.id) removeEmployee(emp.id); }}
                           className="text-stone-400 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-50 transition-colors"
                           title="Excluir"
                         >
@@ -107,7 +107,7 @@ export function EmployeesView() {
                 >
                   <div className="absolute top-4 right-4">
                     <button 
-                      onClick={(e) => { e.stopPropagation(); removeEmployee(emp.id); }}
+                      onClick={(e) => { e.stopPropagation(); if (emp.id) removeEmployee(emp.id); }}
                       className="text-stone-300 hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-50 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 size={16} />

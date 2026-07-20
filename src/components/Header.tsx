@@ -99,7 +99,7 @@ export function Header() {
   }
 
   const filteredVehicles = vehicles.filter(v => {
-    if (v.status === "Vendido" && v.saleDate) {
+    if (v.status === "Sold" && v.saleDate) {
       const vendaMonth = v.saleDate.substring(0, 7);
       return vendaMonth >= startMonth && vendaMonth <= endMonth;
     }
@@ -109,9 +109,9 @@ export function Header() {
   const totalFixed = calculateTotalFixedForPeriod(fixedExpenses, startMonth, endMonth);
   
   const totalVehicleProfit = filteredVehicles.reduce((acc, v) => {
-    if (v.status !== 'Vendido') return acc;
+    if (v.status !== 'Sold') return acc;
     const expenses = v.expenses.reduce((sum, e) => sum + e.value, 0);
-    return acc + (v.saleValue - v.purchaseValue - expenses);
+    return acc + ((v.saleValue || 0) - (v.purchaseValue || 0) - expenses);
   }, 0);
 
   const netBalance = totalVehicleProfit - totalFixed;
