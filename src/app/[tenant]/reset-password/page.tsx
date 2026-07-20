@@ -2,12 +2,16 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import api from "@/services/api";
+import type { AxiosError } from "axios";
+import { authApi } from "@/services/api";
 import { useData } from "@/context/DataContext";
 import { useToast } from "@/context/ToastContext";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { PasswordChecklist } from "@/components/ui/PasswordChecklist";
+import { isPasswordValid, PASSWORD_MIN_LENGTH } from "@/utils/passwordRules";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -28,7 +32,7 @@ function ResetPasswordForm() {
   useEffect(() => {
     if (token) {
       // Validate token automatically on load
-      api.post("/auth/validate-token", { token })
+      authApi.post("/auth/validate-token", { token })
         .then(() => setIsValid(true))
         .catch(() => setIsValid(false))
         .finally(() => setIsValidating(false));
@@ -44,27 +48,34 @@ function ResetPasswordForm() {
     e.preventDefault();
     setErrorMsg("");
     
-    if (password !== confirmPassword) {
-      setErrorMsg("As senhas não coincidem.");
+    if (!isPasswordValid(password)) {
+      setErrorMsg(
+        `A senha deve ter no mínimo ${PASSWORD_MIN_LENGTH} caracteres, com maiúscula, minúscula, número e caractere especial.`
+      );
       return;
     }
-    
-    if (password.length < 6) {
-      setErrorMsg("A senha deve ter no mínimo 6 caracteres.");
+
+    if (password !== confirmPassword) {
+      setErrorMsg("As senhas não coincidem.");
       return;
     }
 
     setIsLoading(true);
     try {
-      await api.post("/auth/reset-password", { token, newPassword: password });
+      await authApi.post("/auth/reset-password", { token, newPassword: password });
       setSuccess(true);
       showToast("Senha definida com sucesso!", "success");
       setTimeout(() => {
         router.push(`/${tenantId}/login`);
       }, 3000);
     } catch (err) {
-      const error = err as any;
-      setErrorMsg(error.response?.data?.message || "Ocorreu um erro ao definir a senha.");
+      // The backend returns an array of messages when several rules fail.
+      const detail = (err as AxiosError<{ message?: string | string[] }>)
+        ?.response?.data?.message;
+      setErrorMsg(
+        (Array.isArray(detail) ? detail.join(" ") : detail) ||
+          "Ocorreu um erro ao definir a senha."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -128,39 +139,25 @@ function ResetPasswordForm() {
       )}
 
       <form onSubmit={handleSetPassword} className="space-y-5">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-stone-700 block ml-1">Nova Senha</label>
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400 group-focus-within:text-indigo-600 transition-colors">
-              <Lock size={18} />
-            </div>
-            <input 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-11 pr-4 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 outline-none transition-all placeholder:text-stone-400 font-medium text-stone-800 shadow-sm"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-        </div>
+        <PasswordInput
+          label="Nova Senha"
+          value={password}
+          onChange={setPassword}
+        />
 
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-stone-700 block ml-1">Confirmar Senha</label>
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400 group-focus-within:text-indigo-600 transition-colors">
-              <Lock size={18} />
-            </div>
-            <input 
-              type="password" 
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full pl-11 pr-4 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 outline-none transition-all placeholder:text-stone-400 font-medium text-stone-800 shadow-sm"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-        </div>
+        <PasswordChecklist password={password} />
+
+        <PasswordInput
+          label="Confirmar Senha"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+        />
+
+        {confirmPassword.length > 0 && password !== confirmPassword && (
+          <p className="text-sm font-medium text-red-600 ml-1">
+            As senhas não coincidem.
+          </p>
+        )}
 
         <div className="pt-4">
           <button 

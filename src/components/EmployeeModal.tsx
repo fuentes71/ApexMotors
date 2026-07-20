@@ -3,9 +3,9 @@ import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { Employee, Role } from "../types";
 import { useToast } from "../context/ToastContext";
+import type { AxiosResponse } from "axios";
 import api from "../services/api";
-import { DateInput } from "./DateInput";
-import { toISODate, RoleEnum } from "../utils";
+import { RoleEnum } from "../utils";
 import { SidePanelModal } from "./ui/SidePanelModal";
 import { ConfirmCloseModal } from "./ui/ConfirmCloseModal";
 
@@ -62,22 +62,21 @@ export function EmployeeModal() {
       showError("email", "O e-mail é obrigatório.");
       hasError = true;
     }
-    if (!draftEmployee.id && (!draftEmployee.password || draftEmployee.password.length < 6)) {
-      showError("password", "A senha inicial deve ter no mínimo 6 caracteres.");
-      hasError = true;
-    }
-
     if (hasError) return;
 
     setIsSaving(true);
     try {
       const isNew = !draftEmployee.id;
-      let res: any;
-      const payload = { ...draftEmployee };
-      if (payload.createdAt) payload.createdAt = toISODate(payload.createdAt) || payload.createdAt;
+      let res: AxiosResponse<Employee>;
+      // Only these three are sent. The user sets their own password through
+      // the first-access email, and the backend stamps createdAt.
+      const payload = {
+        name: draftEmployee.name,
+        email: draftEmployee.email,
+        role: draftEmployee.role,
+      };
 
       if (isNew) {
-        delete payload.id;
         res = await api.post(`/users`, payload);
         setEmployees([...employees, res.data]);
         showToast("Funcionário cadastrado com sucesso!", "success");
@@ -152,20 +151,6 @@ export function EmployeeModal() {
               {errors.email && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.email}</p>}
             </div>
 
-            {!activeEmployee.id && (
-              <div>
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Senha Inicial <span className="text-red-500">*</span></label>
-                <input 
-                  type="password" 
-                  value={draftEmployee.password || ""}
-                  onChange={e => setDraftEmployee({...draftEmployee, password: e.target.value})}
-                  className={`w-full bg-stone-50 border ${errors.password ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all`}
-                  placeholder="Mínimo de 6 caracteres"
-                />
-                {errors.password && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.password}</p>}
-              </div>
-            )}
-
             <div>
               <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Nível de Acesso</label>
               <select 
@@ -179,15 +164,6 @@ export function EmployeeModal() {
               </select>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Data de Cadastro</label>
-              <DateInput 
-                value={draftEmployee.createdAt}
-                onChangeDate={val => setDraftEmployee({...draftEmployee, createdAt: val})}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!!activeEmployee.id}
-              />
-            </div>
           </div>
         </div>
 

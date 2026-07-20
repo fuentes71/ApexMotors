@@ -18,7 +18,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const params = useParams();
   const tenantId = (params?.tenant as string) || defaultTenant;
-  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/forgot-password');
+  // Routes reachable without being logged in. reset-password belongs here:
+  // it is opened from an email link by someone who has no session yet, so
+  // wrapping it in AuthGuard bounced the user straight to /login.
+  const PUBLIC_ROUTES = ['/login', '/forgot-password', '/reset-password'];
+  const isAuthPage = PUBLIC_ROUTES.some((route) => pathname?.includes(route));
 
   return (
     <ToastProvider>

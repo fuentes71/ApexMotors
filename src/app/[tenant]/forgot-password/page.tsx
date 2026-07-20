@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Mail, Loader2, ArrowRight, ArrowLeft, KeyRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import api from "@/services/api";
+import type { AxiosError } from "axios";
+import { authApi } from "@/services/api";
 import { useData } from "@/context/DataContext";
 
 export default function ForgotPasswordPage() {
@@ -23,10 +24,11 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     
     try {
-      await api.post("/auth/forgot-password", { email });
+      await authApi.post("/auth/forgot-password", { email });
       setStep("token");
     } catch (err) {
-      setErrorMsg((err as any).response?.data?.message || "Ocorreu um erro ao solicitar a recuperação. Verifique se o e-mail está correto.");
+      const detail = (err as AxiosError<{ message?: string }>)?.response?.data?.message;
+      setErrorMsg(detail || "Ocorreu um erro ao solicitar a recuperação. Verifique se o e-mail está correto.");
     } finally {
       setIsLoading(false);
     }
@@ -39,10 +41,10 @@ export default function ForgotPasswordPage() {
 
     try {
       // Validate the 6-digit code
-      await api.post("/auth/validate-token", { token });
+      await authApi.post("/auth/validate-token", { token });
       // If valid, redirect to the reset password page with the token
       router.push(`/${tenantId}/reset-password?token=${token}`);
-    } catch (err) {
+    } catch {
       setErrorMsg("Código inválido ou expirado.");
     } finally {
       setIsLoading(false);
