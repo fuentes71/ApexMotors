@@ -5,7 +5,7 @@ import { Employee, Role } from "../types";
 import { useToast } from "../context/ToastContext";
 import api from "../services/api";
 import { DateInput } from "./DateInput";
-import { toISODate } from "../utils";
+import { toISODate, RoleEnum } from "../utils";
 
 export function EmployeeModal() {
   const { activeEmployee, setActiveEmployee, employees, setEmployees } = useData();
@@ -171,8 +171,9 @@ export function EmployeeModal() {
                 onChange={e => setDraftEmployee({...draftEmployee, role: e.target.value as Role})}
                 className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none cursor-pointer"
               >
-                <option value="Seller">Vendedor (Acesso Limitado)</option>
-                <option value="Admin">Admin (Acesso Total)</option>
+                {Object.entries(RoleEnum).map(([key, value]) => (
+                  <option key={key} value={key}>{value}</option>
+                ))}
               </select>
             </div>
 

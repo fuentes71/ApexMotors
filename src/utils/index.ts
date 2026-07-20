@@ -2,6 +2,25 @@ import React from "react";
 import { Wrench, Megaphone, FileText, Tag } from "lucide-react";
 import { Expense, Client, WhatsAppTemplates } from "../types";
 
+export const RoleEnum: Record<string, string> = {
+  Admin: 'Administrador',
+  Seller: 'Vendedor',
+  Accounting: 'Contabilidade'
+};
+
+export const VehicleStatusEnum: Record<string, string> = {
+  "Em Estoque": "Em Estoque", 
+  "Manutenção": "Manutenção", 
+  "Vendido": "Vendido"
+};
+
+export const ClientStatusEnum: Record<string, string> = {
+  Lead: 'Lead',
+  Frio: 'Frio',
+  Negociando: 'Negociando',
+  Cliente: 'Cliente',
+  Fechado: 'Fechado'
+};
 export const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 };

@@ -5,7 +5,8 @@ import { useData } from "../context/DataContext";
 import { Plus, Trash2, Shield, User } from "lucide-react";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "./ui/Table";
 import { ViewLayout } from "./ui/ViewLayout";
-import { Employee, Role } from "../types";
+import { Employee } from "../types";
+import { RoleEnum } from "../utils";
 
 export function EmployeesView() {
   const { employees, setEmployees, setActiveEmployee, currentUser } = useData();
@@ -67,7 +68,7 @@ export function EmployeesView() {
                           : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                       }`}>
                         {emp.role === 'Admin' ? <Shield size={12} /> : <User size={12} />}
-                        {emp.role}
+                        {RoleEnum[emp.role] || emp.role}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
@@ -123,7 +124,7 @@ export function EmployeesView() {
                         emp.role === 'Admin' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'
                       }`}>
                         {emp.role === 'Admin' ? <Shield size={10} /> : <User size={10} />}
-                        {emp.role}
+                        {RoleEnum[emp.role] || emp.role}
                       </span>
                     </div>
                   </div>
