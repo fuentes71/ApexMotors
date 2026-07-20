@@ -47,6 +47,12 @@ export default function SettingsPage() {
     setWhatsappDraft(whatsappTemplates);
   }
 
+  const [prevTenantConfig, setPrevTenantConfig] = useState(tenantConfig);
+  if (tenantConfig !== prevTenantConfig) {
+    setPrevTenantConfig(tenantConfig);
+    setGeralDraft({ name: tenantConfig?.name || '', logoUrl: tenantConfig?.logoUrl || '' });
+  }
+
   const isGeralDirty = geralDraft.name !== (tenantConfig?.name || '') || geralDraft.logoUrl !== (tenantConfig?.logoUrl || '');
   const isPdfDirty = templateDraft !== contractTemplate;
   const isWhatsappDirty = JSON.stringify(whatsappDraft) !== JSON.stringify(whatsappTemplates);

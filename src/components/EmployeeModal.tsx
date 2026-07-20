@@ -70,7 +70,7 @@ export function EmployeeModal() {
     setIsSaving(true);
     try {
       const isNew = !draftEmployee.id;
-      let res;
+      let res: any;
       const payload = { ...draftEmployee };
       if (payload.createdAt) payload.createdAt = toISODate(payload.createdAt) || payload.createdAt;
 
