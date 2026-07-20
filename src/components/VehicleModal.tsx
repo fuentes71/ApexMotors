@@ -11,6 +11,8 @@ import { DateInput } from "./DateInput";
 import { formatCurrency, getCategoryColor, getCategoryIcon, toISODate, VehicleStatusEnum, CategoryEnum, RecurrenceEnum } from "../utils";
 import { generateContractPDF } from "../utils/pdfExport";
 import { ImageUploader } from "./ImageUploader";
+import { SidePanelModal } from "./ui/SidePanelModal";
+import { ConfirmCloseModal } from "./ui/ConfirmCloseModal";
 
 export function VehicleModal() {
   const {
@@ -18,7 +20,7 @@ export function VehicleModal() {
     vehicles, setVehicles,
     fullscreenImage, setFullscreenImage,
     fixedExpenses, setFixedExpenses,
-    contractTemplate, currentUser
+    contractTemplate, currentUser, employees
   } = useData();
   const isVendedor = currentUser?.role === 'Seller';
 
@@ -114,7 +116,7 @@ export function VehicleModal() {
       if (payload.saleDate) payload.saleDate = toISODate(payload.saleDate) || payload.saleDate;
       
       if (payload.expenses?.length) {
-        payload.expenses = payload.expenses.map((exp: Expense) => ({
+        payload.expenses = payload.expenses.map((exp: any) => ({
           ...exp,
           startDate: toISODate(exp.startDate),
           endDate: toISODate(exp.endDate) || null,
@@ -210,7 +212,7 @@ export function VehicleModal() {
 
 
   const handleUpdate = <K extends keyof Vehicle>(field: K, value: Vehicle[K]) => {
-    if (isVendedor) return;
+    if (isVendedor && !["status", "saleDate", "buyerName", "buyerDoc", "soldById"].includes(field as string)) return;
     setDraftVehicle(prev => prev ? { ...prev, [field]: value } : null);
   };
 
@@ -300,12 +302,8 @@ export function VehicleModal() {
 
   return (
     <>
-      <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex justify-end animate-in fade-in">
-        {/* Backdrop clickable area */}
-        <div className="absolute inset-0" onClick={handleCloseAttempt}></div>
-
-        <div className="relative w-full max-w-2xl bg-[#FDFBF7] h-full shadow-2xl animate-in slide-in-from-right flex flex-col z-10">
-          <div className="flex justify-between items-center p-6 border-b border-stone-200/60 bg-white">
+      <SidePanelModal onCloseAttempt={handleCloseAttempt} maxWidthClass="max-w-2xl">
+        <div className="flex justify-between items-center p-6 border-b border-stone-200/60 bg-white">
             <h2 className="text-xl font-bold tracking-tight text-stone-900">
               {!draftVehicle.id ? "Adicionar Veículo" : activeVehicle?.status === "Sold" ? "Visualizar Veículo Vendido" : "Editar Veículo"}
             </h2>
@@ -324,7 +322,7 @@ export function VehicleModal() {
                   <input
                     type="text"
                     value={draftVehicle.name}
-                    disabled={activeVehicle?.status === "Sold"}
+                    disabled={activeVehicle?.status === "Sold" || isVendedor}
                     onChange={(e) => handleUpdate("name", e.target.value)}
                     className={`w-full text-lg font-bold text-stone-900 bg-stone-50 outline-none border ${errors.name ? 'border-red-500' : 'border-stone-200'} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-3 pl-11 pr-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed`}
                   />
@@ -336,7 +334,7 @@ export function VehicleModal() {
                 <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Descrição (Opcional)</label>
                 <textarea
                   value={draftVehicle.description || ""}
-                  disabled={activeVehicle?.status === "Sold"}
+                  disabled={activeVehicle?.status === "Sold" || isVendedor}
                   onChange={(e) => handleUpdate("description", e.target.value)}
                   placeholder="Detalhes adicionais sobre o veículo..."
                   rows={2}
@@ -356,7 +354,7 @@ export function VehicleModal() {
                     type="text"
                     placeholder="ABC-1234"
                     value={draftVehicle.licensePlate || ""}
-                    disabled={activeVehicle?.status === "Sold"}
+                    disabled={activeVehicle?.status === "Sold" || isVendedor}
                     onAccept={(value) => handleUpdate("licensePlate", value.toUpperCase())}
                     className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border ${errors.licensePlate ? 'border-red-500' : 'border-stone-200'} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all uppercase disabled:opacity-70 disabled:cursor-not-allowed`}
                   />
@@ -368,7 +366,7 @@ export function VehicleModal() {
                     mask="00000000000"
                     type="text"
                     value={draftVehicle.renavam || ""}
-                    disabled={activeVehicle?.status === "Sold"}
+                    disabled={activeVehicle?.status === "Sold" || isVendedor}
                     onAccept={(value) => handleUpdate("renavam", value)}
                     className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border ${errors.renavam ? 'border-red-500' : 'border-stone-200'} focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed`}
                   />
@@ -401,7 +399,7 @@ export function VehicleModal() {
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Venda (R$) <span className="text-red-500">*</span></label>
                   <NumericFormat
                     value={draftVehicle.saleValue}
-                    disabled={activeVehicle?.status === "Sold"}
+                    disabled={activeVehicle?.status === "Sold" || isVendedor}
                     onFocus={(e) => e.target.select()}
                     onValueChange={(values) => {
                       if (values.floatValue === undefined) {
@@ -422,7 +420,7 @@ export function VehicleModal() {
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Data de Entrada</label>
                   <DateInput
                     value={draftVehicle.entryDate}
-                    disabled={activeVehicle?.status === "Sold"}
+                    disabled={activeVehicle?.status === "Sold" || isVendedor}
                     onChangeDate={(val) => handleUpdate("entryDate", val)}
                     className="w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   />
@@ -437,6 +435,9 @@ export function VehicleModal() {
                       if (newStatus === "Sold") {
                         handleUpdate("status", "Sold");
                         handleUpdate("saleDate", new Date().toISOString().split('T')[0]);
+                        if (isVendedor && currentUser) {
+                          handleUpdate("soldById", currentUser.id);
+                        }
                       } else {
                         handleUpdate("status", newStatus);
                         handleUpdate("saleDate", undefined);
@@ -464,7 +465,7 @@ export function VehicleModal() {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
                         <label className="text-xs text-emerald-700 uppercase tracking-wider font-semibold mb-2 block">Data de Saída</label>
                         <DateInput
@@ -498,6 +499,20 @@ export function VehicleModal() {
                           onAccept={(value) => handleUpdate("buyerDoc", value)}
                           className="w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                         />
+                      </div>
+                      <div>
+                        <label className="text-xs text-emerald-700 uppercase tracking-wider font-semibold mb-2 block">Vendedor (Opcional)</label>
+                        <select
+                          value={draftVehicle.soldById || ""}
+                          disabled={activeVehicle?.status === "Sold" || isVendedor}
+                          onChange={(e) => handleUpdate("soldById", e.target.value)}
+                          className={`w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all ${activeVehicle?.status === "Sold" || isVendedor ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          <option value="">Selecione um vendedor</option>
+                          {employees.filter(emp => emp.role === 'Seller' || emp.role === 'Admin').map(emp => (
+                            <option key={emp.id} value={emp.id}>{emp.name}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -694,7 +709,7 @@ export function VehicleModal() {
             )}
           </div>
 
-          {!isVendedor && activeVehicle?.status !== 'Sold' && (
+          {(activeVehicle?.status !== 'Sold') && (!isVendedor || draftVehicle.status === 'Sold') && (
             <div className="p-6 border-t border-stone-200 bg-white mt-auto">
               <button
                 onClick={handleSave}
@@ -706,55 +721,14 @@ export function VehicleModal() {
               </button>
             </div>
           )}
-        </div>
-      </div>
+      </SidePanelModal>
 
       {/* Confirm Close Modal */}
-      {showConfirmClose && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center animate-in fade-in p-4">
-          <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-md" onClick={() => setShowConfirmClose(false)}></div>
-          <div className="relative bg-white/90 backdrop-blur-xl border border-white/50 rounded-3xl p-8 max-w-md w-full shadow-[0_32px_64px_-12px_rgba(0,0,0,0.15)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-
-            <div className="absolute top-4 right-4">
-              <button
-                onClick={() => setShowConfirmClose(false)}
-                className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100/80 rounded-full transition-all"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="flex flex-col items-center text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 mb-5 text-white">
-                <AlertTriangle size={32} />
-              </div>
-              <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-stone-900 to-stone-600 mb-3">
-                Alterações não salvas
-              </h3>
-              <p className="text-stone-500 text-sm leading-relaxed px-4">
-                Você tem alterações que não foram salvas. Se sair agora, você perderá todo o progresso recente. O que deseja fazer?
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowConfirmClose(false)}
-                  className="flex-1 px-4 py-3 rounded-2xl font-semibold text-stone-600 hover:text-stone-900 bg-stone-100/80 hover:bg-stone-200/80 backdrop-blur-sm transition-all cursor-pointer"
-                >
-                  Continuar
-                </button>
-                <button
-                  onClick={() => setActiveVehicle(null)}
-                  className="flex-1 px-4 py-3 rounded-2xl font-semibold text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-500 transition-all cursor-pointer"
-                >
-                  Excluir
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmCloseModal 
+        isOpen={showConfirmClose} 
+        onClose={() => setShowConfirmClose(false)} 
+        onConfirm={() => setActiveVehicle(null)} 
+      />
 
       {/* Fullscreen Image View */}
       {renderFullscreenGallery()}

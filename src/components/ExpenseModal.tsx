@@ -10,6 +10,7 @@ import { useConfirm } from "../context/ConfirmContext";
 import { DateInput } from "./DateInput";
 import { toISODate,  } from "../utils";
 import { ImageUploader } from "./ImageUploader";
+import { SidePanelModal } from "./ui/SidePanelModal";
 
 export function ExpenseModal() {
   const { activeExpense, setActiveExpense, fixedExpenses, setFixedExpenses } = useData();
@@ -113,14 +114,7 @@ export function ExpenseModal() {
   if (!activeExpense || !draftExpense) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex justify-end bg-stone-900/20 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={handleCloseAttempt}
-    >
-      <div 
-        className="relative z-10 w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <SidePanelModal onCloseAttempt={handleCloseAttempt}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-stone-50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
@@ -299,7 +293,6 @@ export function ExpenseModal() {
             {isSaving ? 'Salvando...' : 'Salvar Despesa'}
           </button>
         </div>
-      </div>
-    </div>
+      </SidePanelModal>
   );
 }

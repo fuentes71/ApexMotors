@@ -58,6 +58,7 @@ export type Vehicle = {
   debts?: VehicleDebt[];
   buyerName?: string;
   buyerDoc?: string;
+  soldById?: string;
 };
 
 export type Role = "Admin" | "Seller" | "Accounting";

@@ -5,6 +5,7 @@ import { VehicleAnalysisChart } from "./dashboard/VehicleAnalysisChart";
 import { MonthlyComparisonChart } from "./dashboard/MonthlyComparisonChart";
 import { ExpenseDistributionChart } from "./dashboard/ExpenseDistributionChart";
 import { InventoryAging } from "./dashboard/InventoryAging";
+import { SalesBySellerChart, type SalesBySellerDatum } from "./dashboard/SalesBySellerChart";
 
 interface DashboardViewProps {
   netBalance: number;
@@ -25,6 +26,7 @@ interface DashboardViewProps {
   prevAvgStockDays: number;
   salesTrendData: Record<string, unknown>[];
   inventoryAgingData: { name: string; count: number }[];
+  salesBySellerData: SalesBySellerDatum[];
 }
 
 export function DashboardView({
@@ -32,7 +34,7 @@ export function DashboardView({
   prevNetBalance, prevTotalVehicleProfit, prevTotalFixed,
   avgProfit, inStockVehiclesCount, soldVehiclesCount, barData, pieData, pieColors,
   avgTicket, prevAvgTicket, avgStockDays, prevAvgStockDays,
-  salesTrendData, inventoryAgingData
+  salesTrendData, inventoryAgingData, salesBySellerData
 }: DashboardViewProps) {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
@@ -61,6 +63,7 @@ export function DashboardView({
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <VehicleAnalysisChart data={barData} />
         <MonthlyComparisonChart data={salesTrendData} />
+        <SalesBySellerChart data={salesBySellerData} />
         <ExpenseDistributionChart data={pieData} colors={pieColors} />
         <InventoryAging data={inventoryAgingData} inStockVehiclesCount={inStockVehiclesCount} />
       </section>

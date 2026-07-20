@@ -7,7 +7,7 @@ import { calculateTotalFixedForPeriod, CategoryEnum } from "@/utils";
 import { getPreviousPeriod } from "@/utils/period";
 
 export default function DashboardPage() {
-  const { vehicles, fixedExpenses, startMonth, endMonth } = useData();
+  const { vehicles, fixedExpenses, startMonth, endMonth, employees } = useData();
 
   const filteredVehicles = vehicles.filter(v => {
     if (v.status === "Sold" && v.saleDate) {
@@ -151,6 +151,28 @@ export default function DashboardPage() {
     else inventoryAgingData[3].count++;
   });
 
+  const salesBySellerMap: Record<string, { count: number, revenue: number, profit: number }> = {};
+  soldVehicles.forEach(v => {
+    const sellerId = v.soldById || 'unknown';
+    if (!salesBySellerMap[sellerId]) {
+      salesBySellerMap[sellerId] = { count: 0, revenue: 0, profit: 0 };
+    }
+    salesBySellerMap[sellerId].count++;
+    salesBySellerMap[sellerId].revenue += (v.saleValue || 0);
+    const expenses = v.expenses.reduce((s, e) => s + e.value, 0);
+    salesBySellerMap[sellerId].profit += ((v.saleValue || 0) - (v.purchaseValue || 0) - expenses);
+  });
+
+  const salesBySellerData = Object.entries(salesBySellerMap).map(([id, stats]) => {
+    const sellerName = id === 'unknown' ? 'Sem Vendedor' : employees.find(e => e.id === id)?.name || 'Desconhecido';
+    return {
+      name: sellerName.split(' ')[0], // First name only for chart
+      Vendas: stats.count,
+      Receita: stats.revenue,
+      Lucro: stats.profit
+    };
+  }).sort((a, b) => b.Vendas - a.Vendas);
+
   return (
     <div className="flex-1 flex flex-col min-w-0 pb-20 print:pb-0 h-screen overflow-y-auto bg-[#FAFAFA]">
       <Header />
@@ -174,6 +196,7 @@ export default function DashboardPage() {
           prevAvgStockDays={prevAvgStockDays}
           salesTrendData={salesTrendData}
           inventoryAgingData={inventoryAgingData}
+          salesBySellerData={salesBySellerData}
         />
       </div>
     </div>
