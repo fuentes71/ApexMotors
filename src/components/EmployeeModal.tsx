@@ -150,8 +150,9 @@ export function EmployeeModal() {
                 type="email" 
                 value={draftEmployee.email}
                 onChange={e => setDraftEmployee({...draftEmployee, email: e.target.value})}
-                className={`w-full bg-stone-50 border ${errors.email ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all`}
+                className={`w-full bg-stone-50 border ${errors.email ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
                 placeholder="email@apexmotors.com"
+                disabled={!!activeEmployee.id}
               />
               {errors.email && <p className="text-red-500 text-xs mt-1 animate-in fade-in">{errors.email}</p>}
             </div>
@@ -188,7 +189,7 @@ export function EmployeeModal() {
               <DateInput 
                 value={draftEmployee.createdAt}
                 onChangeDate={val => setDraftEmployee({...draftEmployee, createdAt: val})}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!!activeEmployee.id}
               />
             </div>
