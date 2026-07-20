@@ -17,6 +17,7 @@ import { useState } from "react";
 import { AdminGuard } from "@/components/AdminGuard";
 import api from "@/services/api";
 import { ImageUploader } from "@/components/ImageUploader";
+import { ConfirmCloseModal } from "@/components/ui/ConfirmCloseModal";
 
 type Tab = 'geral' | 'pdf' | 'whatsapp';
 
@@ -45,6 +46,46 @@ export default function SettingsPage() {
     setPrevWhatsapp(whatsappTemplates);
     setWhatsappDraft(whatsappTemplates);
   }
+
+  const isGeralDirty = geralDraft.name !== (tenantConfig?.name || '') || geralDraft.logoUrl !== (tenantConfig?.logoUrl || '');
+  const isPdfDirty = templateDraft !== contractTemplate;
+  const isWhatsappDirty = JSON.stringify(whatsappDraft) !== JSON.stringify(whatsappTemplates);
+  
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingTab, setPendingTab] = useState<Tab | null>(null);
+
+  const handleTabClick = (tabId: Tab) => {
+    if (activeTab === tabId) return;
+    
+    let hasChanges = false;
+    if (activeTab === 'geral') hasChanges = isGeralDirty;
+    if (activeTab === 'pdf') hasChanges = isPdfDirty;
+    if (activeTab === 'whatsapp') hasChanges = isWhatsappDirty;
+
+    if (hasChanges) {
+      setPendingTab(tabId);
+      setShowConfirmModal(true);
+    } else {
+      setActiveTab(tabId);
+    }
+  };
+
+  const handleDiscardChanges = () => {
+    // Reset drafts based on current active tab
+    if (activeTab === 'geral') {
+      setGeralDraft({ name: tenantConfig?.name || '', logoUrl: tenantConfig?.logoUrl || '' });
+    } else if (activeTab === 'pdf') {
+      setTemplateDraft(contractTemplate);
+    } else if (activeTab === 'whatsapp') {
+      setWhatsappDraft(whatsappTemplates);
+    }
+    
+    setShowConfirmModal(false);
+    if (pendingTab) {
+      setActiveTab(pendingTab);
+      setPendingTab(null);
+    }
+  };
 
   const DEFAULT_CONTRACT_TEMPLATE = `Pelo presente instrumento, eu, {{buyerName}}, inscrito(a)
 no CPF/CNPJ sob o nº {{buyerDoc}}, declaro ter comprado o veículo abaixo
@@ -146,7 +187,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
+                      onClick={() => handleTabClick(tab.id)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
                         isActive 
                           ? 'bg-white text-indigo-700 shadow-sm border border-stone-200' 
@@ -394,6 +435,15 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
             </div>
           </div>
         </main>
+        
+        <ConfirmCloseModal 
+          isOpen={showConfirmModal}
+          onClose={() => {
+            setShowConfirmModal(false);
+            setPendingTab(null);
+          }}
+          onConfirm={handleDiscardChanges}
+        />
       </div>
     </AdminGuard>
   );
