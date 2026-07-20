@@ -9,6 +9,7 @@ import { useToast } from "../context/ToastContext";
 import { useConfirm } from "../context/ConfirmContext";
 import { DateInput } from "./DateInput";
 import { toISODate } from "../utils";
+import { ImageUploader } from "./ImageUploader";
 
 export function ExpenseModal() {
   const { activeExpense, setActiveExpense, fixedExpenses, setFixedExpenses } = useData();
@@ -241,24 +242,19 @@ export function ExpenseModal() {
               <div>
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Comprovante</label>
                 <div className="relative overflow-hidden h-[46px]">
-                  <button className="w-full h-full px-4 flex items-center justify-center gap-2 bg-stone-50 border border-stone-200 text-stone-600 rounded-xl hover:bg-stone-100 hover:border-stone-300 transition-colors text-sm font-medium shadow-sm">
-                    {draftExpense.image ? 'Trocar Comprovante' : 'Anexar Comprovante'}
-                  </button>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setDraftExpense({...draftExpense, image: reader.result as string});
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }} 
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
-                  />
+                  <ImageUploader 
+                    onImageUploaded={(base64) => setDraftExpense({...draftExpense, image: base64})}
+                  >
+                    {({ onClick, isUploading }) => (
+                      <button 
+                        onClick={onClick}
+                        disabled={isUploading}
+                        className="w-full h-full px-4 flex items-center justify-center gap-2 bg-stone-50 border border-stone-200 text-stone-600 rounded-xl hover:bg-stone-100 hover:border-stone-300 transition-colors text-sm font-medium shadow-sm disabled:opacity-50"
+                      >
+                        {isUploading ? <Loader2 size={16} className="animate-spin" /> : (draftExpense.image ? 'Trocar Comprovante' : 'Anexar Comprovante')}
+                      </button>
+                    )}
+                  </ImageUploader>
                 </div>
               </div>
             </div>

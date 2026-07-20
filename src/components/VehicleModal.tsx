@@ -10,6 +10,7 @@ import { useToast } from "../context/ToastContext";
 import { DateInput } from "./DateInput";
 import { formatCurrency, getCategoryColor, getCategoryIcon, toISODate } from "../utils";
 import { generateContractPDF } from "../utils/pdfExport";
+import { ImageUploader } from "./ImageUploader";
 
 export function VehicleModal() {
   const {
@@ -285,23 +286,6 @@ export function VehicleModal() {
     handleRemoveExpense(expense.id);
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64Str = reader.result as string;
-      setDraftVehicle({
-        ...draftVehicle,
-        image: draftVehicle.image || base64Str,
-        gallery: [...draftVehicle.gallery, base64Str]
-      });
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    };
-    reader.readAsDataURL(file);
-  };
-
   const handleCloseAttempt = () => {
     if (isSaving) {
       setActiveVehicle(null);
@@ -546,15 +530,27 @@ export function VehicleModal() {
                   </div>
                 ))}
                 {activeVehicle?.status !== 'Vendido' && (
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="aspect-square bg-stone-50 border-2 border-dashed border-stone-300 hover:border-blue-400 hover:bg-blue-50/50 rounded-lg flex flex-col items-center justify-center text-stone-400 hover:text-blue-500 transition-all cursor-pointer"
+                  <ImageUploader 
+                    onImageUploaded={(base64Str) => {
+                      setDraftVehicle({
+                        ...draftVehicle,
+                        image: draftVehicle.image || base64Str,
+                        gallery: [...draftVehicle.gallery, base64Str]
+                      });
+                    }}
                   >
-                    <Camera size={24} className="mb-2" />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">Adicionar</span>
-                  </button>
+                    {({ onClick, isUploading }) => (
+                      <button
+                        onClick={onClick}
+                        disabled={isUploading}
+                        className="aspect-square bg-stone-50 border-2 border-dashed border-stone-300 hover:border-blue-400 hover:bg-blue-50/50 rounded-lg flex flex-col items-center justify-center text-stone-400 hover:text-blue-500 transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        {isUploading ? <Loader2 size={24} className="animate-spin mb-2" /> : <Camera size={24} className="mb-2" />}
+                        <span className="text-[11px] font-semibold uppercase tracking-wider">{isUploading ? 'Adicionando...' : 'Adicionar'}</span>
+                      </button>
+                    )}
+                  </ImageUploader>
                 )}
-                <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
               </div>
             </div>
 
