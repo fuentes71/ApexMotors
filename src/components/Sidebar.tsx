@@ -72,32 +72,14 @@ export function Sidebar() {
         </nav>
         
         <div className="p-4 border-t border-stone-200/60 relative">
-          {isSettingsOpen && (
-            <div className="absolute bottom-[80px] left-4 right-4 bg-white border border-stone-200 rounded-xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in z-50">
-              <Link 
-                href={`/${tenantId}/settings`} 
-                onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors"
-              >
-                <div className="w-6 h-6 bg-rose-50 text-rose-600 rounded flex items-center justify-center font-bold text-[10px]">
-                  PDF
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-medium">Modelos e PDF</span>
-                  <span className="text-[10px] text-stone-400">Editar contratos</span>
-                </div>
-              </Link>
-            </div>
-          )}
-
           {currentUser?.role === 'Admin' && (
-            <button 
-              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+            <Link 
+              href={`/${tenantId}/settings`}
               className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
             >
               <Settings size={16} className="text-stone-400" />
               Configurações
-            </button>
+            </Link>
           )}
           <button 
             onClick={handleLogout}
@@ -148,35 +130,15 @@ export function Sidebar() {
               })}
             </nav>
             <div className="p-4 border-t border-stone-200/60 relative">
-              {isSettingsOpen && (
-                <div className="absolute bottom-[80px] left-4 right-4 bg-white border border-stone-200 rounded-xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in z-50">
-                  <Link 
-                    href={`/${tenantId}/settings`} 
-                    onClick={() => {
-                      setIsSettingsOpen(false);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-stone-700 hover:bg-stone-50 hover:text-stone-900 transition-colors"
-                  >
-                    <div className="w-6 h-6 bg-rose-50 text-rose-600 rounded flex items-center justify-center font-bold text-[10px]">
-                      PDF
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium">Modelos e PDF</span>
-                      <span className="text-[10px] text-stone-400">Editar contratos</span>
-                    </div>
-                  </Link>
-                </div>
-              )}
-
               {currentUser?.role === 'Admin' && (
-                <button 
-                  onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                <Link 
+                  href={`/${tenantId}/settings`}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
                 >
                   <Settings size={16} className="text-stone-400" />
                   Configurações
-                </button>
+                </Link>
               )}
               <button 
                 onClick={() => {
