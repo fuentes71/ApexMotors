@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from "react";
-import { Vehicle, Expense, Client, WhatsAppTemplates, Employee, Role } from "../types";
-import { getTenantConfig, TenantConfig } from "../utils/tenantConfig";
+import { Vehicle, Expense, Client, WhatsAppTemplates, Employee } from "../types";
+import { TenantConfig } from "../utils/tenantConfig";
 import api, { authApi, setAuthToken, setTenantSlug } from "../services/api";
 import { jwtDecode } from "jwt-decode";
 
@@ -154,7 +154,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
       const token = localStorage.getItem('@apexMotors:token');
       if (token) {
         try {
-          const decoded: any = jwtDecode(token);
+          const decoded = jwtDecode<any>(token);
           setAuthToken(token);
           setCurrentUser({
             id: decoded.sub,

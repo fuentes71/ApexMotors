@@ -1,6 +1,6 @@
-import { Wallet, Trash2, Plus, Check, Paperclip, ChevronDown, ImageIcon, FileText, Download, X, ChevronRight, Pencil, AlertTriangle, Loader2, TrendingDown, Search } from "lucide-react";
+import { Wallet, Trash2, Plus, ImageIcon, FileText, Download, X, ChevronRight, AlertTriangle, Loader2 } from "lucide-react";
 import { formatCurrency, calculateTotalFixedForPeriod, RecurrenceEnum } from "../utils";
-import { Expense, Category } from "../types";
+import { Expense } from "../types";
 import Image from "next/image";
 import { useState, Fragment } from "react";
 import { useSort } from "../hooks/useSort";

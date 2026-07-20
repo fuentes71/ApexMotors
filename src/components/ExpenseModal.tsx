@@ -1,4 +1,4 @@
-import { X, Save, Loader2, Receipt, Upload, Calendar } from "lucide-react";
+import { X, Save, Loader2, Receipt } from "lucide-react";
 import { NumericFormat } from "react-number-format";
 import Image from "next/image";
 import { useData } from "../context/DataContext";
@@ -8,7 +8,7 @@ import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { useConfirm } from "../context/ConfirmContext";
 import { DateInput } from "./DateInput";
-import { toISODate, CategoryEnum, RecurrenceEnum } from "../utils";
+import { toISODate,  } from "../utils";
 import { ImageUploader } from "./ImageUploader";
 
 export function ExpenseModal() {
@@ -83,7 +83,7 @@ export function ExpenseModal() {
     try {
       const isNew = !draftExpense.id;
       
-      const payload: any = { ...draftExpense };
+      const payload = { ...draftExpense } as any;
       payload.recurrence = payload.recurrence || 'Monthly';
       payload.value = Number(payload.value) || 0;
       payload.startDate = toISODate(payload.startDate);
@@ -182,7 +182,7 @@ export function ExpenseModal() {
                   onFocus={(e) => e.target.select()}
                   onValueChange={(values) => {
                     if (values.floatValue === undefined) {
-                      setDraftExpense({...draftExpense, value: undefined as any});
+                      setDraftExpense({...draftExpense, value: undefined as unknown as number});
                       setTimeout(() => setDraftExpense(prev => prev ? ({...prev, value: 0}) : null), 0);
                     } else {
                       setDraftExpense({...draftExpense, value: values.floatValue});

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
 // coreApi is the default api used by most components
 const api = axios.create({
@@ -44,7 +44,7 @@ if (typeof window !== 'undefined') {
 
 let activeRequests = 0;
 
-const handleRequestStart = (config: any) => {
+const handleRequestStart = (config: InternalAxiosRequestConfig) => {
   activeRequests++;
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('@apexMotors:token');
@@ -68,7 +68,7 @@ const handleRequestStart = (config: any) => {
   return config;
 };
 
-const handleResponse = (response: any) => {
+const handleResponse = (response: AxiosResponse) => {
   activeRequests--;
   if (activeRequests === 0 && typeof window !== 'undefined') {
     window.dispatchEvent(new Event('api-load-end'));
@@ -76,7 +76,7 @@ const handleResponse = (response: any) => {
   return response;
 };
 
-const handleError = (error: any) => {
+const handleError = (error: AxiosError) => {
   activeRequests--;
   if (activeRequests === 0 && typeof window !== 'undefined') {
     window.dispatchEvent(new Event('api-load-end'));

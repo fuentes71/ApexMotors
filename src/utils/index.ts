@@ -125,7 +125,7 @@ export const calculateTotalFixedForPeriod = (expenses: Expense[], startMonth: st
         total += exp.value;
       }
       
-      let recurrence = exp.recurrence;
+      const recurrence = exp.recurrence;
 
 
       if (!recurrence || recurrence === "One-time") {

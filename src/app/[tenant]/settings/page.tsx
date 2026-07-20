@@ -3,7 +3,7 @@
 import { useData } from "@/context/DataContext";
 import { Header } from "@/components/Header";
 import { Settings as SettingsIcon, FileText, Info, MessageCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AdminGuard } from "@/components/AdminGuard";
 import api from "@/services/api";
 

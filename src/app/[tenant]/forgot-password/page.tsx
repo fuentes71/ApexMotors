@@ -25,8 +25,8 @@ export default function ForgotPasswordPage() {
     try {
       await api.post("/auth/forgot-password", { email });
       setStep("token");
-    } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || "Ocorreu um erro ao solicitar a recuperação. Verifique se o e-mail está correto.");
+    } catch (err) {
+      setErrorMsg((err as any).response?.data?.message || "Ocorreu um erro ao solicitar a recuperação. Verifique se o e-mail está correto.");
     } finally {
       setIsLoading(false);
     }
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
       await api.post("/auth/validate-token", { token });
       // If valid, redirect to the reset password page with the token
       router.push(`/${tenantId}/reset-password?token=${token}`);
-    } catch (err: any) {
+    } catch (err) {
       setErrorMsg("Código inválido ou expirado.");
     } finally {
       setIsLoading(false);

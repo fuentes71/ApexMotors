@@ -13,7 +13,7 @@ function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const { tenantId, tenantConfig } = useData();
+  const { tenantId } = useData();
   const { showToast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +33,9 @@ function ResetPasswordForm() {
         .catch(() => setIsValid(false))
         .finally(() => setIsValidating(false));
     } else {
+      // eslint-disable-next-line
       setIsValidating(false);
+       
       setIsValid(false);
     }
   }, [token]);
@@ -60,8 +62,9 @@ function ResetPasswordForm() {
       setTimeout(() => {
         router.push(`/${tenantId}/login`);
       }, 3000);
-    } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || "Ocorreu um erro ao definir a senha.");
+    } catch (err) {
+      const error = err as any;
+      setErrorMsg(error.response?.data?.message || "Ocorreu um erro ao definir a senha.");
     } finally {
       setIsLoading(false);
     }

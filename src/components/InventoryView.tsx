@@ -1,5 +1,5 @@
-import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2, FileText, Search, Download, Calendar, Tag, X, AlertCircle } from "lucide-react";
-import { formatCurrency, DEFAULT_CAR_IMAGE, VehicleStatusEnum } from "../utils";
+import { CarFront, CheckCircle2, Trash2, ChevronRight, Plus, AlertTriangle, ChevronDown, Edit2, Wrench, Loader2, FileText } from "lucide-react";
+import { formatCurrency, VehicleStatusEnum } from "../utils";
 import Image from "next/image";
 import { Vehicle } from "../types";
 import { useData } from "../context/DataContext";
@@ -360,9 +360,9 @@ export function InventoryView({
                                         setVehicles(vehicles.filter(ve => ve.id !== v.id));
                                         setFixedExpenses(fixedExpenses.filter(exp => exp.linkedVehicleId !== v.id));
                                         showToast("Veículo excluído com sucesso!", "success");
-                                      } catch(err: any) {
+                                      } catch(err) {
                                         console.error(err);
-                                        showToast(err.response?.data?.message || "Erro ao excluir veículo", "error");
+                                        showToast((err as any).response?.data?.message || "Erro ao excluir veículo", "error");
                                       } finally {
                                         setIsDeletingId(null);
                                       }

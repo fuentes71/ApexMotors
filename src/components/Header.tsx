@@ -86,7 +86,7 @@ export function Header() {
   const currentMonth = new Date().toISOString().substring(0, 7);
   const monthOptions: string[] = [];
   
-  let current = new Date(minMonth + '-02'); // dia 02 para evitar fuso
+  const current = new Date(minMonth + '-02'); // dia 02 para evitar fuso
   const end = new Date(currentMonth + '-02');
   
   while (current <= end) {

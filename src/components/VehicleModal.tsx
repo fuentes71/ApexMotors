@@ -1,9 +1,9 @@
-import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle, Search, FileWarning, FileText, Check, ChevronLeft, ChevronRight, Loader2, Calendar, Link as LinkIcon, DollarSign, Wrench, Info, Pencil } from "lucide-react";
+import { X, Camera, Plus, Trash2, Save, Tag, AlertTriangle, FileText, Check, ChevronLeft, ChevronRight, Loader2, Pencil } from "lucide-react";
 import { NumericFormat } from "react-number-format";
 import { IMaskInput } from "react-imask";
 import Image from "next/image";
 import { useData } from "../context/DataContext";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Vehicle, Expense, Category, RecurrenceType } from "../types";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
@@ -114,7 +114,7 @@ export function VehicleModal() {
       if (payload.saleDate) payload.saleDate = toISODate(payload.saleDate) || payload.saleDate;
       
       if (payload.expenses?.length) {
-        payload.expenses = payload.expenses.map((exp: any) => ({
+        payload.expenses = payload.expenses.map((exp: Expense) => ({
           ...exp,
           startDate: toISODate(exp.startDate),
           endDate: toISODate(exp.endDate) || null,
@@ -133,9 +133,9 @@ export function VehicleModal() {
       }
       setActiveVehicle(null);
       showToast(isNew ? "Veículo cadastrado com sucesso!" : "Veículo atualizado com sucesso!", "success");
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      const errorMessage = e.response?.data?.message || "Erro ao salvar o veículo. Tente novamente.";
+      const errorMessage = (e as any).response?.data?.message || "Erro ao salvar o veículo. Tente novamente.";
       showToast(errorMessage, "error");
       
       if (errorMessage.includes("Renavam")) {

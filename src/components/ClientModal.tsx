@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Client } from "../types";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
-import { generateWhatsAppLink, toISODate } from "../utils";
+import { generateWhatsAppLink } from "../utils";
 import { DateInput } from "./DateInput";
 
 export function ClientModal() {

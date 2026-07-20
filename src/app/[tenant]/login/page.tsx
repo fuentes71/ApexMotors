@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CarFront, Mail, Lock, Loader2, ArrowRight, Shield, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowRight, User, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useData } from "@/context/DataContext";
@@ -50,7 +50,7 @@ export default function LoginPage() {
       setAuthToken(token);
       
       // Decode JWT to get user info
-      const decoded: any = jwtDecode(token);
+      const decoded = jwtDecode<any>(token);
       setCurrentUser({
         id: decoded.sub,
         name: decoded.name || 'User',
