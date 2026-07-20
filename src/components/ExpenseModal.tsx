@@ -23,7 +23,14 @@ export function ExpenseModal() {
   if (activeExpense !== prevActiveExpense) {
     setPrevActiveExpense(activeExpense);
     if (activeExpense) {
-      setDraftExpense(JSON.parse(JSON.stringify(activeExpense)));
+      const draft = JSON.parse(JSON.stringify(activeExpense));
+      if (draft.dueDate && draft.dueDate.includes('-')) {
+        const d = new Date(draft.dueDate);
+        if (!isNaN(d.getTime())) {
+          draft.dueDate = d.getUTCDate().toString();
+        }
+      }
+      setDraftExpense(draft);
     } else {
       setDraftExpense(null);
     }
@@ -84,7 +91,19 @@ export function ExpenseModal() {
       payload.value = Number(payload.value) || 0;
       payload.startDate = toISODate(payload.startDate);
       payload.endDate = toISODate(payload.endDate) || null;
-      if (payload.dueDate) payload.dueDate = toISODate(new Date(new Date().getFullYear(), new Date().getMonth(), Number(payload.dueDate)).toISOString().split('T')[0]);
+      if (payload.dueDate) {
+        const day = Number(payload.dueDate);
+        if (!isNaN(day) && day > 0 && day <= 31) {
+          const y = new Date().getFullYear();
+          const m = new Date().getMonth() + 1;
+          const yStr = y.toString();
+          const mStr = m.toString().padStart(2, '0');
+          const dStr = day.toString().padStart(2, '0');
+          payload.dueDate = toISODate(`${yStr}-${mStr}-${dStr}`);
+        } else {
+          payload.dueDate = toISODate(payload.dueDate);
+        }
+      }
 
       if (isNew) {
         delete payload.id;
