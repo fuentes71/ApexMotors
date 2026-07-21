@@ -3,6 +3,7 @@ export interface TenantConfig {
   name: string;
   primaryColor: string;
   logoUrl?: string;
+  cnpj?: string;
 }
 
 export const tenants: Record<string, TenantConfig> = {

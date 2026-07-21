@@ -29,7 +29,7 @@ export default function SettingsPage() {
   // Draft states
   const [templateDraft, setTemplateDraft] = useState(contractTemplate);
   const [whatsappDraft, setWhatsappDraft] = useState(whatsappTemplates);
-  const [geralDraft, setGeralDraft] = useState({ name: tenantConfig?.name || '', logoUrl: tenantConfig?.logoUrl || '' });
+  const [geralDraft, setGeralDraft] = useState({ name: tenantConfig?.name || '', logoUrl: tenantConfig?.logoUrl || '', cnpj: tenantConfig?.cnpj || '' });
   
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -50,10 +50,10 @@ export default function SettingsPage() {
   const [prevTenantConfig, setPrevTenantConfig] = useState(tenantConfig);
   if (tenantConfig !== prevTenantConfig) {
     setPrevTenantConfig(tenantConfig);
-    setGeralDraft({ name: tenantConfig?.name || '', logoUrl: tenantConfig?.logoUrl || '' });
+    setGeralDraft({ name: tenantConfig?.name || '', logoUrl: tenantConfig?.logoUrl || '', cnpj: tenantConfig?.cnpj || '' });
   }
 
-  const isGeralDirty = geralDraft.name !== (tenantConfig?.name || '') || geralDraft.logoUrl !== (tenantConfig?.logoUrl || '');
+  const isGeralDirty = geralDraft.name !== (tenantConfig?.name || '') || geralDraft.logoUrl !== (tenantConfig?.logoUrl || '') || geralDraft.cnpj !== (tenantConfig?.cnpj || '');
   const isPdfDirty = templateDraft !== contractTemplate;
   const isWhatsappDirty = JSON.stringify(whatsappDraft) !== JSON.stringify(whatsappTemplates);
   
@@ -79,7 +79,7 @@ export default function SettingsPage() {
   const handleDiscardChanges = () => {
     // Reset drafts based on current active tab
     if (activeTab === 'geral') {
-      setGeralDraft({ name: tenantConfig?.name || '', logoUrl: tenantConfig?.logoUrl || '' });
+      setGeralDraft({ name: tenantConfig?.name || '', logoUrl: tenantConfig?.logoUrl || '', cnpj: tenantConfig?.cnpj || '' });
     } else if (activeTab === 'pdf') {
       setTemplateDraft(contractTemplate);
     } else if (activeTab === 'whatsapp') {
@@ -137,6 +137,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
       if (activeTab === 'geral') {
         payload.name = geralDraft.name;
         payload.logoUrl = geralDraft.logoUrl;
+        payload.cnpj = geralDraft.cnpj;
       } else if (activeTab === 'pdf') {
         payload.pdfTemplate = templateDraft;
       } else if (activeTab === 'whatsapp') {
@@ -232,7 +233,23 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
                           placeholder="Ex: Apex Motors"
                         />
                       </div>
-                      
+
+                      <div>
+                        <label className="block text-sm font-semibold text-stone-700 mb-2">
+                          CNPJ
+                        </label>
+                        <input
+                          type="text"
+                          value={geralDraft.cnpj}
+                          onChange={(e) => setGeralDraft({...geralDraft, cnpj: e.target.value})}
+                          className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-stone-900 font-medium"
+                          placeholder="00.000.000/0000-00"
+                        />
+                        <p className="text-xs text-stone-400 mt-1.5">
+                          Usado no contrato em PDF pelo campo {"{{cnpj}}"}.
+                        </p>
+                      </div>
+
                       <div>
                         <label className="block text-sm font-semibold text-stone-700 mb-2">
                           Logo da Empresa
