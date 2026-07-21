@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useSort } from "../hooks/useSort";
 import { useToast } from "../context/ToastContext";
 import { useConfirm } from "../context/ConfirmContext";
-import { generateContractPDF } from "../utils/pdfExport";
+import { generateContractPDF } from "../utils/pdfLazy";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import { ViewLayout } from "./ui/ViewLayout";
 import { Tooltip } from "./ui/Tooltip";

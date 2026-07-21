@@ -9,7 +9,7 @@ import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { DateInput } from "./DateInput";
 import { formatCurrency, getCategoryColor, getCategoryIcon, toISODate, VehicleStatusEnum, CategoryEnum, RecurrenceEnum } from "../utils";
-import { generateContractPDF } from "../utils/pdfExport";
+import { generateContractPDF } from "../utils/pdfLazy";
 import { ImageUploader } from "./ImageUploader";
 import { SidePanelModal } from "./ui/SidePanelModal";
 import { ConfirmCloseModal } from "./ui/ConfirmCloseModal";

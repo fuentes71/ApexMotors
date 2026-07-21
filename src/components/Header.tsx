@@ -4,7 +4,6 @@ import { Menu, Download, ChevronDown, Calendar, Check } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { formatMonth, formatCurrency, calculateTotalFixedForPeriod } from "../utils";
-import { generateStructuredPDF } from "../utils/pdfExport";
 import { useData } from "../context/DataContext";
 import { useState, useRef, useEffect } from "react";
 
@@ -116,7 +115,9 @@ export function Header() {
 
   const netBalance = totalVehicleProfit - totalFixed;
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    // Loaded on click so jsPDF stays out of the initial bundle.
+    const { generateStructuredPDF } = await import("../utils/pdfLazy");
     generateStructuredPDF({
       startMonth,
       endMonth,
