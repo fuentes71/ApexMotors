@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
         <div className="w-full relative z-10">
           <div className="flex items-center justify-center gap-3 mb-10">
             <div className="p-0.5 bg-stone-100 rounded-xl shadow-sm border border-stone-200">
-              {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={48} height={48} className="rounded-[10px] object-cover" />}
+              {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={48} height={48} className="rounded-[10px] object-cover" unoptimized />}
             </div>
             <span className="text-2xl font-extrabold tracking-tight text-stone-900">{tenantConfig.name}</span>
           </div>

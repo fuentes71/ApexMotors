@@ -92,7 +92,7 @@ export default function LoginPage() {
           {/* Brand art */}
           <div className="relative z-10 w-full max-w-sm flex flex-col items-center text-center mt-[-40px]">
             <div className="inline-flex items-center justify-center p-1 bg-white/5 border border-white/10 rounded-3xl mb-8 backdrop-blur-xl shadow-2xl">
-              {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={96} height={96} className="rounded-2xl object-cover" />}
+              {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={96} height={96} className="rounded-2xl object-cover" unoptimized />}
             </div>
             <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-stone-400 mb-4 leading-tight tracking-tight">
               Acelere a gestão<br />do seu estoque.
@@ -119,7 +119,7 @@ export default function LoginPage() {
           <div className="w-full max-w-[360px] mx-auto relative z-10">
             <div className="lg:hidden flex items-center justify-center gap-3 mb-10">
               <div className="p-0.5 bg-stone-100 rounded-xl shadow-sm border border-stone-200">
-                {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={48} height={48} className="rounded-[10px] object-cover" />}
+                {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={48} height={48} className="rounded-[10px] object-cover" unoptimized />}
               </div>
               <span className="text-2xl font-extrabold tracking-tight text-stone-900">{tenantConfig.name}</span>
             </div>

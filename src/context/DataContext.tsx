@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect, useRef } from "react";
 import { Vehicle, Expense, Client, WhatsAppTemplates, Employee } from "../types";
 import { TenantConfig } from "../utils/tenantConfig";
 import api, { authApi, setAuthToken, setTenantSlug } from "../services/api";
@@ -49,6 +49,10 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export function DataProvider({ children, tenantId }: { children: ReactNode, tenantId: string }) {
   const [tenantConfig, setTenantConfig] = useState<TenantConfig | null>(null);
   const [tenantError, setTenantError] = useState(false);
+  // Real tenant UUID (tenantConfig.id holds the slug). A ref, so reading it in
+  // checkAuth does not make it an effect dependency. Used to check that a
+  // stored token belongs to the tenant in the URL.
+  const tenantRealIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     setTenantSlug(tenantId);
@@ -56,6 +60,7 @@ export function DataProvider({ children, tenantId }: { children: ReactNode, tena
     const fetchTenant = async () => {
       try {
         const response = await api.get(`/tenants/${tenantId}`);
+        tenantRealIdRef.current = response.data.id;
         setTenantConfig({
           id: response.data.slug,
           name: response.data.name,
@@ -173,6 +178,18 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
       if (token) {
         try {
           const decoded = jwtDecode<any>(token);
+
+          // The token carries the tenant the user logged into. If the URL
+          // points at a different tenant, this is another account — do not
+          // authenticate here; AuthGuard sends them to this tenant's login.
+          // The token is left in storage so the original tenant still works.
+          if (tenantRealIdRef.current && decoded.tenantId !== tenantRealIdRef.current) {
+            setAuthToken(null);
+            setCurrentUser(null);
+            setIsLoadingAuth(false);
+            return;
+          }
+
           setAuthToken(token);
           setCurrentUser({
             id: decoded.sub,

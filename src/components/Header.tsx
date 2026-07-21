@@ -142,7 +142,7 @@ export function Header() {
             </button>
           </div>
           <div className="hidden print:flex items-center gap-4 mb-6 pb-6 border-b border-stone-200">
-            {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={48} height={48} className="rounded-lg object-cover" />}
+            {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={48} height={48} className="rounded-lg object-cover" unoptimized />}
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-stone-900">Relatório {tenantConfig.name}</h1>
               <p className="text-stone-500">{getTitle()} • {startMonth === endMonth ? formatMonth(startMonth) : `${formatMonth(startMonth)} a ${formatMonth(endMonth)}`}</p>
