@@ -63,75 +63,97 @@ export function VehicleModal() {
     if (!draftVehicle) return;
 
     let hasError = false;
-    if (!draftVehicle.name?.trim()) {
-      showError("name", "O nome do veículo é obrigatório.");
+    let firstInvalidField: string | null = null;
+    const markError = (field: string, msg: string) => {
+      showError(field, msg);
       hasError = true;
+      if (!firstInvalidField) firstInvalidField = field;
+    };
+
+    if (!draftVehicle.name?.trim()) {
+      markError("name", "O nome do veículo é obrigatório.");
     }
     if (draftVehicle.purchaseValue === undefined || draftVehicle.purchaseValue === null) {
-      showError("purchaseValue", "O valor de compra é obrigatório.");
-      hasError = true;
+      markError("purchaseValue", "O valor de compra é obrigatório.");
     }
     if (draftVehicle.saleValue === undefined || draftVehicle.saleValue === null) {
-      showError("saleValue", "O valor de venda é obrigatório.");
-      hasError = true;
+      markError("saleValue", "O valor de venda é obrigatório.");
     }
 
     if (!draftVehicle.licensePlate?.trim()) {
-      showError("licensePlate", "A placa do veículo é obrigatória.");
-      hasError = true;
+      markError("licensePlate", "A placa do veículo é obrigatória.");
     } else {
       const plateRegex = /^[A-Z]{3}-?[0-9][A-Z0-9][0-9]{2}$/i;
       if (!plateRegex.test(draftVehicle.licensePlate.trim())) {
-        showError("licensePlate", "Placa inválida. Use o formato AAA-1234 ou AAA1A23.");
-        hasError = true;
+        markError("licensePlate", "Placa inválida. Use o formato AAA-1234 ou AAA1A23.");
       }
     }
 
     if (!draftVehicle.renavam?.trim()) {
-      showError("renavam", "O renavam do veículo é obrigatório.");
-      hasError = true;
+      markError("renavam", "O renavam do veículo é obrigatório.");
     } else {
       const renavamRegex = /^[0-9]{11}$/;
       if (!renavamRegex.test(draftVehicle.renavam.trim())) {
-        showError("renavam", "O Renavam deve ter exatamente 11 números.");
-        hasError = true;
+        markError("renavam", "O Renavam deve ter exatamente 11 números.");
       }
     }
 
     if (draftVehicle.saleValue !== null && draftVehicle.purchaseValue !== null && draftVehicle.saleValue < draftVehicle.purchaseValue) {
-      showError("saleValue", "O valor de venda deve ser maior que o valor de compra.");
-      hasError = true;
+      markError("saleValue", "O valor de venda deve ser maior que o valor de compra.");
     }
-    if (hasError) return;
+
+    if (hasError) {
+      // Errors render as small inline text; with a scrollable panel the
+      // field that's actually blocking the save can be scrolled out of
+      // view, which reads as the button silently doing nothing.
+      const el = document.getElementById(`vehicle-field-${firstInvalidField}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+      return;
+    }
 
     setIsSaving(true);
+    const isNew = !draftVehicle.id;
+
+    const payload = { ...draftVehicle };
+    payload.purchaseValue = Number(payload.purchaseValue) || 0;
+    payload.saleValue = Number(payload.saleValue) || 0;
+    payload.entryDate = toISODate(payload.entryDate) || payload.entryDate;
+    if (payload.saleDate) payload.saleDate = toISODate(payload.saleDate) || payload.saleDate;
+
+    if (payload.expenses?.length) {
+      payload.expenses = payload.expenses.map((exp: any) => ({
+        ...exp,
+        startDate: toISODate(exp.startDate),
+        endDate: toISODate(exp.endDate) || null,
+      }));
+    }
+
+    if (!payload.buyerDoc) delete payload.buyerDoc;
+    if (!payload.buyerName) delete payload.buyerName;
+
+    // Optimistic update: the inventory table (Custo Total, despesas) reads
+    // straight from this list, so reflect the save immediately instead of
+    // waiting on the round trip. A temp id keys the new-vehicle row until
+    // the server responds; roll back to previousVehicles if the request
+    // fails so a rejected save never leaves stale numbers on screen.
+    const previousVehicles = vehicles;
+    const optimisticId = draftVehicle.id || `temp-${Date.now()}`;
+    const optimisticVehicle = { ...draftVehicle, ...payload, id: optimisticId } as Vehicle;
+    setVehicles(
+      isNew
+        ? [...vehicles, optimisticVehicle]
+        : vehicles.map(v => v.id === draftVehicle.id ? optimisticVehicle : v)
+    );
+
     try {
-      const isNew = !draftVehicle.id;
       let res: { data: Vehicle };
-
-      const payload = { ...draftVehicle };
-      payload.purchaseValue = Number(payload.purchaseValue) || 0;
-      payload.saleValue = Number(payload.saleValue) || 0;
-      payload.entryDate = toISODate(payload.entryDate) || payload.entryDate;
-      if (payload.saleDate) payload.saleDate = toISODate(payload.saleDate) || payload.saleDate;
-      
-      if (payload.expenses?.length) {
-        payload.expenses = payload.expenses.map((exp: any) => ({
-          ...exp,
-          startDate: toISODate(exp.startDate),
-          endDate: toISODate(exp.endDate) || null,
-        }));
-      }
-
-      if (!payload.buyerDoc) delete payload.buyerDoc;
-      if (!payload.buyerName) delete payload.buyerName;
-
       if (isNew) {
         res = await api.post(`/vehicles`, payload);
-        setVehicles([...vehicles, res.data]);
+        setVehicles(prev => prev.map(v => v.id === optimisticId ? res.data : v));
       } else {
         res = await api.patch(`/vehicles/${payload.id}`, payload);
-        setVehicles(vehicles.map(v => v.id === draftVehicle.id ? res.data : v));
+        setVehicles(prev => prev.map(v => v.id === draftVehicle.id ? res.data : v));
       }
       setActiveVehicle(null);
       showToast(isNew ? "Veículo cadastrado com sucesso!" : "Veículo atualizado com sucesso!", "success");
@@ -139,7 +161,8 @@ export function VehicleModal() {
       console.error(e);
       const errorMessage = (e as any).response?.data?.message || "Erro ao salvar o veículo. Tente novamente.";
       showToast(errorMessage, "error");
-      
+      setVehicles(previousVehicles);
+
       if (errorMessage.includes("Renavam")) {
         showError("renavam", errorMessage);
       } else if (errorMessage.includes("Placa")) {
@@ -320,6 +343,7 @@ export function VehicleModal() {
                 <div className="relative">
                   <Tag size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
                   <input
+                    id="vehicle-field-name"
                     type="text"
                     value={draftVehicle.name}
                     disabled={activeVehicle?.status === "Sold" || isVendedor}
@@ -346,6 +370,7 @@ export function VehicleModal() {
                 <div>
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Placa <span className="text-red-500">*</span></label>
                   <IMaskInput
+                    id="vehicle-field-licensePlate"
                     mask={[
                       { mask: 'aaa-0000' }, // Placa antiga
                       { mask: 'aaa0a00' }   // Placa Mercosul
@@ -363,6 +388,7 @@ export function VehicleModal() {
                 <div>
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Renavam <span className="text-red-500">*</span></label>
                   <IMaskInput
+                    id="vehicle-field-renavam"
                     mask="00000000000"
                     type="text"
                     value={draftVehicle.renavam || ""}
@@ -376,6 +402,7 @@ export function VehicleModal() {
                   <div>
                     <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Compra (R$) <span className="text-red-500">*</span></label>
                     <NumericFormat
+                      id="vehicle-field-purchaseValue"
                       value={draftVehicle.purchaseValue}
                       disabled={activeVehicle?.status === "Sold"}
                       onFocus={(e) => e.target.select()}
@@ -398,6 +425,7 @@ export function VehicleModal() {
                 <div>
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Valor de Venda (R$) <span className="text-red-500">*</span></label>
                   <NumericFormat
+                    id="vehicle-field-saleValue"
                     value={draftVehicle.saleValue}
                     disabled={activeVehicle?.status === "Sold" || isVendedor}
                     onFocus={(e) => e.target.select()}
