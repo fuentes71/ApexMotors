@@ -61,6 +61,7 @@ export function DataProvider({ children, tenantId }: { children: ReactNode, tena
           name: response.data.name,
           primaryColor: response.data.primaryColor || 'blue',
           logoUrl: response.data.logoUrl || '',
+          cnpj: response.data.cnpj || '',
         });
       } catch (error) {
         console.error("Failed to fetch tenant:", error);
