@@ -12,6 +12,7 @@ interface DataContextType {
   currentUser: Employee | null;
   setCurrentUser: Dispatch<SetStateAction<Employee | null>>;
   isLoadingAuth: boolean;
+  loadError: boolean;
   employees: Employee[];
   setEmployees: Dispatch<SetStateAction<Employee[]>>;
   vehicles: Vehicle[];
@@ -115,6 +116,9 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
   // Authenticated user
   const [currentUser, setCurrentUser] = useState<Employee | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  // True when a core list (vehicles, clients or expenses) failed to load, so
+  // the UI can show an error instead of a plausible-looking empty account.
+  const [loadError, setLoadError] = useState(false);
 
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
   const [activeClient, setActiveClient] = useState<Client | null>(null);
@@ -122,6 +126,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
   const [activeEmployee, setActiveEmployee] = useState<Employee | null>(null);
 
   const fetchData = async () => {
+    setLoadError(false);
     try {
       const [vRes, eRes, cRes, empRes, settingsRes] = await Promise.allSettled([
         api.get('/vehicles'),
@@ -135,6 +140,17 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
       if (eRes.status === 'fulfilled') setFixedExpenses(eRes.value.data);
       if (cRes.status === 'fulfilled') setClients(cRes.value.data);
       if (empRes.status === 'fulfilled') setEmployees(empRes.value.data);
+
+      // If a core list failed, flag it so the UI does not read as an empty
+      // account. Settings and employees are not counted as core here.
+      if (
+        vRes.status === 'rejected' ||
+        eRes.status === 'rejected' ||
+        cRes.status === 'rejected'
+      ) {
+        setLoadError(true);
+      }
+
       if (settingsRes.status === 'fulfilled') {
         if (settingsRes.value.data.pdfTemplate) {
           setContractTemplate(settingsRes.value.data.pdfTemplate);
@@ -145,6 +161,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
       }
     } catch (err) {
       console.error('Error fetching initial data:', err);
+      setLoadError(true);
     }
   };
 
@@ -204,6 +221,7 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
       tenantId, tenantConfig,
       currentUser, setCurrentUser,
       isLoadingAuth,
+      loadError,
       employees, setEmployees,
       vehicles, setVehicles,
       fixedExpenses, setFixedExpenses,

@@ -302,7 +302,7 @@ export function VehicleModal() {
 
   return (
     <>
-      <SidePanelModal onCloseAttempt={handleCloseAttempt} maxWidthClass="max-w-2xl">
+      <SidePanelModal onCloseAttempt={handleCloseAttempt} maxWidthClass="max-w-2xl" title="Detalhes do veículo">
         <div className="flex justify-between items-center p-6 border-b border-stone-200/60 bg-white">
             <h2 className="text-xl font-bold tracking-tight text-stone-900">
               {!draftVehicle.id ? "Adicionar Veículo" : activeVehicle?.status === "Sold" ? "Visualizar Veículo Vendido" : "Editar Veículo"}

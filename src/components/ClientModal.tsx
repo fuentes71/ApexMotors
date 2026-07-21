@@ -103,7 +103,7 @@ export function ClientModal() {
 
   return (
     <>
-      <SidePanelModal onCloseAttempt={handleCloseAttempt}>
+      <SidePanelModal onCloseAttempt={handleCloseAttempt} title="Detalhes do cliente">
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-stone-50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
