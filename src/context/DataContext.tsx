@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from "react";
 import { Vehicle, Expense, Client, WhatsAppTemplates, Employee } from "../types";
 import { TenantConfig } from "../utils/tenantConfig";
-import api, { authApi, setAuthToken, setTenantSlug } from "../services/api";
+import api, { authApi, setAuthToken, setTenantSlug, getTokenTenant } from "../services/api";
 import { jwtDecode } from "jwt-decode";
 
 interface DataContextType {
@@ -170,10 +170,21 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
     // Check local storage for token on mount
     const checkAuth = async () => {
       const token = localStorage.getItem('@apexMotors:token');
+      const tokenTenant = getTokenTenant();
+      if (token && tokenTenant && tokenTenant !== tenantId) {
+        // Token was issued for a different tenant than the one we're on now
+        // (e.g. the URL moved to another tenant without a fresh login).
+        // The backend would still trust the old tenantId embedded in the
+        // token, so this has to be an explicit logout, not a silent reuse.
+        setAuthToken(null);
+        setCurrentUser(null);
+        setIsLoadingAuth(false);
+        return;
+      }
       if (token) {
         try {
           const decoded = jwtDecode<any>(token);
-          setAuthToken(token);
+          setAuthToken(token, tenantId);
           setCurrentUser({
             id: decoded.sub,
             name: decoded.name || 'User',

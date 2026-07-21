@@ -47,7 +47,7 @@ export default function LoginPage() {
       });
       
       const token = response.data.access_token;
-      setAuthToken(token);
+      setAuthToken(token, tenantId);
       
       // Decode JWT to get user info
       const decoded = jwtDecode<any>(token);

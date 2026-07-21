@@ -10,21 +10,32 @@ export const authApi = axios.create({
   baseURL: process.env.NEXT_PUBLIC_AUTH_API_URL || 'https://apexmotors-auth-service.onrender.com/auth',
 });
 
-export const setAuthToken = (token: string | null) => {
+// The token carries its own tenantId (a JWT claim), but that's a UUID and
+// the URL/UI only knows the tenant slug - so we track the slug the token
+// was issued under alongside it, to detect "still logged in, but for a
+// different tenant" when the URL's slug moves on without a fresh login.
+export const setAuthToken = (token: string | null, tenantSlug?: string) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     authApi.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     if (typeof window !== 'undefined') {
       localStorage.setItem('@apexMotors:token', token);
+      if (tenantSlug) {
+        localStorage.setItem('@apexMotors:tokenTenant', tenantSlug);
+      }
     }
   } else {
     delete api.defaults.headers.common['Authorization'];
     delete authApi.defaults.headers.common['Authorization'];
     if (typeof window !== 'undefined') {
       localStorage.removeItem('@apexMotors:token');
+      localStorage.removeItem('@apexMotors:tokenTenant');
     }
   }
 };
+
+export const getTokenTenant = (): string | null =>
+  typeof window !== 'undefined' ? localStorage.getItem('@apexMotors:tokenTenant') : null;
 
 export const setTenantSlug = (slug: string) => {
   api.defaults.headers.common['x-tenant-slug'] = slug;
