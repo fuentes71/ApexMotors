@@ -81,31 +81,46 @@ export function ExpenseModal() {
     if (hasError) return;
 
     setIsSaving(true);
-    try {
-      const isNew = !draftExpense.id;
-      
-      const payload = { ...draftExpense } as any;
-      payload.recurrence = payload.recurrence || 'Monthly';
-      payload.value = Number(payload.value) || 0;
-      payload.startDate = toISODate(payload.startDate);
-      payload.endDate = toISODate(payload.endDate) || null;
-      if (payload.dueDate) {
-        payload.dueDate = toISODate(payload.dueDate);
-      }
+    const isNew = !draftExpense.id;
 
+    const payload = { ...draftExpense } as any;
+    payload.recurrence = payload.recurrence || 'Monthly';
+    payload.value = Number(payload.value) || 0;
+    payload.startDate = toISODate(payload.startDate);
+    payload.endDate = toISODate(payload.endDate) || null;
+    if (payload.dueDate) {
+      payload.dueDate = toISODate(payload.dueDate);
+    }
+    if (isNew) delete payload.id;
+
+    // Optimistic update: reflect the save in the expenses list immediately
+    // and roll back to previousExpenses if the request fails, so a rejected
+    // save never leaves stale data on screen.
+    const previousExpenses = fixedExpenses;
+    const optimisticId = draftExpense.id || `temp-${Date.now()}`;
+    const optimisticExpense = { ...draftExpense, ...payload, id: optimisticId };
+    // setFixedExpenses only takes a plain array (no functional update form),
+    // so keep the optimistic list around to reconcile against below instead
+    // of reading the (still stale, pre-update) fixedExpenses closure.
+    const optimisticList = isNew
+      ? [...fixedExpenses, optimisticExpense]
+      : fixedExpenses.map(e => e.id === draftExpense.id ? optimisticExpense : e);
+    setFixedExpenses(optimisticList);
+
+    try {
       if (isNew) {
-        delete payload.id;
         const res = await api.post('/expenses', payload);
-        setFixedExpenses([...fixedExpenses, res.data]);
+        setFixedExpenses(optimisticList.map(e => e.id === optimisticId ? res.data : e));
       } else {
         const res = await api.patch(`/expenses/${payload.id}`, payload);
-        setFixedExpenses(fixedExpenses.map(e => e.id === payload.id ? res.data : e));
+        setFixedExpenses(optimisticList.map(e => e.id === payload.id ? res.data : e));
       }
       setActiveExpense(null);
       showToast(isNew ? "Despesa adicionada com sucesso!" : "Despesa atualizada com sucesso!", "success");
     } catch (e) {
       console.error(e);
       showToast("Erro ao salvar despesa", "error");
+      setFixedExpenses(previousExpenses);
     } finally {
       setIsSaving(false);
     }

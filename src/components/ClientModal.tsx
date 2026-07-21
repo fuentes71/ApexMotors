@@ -75,25 +75,37 @@ export function ClientModal() {
     if (hasError) return;
 
     setIsSaving(true);
-    try {
-      const isNew = !draftClient.id;
-      const payload = { ...draftClient };
+    const isNew = !draftClient.id;
+    const payload = { ...draftClient };
+    if (isNew) delete payload.id;
 
-      
+    // Optimistic update: reflect the save in the clients list immediately
+    // and roll back to previousClients if the request fails, so a rejected
+    // save never leaves stale data on screen.
+    const previousClients = clients;
+    const optimisticId = draftClient.id || `temp-${Date.now()}`;
+    const optimisticClient = { ...draftClient, id: optimisticId };
+    setClients(
+      isNew
+        ? [...clients, optimisticClient]
+        : clients.map(c => c.id === draftClient.id ? optimisticClient : c)
+    );
+
+    try {
       if (isNew) {
-        delete payload.id;
         const res = await api.post(`/clients`, payload);
-        setClients([...clients, res.data]);
+        setClients(prev => prev.map(c => c.id === optimisticId ? res.data : c));
       } else {
         const res = await api.patch(`/clients/${draftClient.id}`, payload);
-        setClients(clients.map(c => c.id === draftClient.id ? res.data : c));
+        setClients(prev => prev.map(c => c.id === draftClient.id ? res.data : c));
       }
-      
+
       setActiveClient(null);
       showToast(isNew ? "Cliente cadastrado com sucesso!" : "Cliente atualizado com sucesso!", "success");
     } catch (e) {
       console.error(e);
       showToast("Erro ao salvar cliente", "error");
+      setClients(previousClients);
     } finally {
       setIsSaving(false);
     }

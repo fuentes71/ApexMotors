@@ -65,36 +65,45 @@ export function EmployeeModal() {
     if (hasError) return;
 
     setIsSaving(true);
-    try {
-      const isNew = !draftEmployee.id;
-      let res: AxiosResponse<Employee>;
-      // Only these three are sent. The user sets their own password through
-      // the first-access email, and the backend stamps createdAt.
-      const payload = {
-        name: draftEmployee.name,
-        email: draftEmployee.email,
-        role: draftEmployee.role,
-      };
+    const isNew = !draftEmployee.id;
+    // Only these three are sent. The user sets their own password through
+    // the first-access email, and the backend stamps createdAt.
+    const payload = {
+      name: draftEmployee.name,
+      email: draftEmployee.email,
+      role: draftEmployee.role,
+    };
 
+    // Optimistic update: reflect the save in the employees list immediately
+    // and roll back to previousEmployees if the request fails, so a rejected
+    // save never leaves stale data on screen (or, as before, a fake "saved
+    // locally" employee that was never actually persisted).
+    const previousEmployees = employees;
+    const optimisticId = draftEmployee.id || `temp-${Date.now()}`;
+    const optimisticEmployee = { ...draftEmployee, ...payload, id: optimisticId };
+    setEmployees(
+      isNew
+        ? [...employees, optimisticEmployee]
+        : employees.map(e => e.id === draftEmployee.id ? optimisticEmployee : e)
+    );
+
+    try {
+      let res: AxiosResponse<Employee>;
       if (isNew) {
         res = await api.post(`/users`, payload);
-        setEmployees([...employees, res.data]);
+        setEmployees(prev => prev.map(e => e.id === optimisticId ? res.data : e));
         showToast("Funcionário cadastrado com sucesso!", "success");
       } else {
         res = await api.patch(`/users/${draftEmployee.id}`, payload);
-        setEmployees(employees.map(e => e.id === draftEmployee.id ? res.data : e));
+        setEmployees(prev => prev.map(e => e.id === draftEmployee.id ? res.data : e));
         showToast("Funcionário atualizado com sucesso!", "success");
       }
-      
+
       setActiveEmployee(null);
     } catch (e) {
       console.error(e);
-      // Fallback local caso dê erro (opcional, mantendo comportamento parecido com os outros módulos)
-      if (draftEmployee.id !== "new") {
-        setEmployees(employees.map(e => e.id === draftEmployee.id ? draftEmployee : e));
-      }
-      setActiveEmployee(null);
-      showToast("Erro na API: Funcionário salvo localmente", "warning");
+      setEmployees(previousEmployees);
+      showToast("Erro ao salvar funcionário. Tente novamente.", "error");
     } finally {
       setIsSaving(false);
     }
