@@ -44,7 +44,7 @@ export function Sidebar() {
       {/* --- SIDEBAR (DESKTOP) --- */}
       <aside className="w-64 bg-[#FAFAFA] border-r border-stone-200/60 hidden lg:flex flex-col sticky top-0 h-screen print:hidden z-40">
         <div className="p-6 flex items-center gap-3">
-          {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={28} height={28} className="rounded-md object-cover" />}
+          {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={28} height={28} className="rounded-md object-cover" unoptimized />}
           <span className="font-semibold text-[15px] text-stone-900 tracking-tight">{tenantConfig.name}</span>
         </div>
         
@@ -98,7 +98,7 @@ export function Sidebar() {
           <aside className="relative w-64 bg-[#FAFAFA] h-full flex flex-col shadow-2xl animate-in slide-in-from-left">
             <div className="p-6 flex items-center justify-between border-b border-stone-200/60">
               <div className="flex items-center gap-3">
-                {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={28} height={28} className="rounded-md object-cover" />}
+                {tenantConfig.logoUrl && <Image src={tenantConfig.logoUrl} alt={`${tenantConfig.name} Logo`} width={28} height={28} className="rounded-md object-cover" unoptimized />}
                 <span className="font-semibold text-[15px] text-stone-900 tracking-tight">{tenantConfig.name}</span>
               </div>
               <button onClick={() => setIsMobileMenuOpen(false)} className="text-stone-400 hover:text-stone-600 p-1">
