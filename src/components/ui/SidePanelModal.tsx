@@ -19,17 +19,24 @@ export function SidePanelModal({
 }: SidePanelModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  const onCloseAttemptRef = useRef(onCloseAttempt);
+  onCloseAttemptRef.current = onCloseAttempt;
 
   useEffect(() => {
     // Remember what had focus so it can be restored on close, and move focus
-    // into the panel so Tab does not walk the page behind it.
+    // into the panel so Tab does not walk the page behind it. Mount-only:
+    // callers rarely memoize onCloseAttempt, so keying this effect on it
+    // reran the setup (and its cleanup's focus restore) on every keystroke
+    // in the form, yanking focus out of whatever input was being typed in.
+    // The Escape handler reads onCloseAttemptRef instead so it still calls
+    // the latest closure without needing the effect to rerun.
     previouslyFocused.current = document.activeElement as HTMLElement | null;
     panelRef.current?.focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        onCloseAttempt();
+        onCloseAttemptRef.current();
         return;
       }
       if (e.key !== 'Tab' || !panelRef.current) return;
@@ -55,7 +62,7 @@ export function SidePanelModal({
       document.removeEventListener('keydown', onKeyDown);
       previouslyFocused.current?.focus();
     };
-  }, [onCloseAttempt]);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-stone-900/20 backdrop-blur-sm animate-in fade-in duration-200">
