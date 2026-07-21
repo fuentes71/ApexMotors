@@ -40,9 +40,10 @@ export function ViewLayout({
         <div className={`p-4 border-b border-stone-100 flex flex-col md:flex-row items-center gap-4 ${viewMode === 'cards' ? 'bg-white rounded-2xl shadow-sm border border-stone-200 mb-4' : 'bg-stone-50/50'}`}>
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
-            <input 
-              type="text" 
-              placeholder={searchPlaceholder} 
+            <input
+              type="text"
+              aria-label={searchPlaceholder || "Buscar"}
+              placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm"
@@ -51,14 +52,18 @@ export function ViewLayout({
           
           {showViewToggle && (
             <div className="flex bg-stone-100 p-1 rounded-lg w-full md:w-auto">
-              <button 
+              <button
                 onClick={() => setViewMode('table')}
+                aria-label="Ver em tabela"
+                aria-pressed={viewMode === 'table'}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'table' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
               >
                 <List size={16} /> <span className="md:hidden">Tabela</span>
               </button>
-              <button 
+              <button
                 onClick={() => setViewMode('cards')}
+                aria-label="Ver em cartões"
+                aria-pressed={viewMode === 'cards'}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'cards' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}
               >
                 <LayoutGrid size={16} /> <span className="md:hidden">Cartões</span>

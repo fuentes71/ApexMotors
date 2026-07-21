@@ -103,7 +103,10 @@ export function ClientsView() {
   return (
     <ViewLayout
       searchTerm={searchTerm}
-      onSearchChange={setSearchTerm}
+      onSearchChange={(v) => {
+        setSearchTerm(v);
+        setCurrentPage(1);
+      }}
       searchPlaceholder="Buscar por nome, e-mail ou telefone..."
       showViewToggle={true}
       pagination={{

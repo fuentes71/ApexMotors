@@ -10,6 +10,7 @@ import { ClientModal } from "../components/ClientModal";
 import { ExpenseModal } from "../components/ExpenseModal";
 import { EmployeeModal } from "../components/EmployeeModal";
 import { AuthGuard } from "../components/AuthGuard";
+import { LoadErrorBanner } from "../components/ui/LoadErrorBanner";
 import { defaultTenant } from "../utils/tenantConfig";
 
 import { ConfirmProvider } from "../context/ConfirmContext";
@@ -33,6 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           ) : (
             <AuthGuard>
               <div className="flex min-h-screen bg-[#FDFBF7] text-stone-800 font-sans selection:bg-blue-100 print:bg-white">
+                <LoadErrorBanner />
                 <Sidebar />
                 {children}
                 <VehicleModal />

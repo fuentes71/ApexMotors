@@ -92,7 +92,10 @@ export function FinanceView({
     <>
       <ViewLayout
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={(v) => {
+          setSearchTerm(v);
+          setCurrentPage(1);
+        }}
         searchPlaceholder="Buscar por descrição..."
         showViewToggle={true}
         pagination={{

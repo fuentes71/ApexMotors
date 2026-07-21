@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useSort } from "../hooks/useSort";
 import { useToast } from "../context/ToastContext";
 import { useConfirm } from "../context/ConfirmContext";
-import { generateContractPDF } from "../utils/pdfExport";
+import { generateContractPDF } from "../utils/pdfLazy";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/Table";
 import { ViewLayout } from "./ui/ViewLayout";
 import { Tooltip } from "./ui/Tooltip";
@@ -115,12 +115,19 @@ export function InventoryView({
     <section className="w-full">
       <ViewLayout
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={(v) => {
+          // Reset to the first page: a search while on page 3 could otherwise
+          // land past the last result and show a blank table.
+          setSearchTerm(v);
+          setCurrentPage(1);
+        }}
         searchPlaceholder="Buscar por veículo ou placa..."
         showViewToggle={true}
         pagination={{
           currentPage,
-          totalPages: Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE),
+          // Paginate over the rows actually shown (period + search), not the
+          // period-only list, or searching leaves phantom empty pages.
+          totalPages: Math.max(1, Math.ceil(sortedVehicles.length / ITEMS_PER_PAGE)),
           onPageChange: setCurrentPage
         }}
         floatingAction={isVendedor ? undefined : {
@@ -180,10 +187,12 @@ export function InventoryView({
                 )}
               </TableHeader>
               <TableBody>
-                {filteredVehicles.length === 0 && (
+                {sortedVehicles.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="py-12 text-center text-stone-400 text-sm">
-                      Nenhum veículo movimentado ou em estoque neste mês.
+                      {searchTerm
+                        ? "Nenhum veículo encontrado para a busca."
+                        : "Nenhum veículo movimentado ou em estoque neste mês."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -395,9 +404,11 @@ export function InventoryView({
             </Table>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-20">
-              {filteredVehicles.length === 0 && (
+              {sortedVehicles.length === 0 && (
                 <div className="col-span-full py-12 text-center text-stone-400 text-sm bg-white rounded-2xl border border-stone-200 border-dashed">
-                  Nenhum veículo movimentado ou em estoque neste mês.
+                  {searchTerm
+                    ? "Nenhum veículo encontrado para a busca."
+                    : "Nenhum veículo movimentado ou em estoque neste mês."}
                 </div>
               )}
               {sortedVehicles

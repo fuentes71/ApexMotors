@@ -9,7 +9,7 @@ import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { DateInput } from "./DateInput";
 import { formatCurrency, getCategoryColor, getCategoryIcon, toISODate, VehicleStatusEnum, CategoryEnum, RecurrenceEnum } from "../utils";
-import { generateContractPDF } from "../utils/pdfExport";
+import { generateContractPDF } from "../utils/pdfLazy";
 import { ImageUploader } from "./ImageUploader";
 import { SidePanelModal } from "./ui/SidePanelModal";
 import { ConfirmCloseModal } from "./ui/ConfirmCloseModal";
@@ -302,7 +302,7 @@ export function VehicleModal() {
 
   return (
     <>
-      <SidePanelModal onCloseAttempt={handleCloseAttempt} maxWidthClass="max-w-2xl">
+      <SidePanelModal onCloseAttempt={handleCloseAttempt} maxWidthClass="max-w-2xl" title="Detalhes do veículo">
         <div className="flex justify-between items-center p-6 border-b border-stone-200/60 bg-white">
             <h2 className="text-xl font-bold tracking-tight text-stone-900">
               {!draftVehicle.id ? "Adicionar Veículo" : activeVehicle?.status === "Sold" ? "Visualizar Veículo Vendido" : "Editar Veículo"}
