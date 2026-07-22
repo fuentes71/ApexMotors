@@ -23,11 +23,14 @@ export function Sidebar() {
     router.push(`/${tenantId}/login`);
   };
   
+  // Sellers can't see the dashboard or the finance/expenses screen.
+  const isSeller = currentUser?.role === 'Seller';
+
   const navItems = [
-    { id: 'dashboard', href: `/${tenantId}`, label: 'Dashboard', icon: LayoutDashboard },
+    ...(!isSeller ? [{ id: 'dashboard', href: `/${tenantId}`, label: 'Dashboard', icon: LayoutDashboard }] : []),
     { id: 'veiculos', href: `/${tenantId}/vehicles`, label: 'Inventário', icon: CarFront },
     { id: 'clientes', href: `/${tenantId}/clients`, label: 'Clientes', icon: Users },
-    { id: 'financeiro', href: `/${tenantId}/finance`, label: 'Financeiro', icon: Wallet },
+    ...(!isSeller ? [{ id: 'financeiro', href: `/${tenantId}/finance`, label: 'Financeiro', icon: Wallet }] : []),
   ];
 
   if (currentUser?.role === 'Admin') {

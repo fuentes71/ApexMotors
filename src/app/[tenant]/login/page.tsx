@@ -7,14 +7,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useData } from "@/context/DataContext";
 import { authApi } from "@/services/api";
+import { getHomeRoute } from "@/utils/access";
 
 export default function LoginPage() {
   const router = useRouter();
   const { setCurrentUser, tenantId, tenantConfig, currentUser, isLoadingAuth, fetchData } = useData();
-  
+
   useEffect(() => {
     if (!isLoadingAuth && currentUser) {
-      router.push(`/${tenantId}`);
+      router.push(getHomeRoute(currentUser.role, tenantId));
     }
   }, [isLoadingAuth, currentUser, tenantId, router]);
 
@@ -57,8 +58,8 @@ export default function LoginPage() {
       });
 
       await fetchData();
-      
-      router.push(`/${tenantId}`);
+
+      router.push(getHomeRoute(user.role, tenantId));
     } catch (error) {
       console.error("Login failed:", error);
       alert("Falha no login. Verifique suas credenciais.");

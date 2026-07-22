@@ -3,6 +3,7 @@
 import { useData } from "@/context/DataContext";
 import { Header } from "@/components/Header";
 import { DashboardView } from "@/components/DashboardView";
+import { RoleGuard } from "@/components/RoleGuard";
 import { calculateTotalFixedForPeriod, CategoryEnum } from "@/utils";
 import { getPreviousPeriod } from "@/utils/period";
 
@@ -174,6 +175,7 @@ export default function DashboardPage() {
   }).sort((a, b) => b.Vendas - a.Vendas);
 
   return (
+    <RoleGuard allow={["Admin", "Accounting"]}>
     <div className="flex-1 flex flex-col min-w-0 pb-20 print:pb-0 h-screen overflow-y-auto bg-[#FAFAFA]">
       <Header />
       <div className="px-4 lg:px-8 max-w-7xl mx-auto w-full pt-6 pb-12">
@@ -200,5 +202,6 @@ export default function DashboardPage() {
         />
       </div>
     </div>
+    </RoleGuard>
   );
 }
