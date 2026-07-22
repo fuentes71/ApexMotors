@@ -2,23 +2,48 @@
 
 import { useState } from "react";
 import { useData } from "../context/DataContext";
-import { Plus, Trash2, Shield, User } from "lucide-react";
+import { useToast } from "../context/ToastContext";
+import { useConfirm } from "../context/ConfirmContext";
+import { Plus, Trash2, Shield, User, Loader2 } from "lucide-react";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "./ui/Table";
 import { ViewLayout } from "./ui/ViewLayout";
 import { Employee } from "../types";
 import { RoleEnum } from "../utils";
+import api from "../services/api";
 
 export function EmployeesView() {
   const { employees, setEmployees, setActiveEmployee, currentUser } = useData();
+  const { showToast } = useToast();
+  const { confirm: confirmAction } = useConfirm();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
-  const filteredEmployees = employees.filter(e => 
+  const filteredEmployees = employees.filter(e =>
     e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const removeEmployee = (id: string) => {
-    setEmployees(prev => prev.filter(e => e.id !== id));
+  const deleteEmployee = async (id: string) => {
+    const isConfirmed = await confirmAction({
+      title: "Excluir Funcionário",
+      message: "Tem certeza que deseja excluir este funcionário? Esta ação não pode ser desfeita.",
+      confirmText: "Excluir",
+      cancelText: "Cancelar",
+      type: "danger"
+    });
+    if (!isConfirmed) return;
+
+    setIsDeletingId(id);
+    try {
+      await api.delete(`/users/${id}`);
+      setEmployees(prev => prev.filter(e => e.id !== id));
+      showToast("Funcionário excluído!", "success");
+    } catch (error) {
+      console.error(error);
+      showToast("Erro ao excluir", "error");
+    } finally {
+      setIsDeletingId(null);
+    }
   };
 
   return (
@@ -73,12 +98,13 @@ export function EmployeesView() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); if (emp.id) removeEmployee(emp.id); }}
-                          className="text-stone-400 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-50 transition-colors"
+                        <button
+                          onClick={(e) => { e.stopPropagation(); if (emp.id) deleteEmployee(emp.id); }}
+                          disabled={isDeletingId === emp.id}
+                          className="text-stone-400 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-50 transition-colors disabled:opacity-50"
                           title="Excluir"
                         >
-                          <Trash2 size={18} />
+                          {isDeletingId === emp.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                         </button>
                       </div>
                     </TableCell>
@@ -106,11 +132,12 @@ export function EmployeesView() {
                   className="bg-white p-6 rounded-2xl border border-stone-200 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/10 transition-all cursor-pointer group flex flex-col h-full relative"
                 >
                   <div className="absolute top-4 right-4">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); if (emp.id) removeEmployee(emp.id); }}
-                      className="text-stone-300 hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-50 transition-colors opacity-0 group-hover:opacity-100"
+                    <button
+                      onClick={(e) => { e.stopPropagation(); if (emp.id) deleteEmployee(emp.id); }}
+                      disabled={isDeletingId === emp.id}
+                      className="text-stone-300 hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-50 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
                     >
-                      <Trash2 size={16} />
+                      {isDeletingId === emp.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                     </button>
                   </div>
 
