@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useData } from "../context/DataContext";
-import { useState } from "react";
 import { logout } from "../services/api";
 import { RoleEnum } from "../utils";
 
@@ -13,7 +12,6 @@ export function Sidebar() {
   const { isMobileMenuOpen, setIsMobileMenuOpen, tenantId, tenantConfig, currentUser, setCurrentUser } = useData();
   const pathname = usePathname();
   const router = useRouter();
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -75,35 +73,39 @@ export function Sidebar() {
           })}
         </nav>
         
-        <div className="p-4 border-t border-stone-200/60 relative">
-          {currentUser && (
-            <div className="flex items-center gap-3 px-3 py-2 mb-2">
-              <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
+        {currentUser && (
+          <div className="p-3 border-t border-stone-200/60">
+            <div className="group flex items-center gap-2.5 rounded-xl bg-white p-1.5 pl-2 ring-1 ring-stone-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-colors hover:ring-stone-300/70">
+              <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-sm shrink-0">
                 {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?'}
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-medium text-stone-900 truncate">{currentUser.name}</span>
-                <span className="text-xs text-stone-400 truncate">{RoleEnum[currentUser.role] || currentUser.role}</span>
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-sm font-medium text-stone-900 truncate leading-tight">{currentUser.name}</span>
+                <span className="text-[11px] text-stone-400 truncate leading-tight mt-0.5">{RoleEnum[currentUser.role] || currentUser.role}</span>
+              </div>
+              <div className="flex items-center gap-0.5 shrink-0">
+                {currentUser.role === 'Admin' && (
+                  <Link
+                    href={`/${tenantId}/settings`}
+                    aria-label="Configurações"
+                    title="Configurações"
+                    className="p-1.5 rounded-lg text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300"
+                  >
+                    <Settings size={16} />
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  aria-label="Sair"
+                  title="Sair"
+                  className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+                >
+                  <LogOut size={16} />
+                </button>
               </div>
             </div>
-          )}
-          {currentUser?.role === 'Admin' && (
-            <Link
-              href={`/${tenantId}/settings`}
-              className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
-            >
-              <Settings size={16} className="text-stone-400" />
-              Configurações
-            </Link>
-          )}
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
-          >
-            <LogOut size={16} className="text-rose-400" />
-            Sair
-          </button>
-        </div>
+          </div>
+        )}
       </aside>
 
       {/* --- SIDEBAR MOBILE OVERLAY --- */}
@@ -144,39 +146,43 @@ export function Sidebar() {
                 )
               })}
             </nav>
-            <div className="p-4 border-t border-stone-200/60 relative">
-              {currentUser && (
-                <div className="flex items-center gap-3 px-3 py-2 mb-2">
-                  <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
+            {currentUser && (
+              <div className="p-3 border-t border-stone-200/60">
+                <div className="flex items-center gap-2.5 rounded-xl bg-white p-1.5 pl-2 ring-1 ring-stone-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+                  <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-sm shrink-0">
                     {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?'}
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-medium text-stone-900 truncate">{currentUser.name}</span>
-                    <span className="text-xs text-stone-400 truncate">{RoleEnum[currentUser.role] || currentUser.role}</span>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-sm font-medium text-stone-900 truncate leading-tight">{currentUser.name}</span>
+                    <span className="text-[11px] text-stone-400 truncate leading-tight mt-0.5">{RoleEnum[currentUser.role] || currentUser.role}</span>
+                  </div>
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    {currentUser.role === 'Admin' && (
+                      <Link
+                        href={`/${tenantId}/settings`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        aria-label="Configurações"
+                        title="Configurações"
+                        className="p-1.5 rounded-lg text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300"
+                      >
+                        <Settings size={16} />
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      aria-label="Sair"
+                      title="Sair"
+                      className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+                    >
+                      <LogOut size={16} />
+                    </button>
                   </div>
                 </div>
-              )}
-              {currentUser?.role === 'Admin' && (
-                <Link
-                  href={`/${tenantId}/settings`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
-                >
-                  <Settings size={16} className="text-stone-400" />
-                  Configurações
-                </Link>
-              )}
-              <button 
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  handleLogout();
-                }}
-                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
-              >
-                <LogOut size={16} className="text-rose-400" />
-                Sair
-              </button>
-            </div>
+              </div>
+            )}
           </aside>
         </div>
       )}
