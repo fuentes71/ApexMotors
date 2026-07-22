@@ -6,7 +6,7 @@ import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { AxiosError } from "axios";
-import { authApi } from "@/services/api";
+import { authApi, logout } from "@/services/api";
 import { useData } from "@/context/DataContext";
 import { useToast } from "@/context/ToastContext";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -63,6 +63,10 @@ function ResetPasswordForm() {
     setIsLoading(true);
     try {
       await authApi.post("/auth/reset-password", { token, newPassword: password });
+      // Clear any stale cookie session before sending the user to login. Fixes
+      // the case where setting a first-access password in a browser that still
+      // held an old session dropped the user into the wrong session.
+      await logout();
       setSuccess(true);
       showToast("Senha definida com sucesso!", "success");
       setTimeout(() => {

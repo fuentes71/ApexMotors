@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
-import { setAuthToken } from "../services/api";
+import { logout } from "../services/api";
 
 export function Sidebar() {
   const { isMobileMenuOpen, setIsMobileMenuOpen, tenantId, tenantConfig, currentUser, setCurrentUser } = useData();
@@ -14,8 +14,8 @@ export function Sidebar() {
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const handleLogout = () => {
-    setAuthToken(null);
+  const handleLogout = async () => {
+    await logout();
     setCurrentUser(null);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('@apexMotors:whatsappTemplates_v2');

@@ -6,8 +6,7 @@ import { Mail, Lock, Loader2, ArrowRight, User, Eye, EyeOff } from "lucide-react
 import Image from "next/image";
 import Link from "next/link";
 import { useData } from "@/context/DataContext";
-import { authApi, setAuthToken } from "@/services/api";
-import { jwtDecode } from "jwt-decode";
+import { authApi } from "@/services/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,20 +44,18 @@ export default function LoginPage() {
         email,
         password
       });
-      
-      const token = response.data.access_token;
-      setAuthToken(token, tenantId);
-      
-      // Decode JWT to get user info
-      const decoded = jwtDecode<any>(token);
+
+      // The JWT is now set as an httpOnly cookie by the response; the user
+      // object comes back in the body since we can't decode the cookie in JS.
+      const user = response.data.user;
       setCurrentUser({
-        id: decoded.sub,
-        name: decoded.name || 'User',
-        email: decoded.email,
-        role: decoded.role || 'Seller',
+        id: user.id,
+        name: user.name || 'User',
+        email: user.email,
+        role: user.role || 'Seller',
         createdAt: new Date().toISOString()
       });
-      
+
       await fetchData();
       
       router.push(`/${tenantId}`);

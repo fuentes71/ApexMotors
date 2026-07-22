@@ -3,8 +3,7 @@
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from "react";
 import { Vehicle, Expense, Client, WhatsAppTemplates, Employee } from "../types";
 import { TenantConfig } from "../utils/tenantConfig";
-import api, { authApi, setAuthToken, setTenantSlug, getTokenTenant } from "../services/api";
-import { jwtDecode } from "jwt-decode";
+import api, { authApi, setTenantSlug, logout } from "../services/api";
 
 interface DataContextType {
   tenantId: string;
@@ -167,37 +166,34 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
   };
 
   useEffect(() => {
-    // Check local storage for token on mount
+    // Ask the backend who we are. The httpOnly cookie can't be read in JS, so
+    // /auth/me is the source of truth for the current session.
     const checkAuth = async () => {
-      const token = localStorage.getItem('@apexMotors:token');
-      const tokenTenant = getTokenTenant();
-      if (token && tokenTenant && tokenTenant !== tenantId) {
-        // Token was issued for a different tenant than the one we're on now
-        // (e.g. the URL moved to another tenant without a fresh login).
-        // The backend would still trust the old tenantId embedded in the
-        // token, so this has to be an explicit logout, not a silent reuse.
-        setAuthToken(null);
-        setCurrentUser(null);
-        setIsLoadingAuth(false);
-        return;
-      }
-      if (token) {
-        try {
-          const decoded = jwtDecode<any>(token);
-          setAuthToken(token, tenantId);
-          setCurrentUser({
-            id: decoded.sub,
-            name: decoded.name || 'User',
-            email: decoded.email,
-            role: decoded.role || 'Seller',
-            createdAt: new Date().toISOString()
-          });
+      try {
+        const { data: user } = await authApi.get('/auth/me');
 
-          await fetchData();
-        } catch (e) {
-          console.error("Invalid token:", e);
-          setAuthToken(null);
+        // Still logged in, but for a different tenant than the one in the URL
+        // (the URL slug moved on without a fresh login). The backend would
+        // still trust the tenantId in the cookie, so force an explicit logout.
+        if (user.tenantSlug !== tenantId) {
+          await logout();
+          setCurrentUser(null);
+          setIsLoadingAuth(false);
+          return;
         }
+
+        setCurrentUser({
+          id: user.id,
+          name: user.name || 'User',
+          email: user.email,
+          role: user.role || 'Seller',
+          createdAt: new Date().toISOString()
+        });
+
+        await fetchData();
+      } catch {
+        // No valid session (401 or network error).
+        setCurrentUser(null);
       }
       setIsLoadingAuth(false);
     };
