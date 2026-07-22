@@ -1,4 +1,4 @@
-import { Wallet, Trash2, Plus, ImageIcon, FileText, Download, X, ChevronRight, AlertTriangle, Loader2 } from "lucide-react";
+import { Wallet, Trash2, Plus, ImageIcon, FileText, Download, X, ChevronRight, AlertTriangle, Loader2, Car } from "lucide-react";
 import { formatCurrency, calculateTotalFixedForPeriod, RecurrenceEnum } from "../utils";
 import { Expense } from "../types";
 import Image from "next/image";
@@ -23,7 +23,7 @@ interface FinanceViewProps {
 export function FinanceView({
   fixedExpenses, setFixedExpenses, totalFixed
 }: FinanceViewProps) {
-  const { startMonth, endMonth, vehicles, setActiveExpense } = useData();
+  const { startMonth, endMonth, vehicles, setActiveExpense, setActiveVehicle } = useData();
   const { showToast } = useToast();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
@@ -166,28 +166,43 @@ export function FinanceView({
                       'Yearly': 'bg-emerald-50 text-emerald-600'
                     }[exp.recurrence || 'Monthly'] || 'bg-blue-50 text-blue-600';
 
-                    let isWarning = false;
-                    if (exp.linkedVehicleId && exp.recurrence && exp.recurrence !== 'One-time') {
-                      const linkedVehicle = vehicles.find(v => v.id === exp.linkedVehicleId);
-                      if (linkedVehicle && linkedVehicle.status === 'Sold') {
-                        isWarning = true;
-                      }
-                    }
+                    const linkedVehicle = exp.linkedVehicleId
+                      ? vehicles.find(v => v.id === exp.linkedVehicleId)
+                      : undefined;
+                    const isWarning = !!(
+                      linkedVehicle &&
+                      exp.recurrence &&
+                      exp.recurrence !== 'One-time' &&
+                      linkedVehicle.status === 'Sold'
+                    );
 
                     return (
                     <Fragment key={exp.id}>
                       <TableRow interactive onClick={() => setActiveExpense(exp)}>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Tooltip content={exp.name} position="top">
-                              <span className="font-medium text-sm text-stone-800">
-                                {exp.name}
-                              </span>
-                            </Tooltip>
-                            {isWarning && (
-                              <div className="text-rose-500 bg-rose-50 p-1 rounded-full animate-pulse" title="Veículo vendido! Considere encerrar ou remover esta despesa recorrente.">
-                                <AlertTriangle size={14} />
-                              </div>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <Tooltip content={exp.name} position="top">
+                                <span className="font-medium text-sm text-stone-800">
+                                  {exp.name}
+                                </span>
+                              </Tooltip>
+                              {isWarning && (
+                                <div className="text-rose-500 bg-rose-50 p-1 rounded-full animate-pulse" title="Veículo vendido! Considere encerrar ou remover esta despesa recorrente.">
+                                  <AlertTriangle size={14} />
+                                </div>
+                              )}
+                            </div>
+                            {exp.linkedVehicleId && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); if (linkedVehicle) setActiveVehicle(linkedVehicle); }}
+                                disabled={!linkedVehicle}
+                                className="inline-flex items-center gap-1 w-fit text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline disabled:text-stone-400 disabled:no-underline disabled:cursor-default"
+                                title="Ver veículo desta despesa"
+                              >
+                                <Car size={12} />
+                                {linkedVehicle ? linkedVehicle.name : 'Veículo removido'}
+                              </button>
                             )}
                           </div>
                         </TableCell>
@@ -263,16 +278,18 @@ export function FinanceView({
                     'Yearly': 'bg-emerald-50 text-emerald-600'
                   }[exp.recurrence || 'Monthly'] || 'bg-blue-50 text-blue-600';
 
-                  let isWarning = false;
-                  if (exp.linkedVehicleId && exp.recurrence && exp.recurrence !== 'One-time') {
-                    const linkedVehicle = vehicles.find(v => v.id === exp.linkedVehicleId);
-                    if (linkedVehicle && linkedVehicle.status === 'Sold') {
-                      isWarning = true;
-                    }
-                  }
+                  const linkedVehicle = exp.linkedVehicleId
+                    ? vehicles.find(v => v.id === exp.linkedVehicleId)
+                    : undefined;
+                  const isWarning = !!(
+                    linkedVehicle &&
+                    exp.recurrence &&
+                    exp.recurrence !== 'One-time' &&
+                    linkedVehicle.status === 'Sold'
+                  );
 
                   return (
-                    <div 
+                    <div
                       key={exp.id}
                       onClick={() => setActiveExpense(exp)}
                       className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col gap-4 relative"
@@ -319,10 +336,21 @@ export function FinanceView({
                               </span>
                             )}
                           </div>
-                          <div className="mt-1 flex items-center gap-2">
+                          <div className="mt-1 flex items-center gap-2 flex-wrap">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${recurrenceColor}`}>
                               {RecurrenceEnum[exp.recurrence || 'Monthly'] || exp.recurrence}
                             </span>
+                            {exp.linkedVehicleId && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); if (linkedVehicle) setActiveVehicle(linkedVehicle); }}
+                                disabled={!linkedVehicle}
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 hover:underline disabled:text-stone-400 disabled:no-underline disabled:cursor-default"
+                                title="Ver veículo desta despesa"
+                              >
+                                <Car size={12} />
+                                <span className="truncate max-w-[120px]">{linkedVehicle ? linkedVehicle.name : 'Veículo removido'}</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
