@@ -21,12 +21,17 @@ export const setTenantSlug = (slug: string) => {
   api.defaults.headers.common['x-tenant-slug'] = slug;
   authApi.defaults.headers.common['x-tenant-slug'] = slug;
   if (typeof window !== 'undefined') {
-    localStorage.setItem('@apexMotors:tenant', slug);
+    // sessionStorage, not localStorage: the tenant slug must be scoped to the
+    // tab. localStorage is shared across every tab of this origin, so two tabs
+    // on different tenants would clobber each other's slug and send the wrong
+    // x-tenant-slug on pre-cookie requests. The authenticated source of truth
+    // is the httpOnly cookie/token anyway; this is only a fallback header.
+    sessionStorage.setItem('@apexMotors:tenant', slug);
   }
 };
 
 if (typeof window !== 'undefined') {
-  const storedTenant = localStorage.getItem('@apexMotors:tenant');
+  const storedTenant = sessionStorage.getItem('@apexMotors:tenant');
   if (storedTenant) {
     api.defaults.headers.common['x-tenant-slug'] = storedTenant;
     authApi.defaults.headers.common['x-tenant-slug'] = storedTenant;
@@ -48,7 +53,7 @@ let activeRequests = 0;
 const handleRequestStart = (config: InternalAxiosRequestConfig) => {
   activeRequests++;
   if (typeof window !== 'undefined') {
-    const tenant = localStorage.getItem('@apexMotors:tenant');
+    const tenant = sessionStorage.getItem('@apexMotors:tenant');
     if (tenant) {
       if (typeof config.headers.set === 'function') {
         config.headers.set('x-tenant-slug', tenant);
@@ -77,8 +82,18 @@ const handleError = (error: AxiosError) => {
   if (error.response?.status === 401) {
     // The cookie is invalid/expired/absent; send the user back to login.
     if (typeof window !== 'undefined') {
-      const tenant = localStorage.getItem('@apexMotors:tenant');
-      if (tenant && !window.location.pathname.includes('/login')) {
+      const tenant = sessionStorage.getItem('@apexMotors:tenant');
+      // Do NOT bounce on the public auth pages. DataContext calls /auth/me on
+      // every page mount; on forgot-password / reset-password the visitor is
+      // legitimately unauthenticated, so that 401 must not hijack them back to
+      // login (it was breaking first-access and password-reset links). Keep
+      // this list in sync with PUBLIC_ROUTES in app/providers.tsx.
+      const path = window.location.pathname;
+      const onPublicAuthPage =
+        path.includes('/login') ||
+        path.includes('/forgot-password') ||
+        path.includes('/reset-password');
+      if (tenant && !onPublicAuthPage) {
         window.location.href = `/${tenant}/login`;
       }
     }
