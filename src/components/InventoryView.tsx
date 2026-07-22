@@ -26,6 +26,9 @@ export function InventoryView({
 }: InventoryViewProps) {
   const { fixedExpenses, setFixedExpenses, contractTemplate, setFullscreenImage, currentUser } = useData();
   const isVendedor = currentUser?.role === 'Seller';
+  // Sellers can only change status while the vehicle is "In Stock" (to record a
+  // sale). A vehicle in maintenance is locked for them.
+  const sellerCanChangeStatus = (v: Vehicle) => !isVendedor || v.status === 'In Stock';
   const { showToast } = useToast();
   const { confirm: confirmAction } = useConfirm();
 
@@ -262,45 +265,49 @@ export function InventoryView({
                         </TableCell>
                         <TableCell className="relative">
                           <div className="relative inline-block w-max">
-                            <button 
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (v.status !== 'Sold') {
+                                if (v.status !== 'Sold' && sellerCanChangeStatus(v)) {
                                   setOpenDropdownId(openDropdownId === v.id ? null : (v.id || null));
                                 }
                               }}
                               className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-all whitespace-nowrap w-[140px] ${
-                                v.status === 'Sold' 
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default' 
+                                v.status === 'Sold'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default'
                                   : v.status === 'Maintenance'
-                                  ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 hover:shadow-sm cursor-pointer'
-                                  : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:shadow-sm cursor-pointer'
+                                  ? `bg-amber-50 text-amber-600 border-amber-200 ${sellerCanChangeStatus(v) ? 'hover:bg-amber-100 hover:shadow-sm cursor-pointer' : 'cursor-default'}`
+                                  : `bg-blue-50 text-blue-600 border-blue-200 ${sellerCanChangeStatus(v) ? 'hover:bg-blue-100 hover:shadow-sm cursor-pointer' : 'cursor-default'}`
                               }`}
                             >
                               <span className="flex items-center gap-1.5 whitespace-nowrap overflow-hidden">
                                 {v.status === 'Sold' ? <CheckCircle2 size={12} className="shrink-0" /> : v.status === 'Maintenance' ? <Wrench size={12} className="shrink-0" /> : <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />}
                                 <span className="truncate">{VehicleStatusEnum[v.status] || v.status}</span>
                               </span>
-                              {v.status !== 'Sold' && <ChevronDown size={12} className="opacity-50 shrink-0" />}
+                              {v.status !== 'Sold' && sellerCanChangeStatus(v) && <ChevronDown size={12} className="opacity-50 shrink-0" />}
                             </button>
-    
+
                             {openDropdownId === v.id && (
                               <>
                                 <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }} />
                                 <div className="absolute top-full mt-2 left-6 w-44 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'In Stock'); }}
-                                    className="w-full text-left px-4 py-3 text-xs font-semibold text-stone-600 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2"
-                                  >
-                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Em Estoque
-                                  </button>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Maintenance'); }}
-                                    className="w-full text-left px-4 py-3 text-xs font-semibold text-stone-600 hover:bg-amber-50 hover:text-amber-700 transition-colors flex items-center gap-2"
-                                  >
-                                    <Wrench size={12} className="text-amber-600" /> Manutenção
-                                  </button>
-                                  <button 
+                                  {!isVendedor && (
+                                    <>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'In Stock'); }}
+                                        className="w-full text-left px-4 py-3 text-xs font-semibold text-stone-600 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-2"
+                                      >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Em Estoque
+                                      </button>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Maintenance'); }}
+                                        className="w-full text-left px-4 py-3 text-xs font-semibold text-stone-600 hover:bg-amber-50 hover:text-amber-700 transition-colors flex items-center gap-2"
+                                      >
+                                        <Wrench size={12} className="text-amber-600" /> Manutenção
+                                      </button>
+                                    </>
+                                  )}
+                                  <button
                                     onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Sold'); }}
                                     className="w-full text-left px-4 py-3 text-xs font-semibold text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-2"
                                   >
@@ -539,41 +546,47 @@ export function InventoryView({
                             </>
                           ) : (
                             <div className="relative inline-block w-full mt-1">
-                              <button 
+                              <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setOpenDropdownId(openDropdownId === v.id ? null : (v.id || null));
+                                  if (sellerCanChangeStatus(v)) {
+                                    setOpenDropdownId(openDropdownId === v.id ? null : (v.id || null));
+                                  }
                                 }}
                                 className={`flex items-center justify-between gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all w-full ${
                                   v.status === 'Maintenance'
-                                    ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'
-                                    : 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
+                                    ? `bg-amber-50 text-amber-600 border-amber-200 ${sellerCanChangeStatus(v) ? 'hover:bg-amber-100' : 'cursor-default'}`
+                                    : `bg-blue-50 text-blue-600 border-blue-200 ${sellerCanChangeStatus(v) ? 'hover:bg-blue-100' : 'cursor-default'}`
                                 }`}
                               >
                                 <span className="flex items-center gap-1.5 truncate">
                                   {v.status === 'Maintenance' ? <Wrench size={10} className="shrink-0" /> : <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />}
                                   <span className="truncate">{VehicleStatusEnum[v.status] || v.status}</span>
                                 </span>
-                                <ChevronDown size={12} className="opacity-50 shrink-0" />
+                                {sellerCanChangeStatus(v) && <ChevronDown size={12} className="opacity-50 shrink-0" />}
                               </button>
-      
+
                               {openDropdownId === v.id && (
                                 <>
                                   <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }} />
                                   <div className="absolute top-full mt-1 right-0 w-36 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
-                                    <button 
-                                      onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'In Stock'); }}
-                                      className="w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase text-stone-600 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2"
-                                    >
-                                      <div className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Em Estoque
-                                    </button>
-                                    <button 
-                                      onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Maintenance'); }}
-                                      className="w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase text-stone-600 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2"
-                                    >
-                                      <Wrench size={10} className="text-amber-600" /> Manutenção
-                                    </button>
-                                    <button 
+                                    {!isVendedor && (
+                                      <>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'In Stock'); }}
+                                          className="w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase text-stone-600 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2"
+                                        >
+                                          <div className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Em Estoque
+                                        </button>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Maintenance'); }}
+                                          className="w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase text-stone-600 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2"
+                                        >
+                                          <Wrench size={10} className="text-amber-600" /> Manutenção
+                                        </button>
+                                      </>
+                                    )}
+                                    <button
                                       onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleStatusChange(v, 'Sold'); }}
                                       className="w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2"
                                     >

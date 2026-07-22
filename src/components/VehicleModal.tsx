@@ -457,7 +457,7 @@ export function VehicleModal() {
                   <label className="text-xs text-stone-500 uppercase tracking-wider font-semibold mb-2 block">Status</label>
                   <select
                     value={draftVehicle.status}
-                    disabled={activeVehicle?.status === "Sold"}
+                    disabled={activeVehicle?.status === "Sold" || (isVendedor && activeVehicle?.status !== "In Stock")}
                     onChange={(e) => {
                       const newStatus = e.target.value as "In Stock" | "Maintenance" | "Sold";
                       if (newStatus === "Sold") {
@@ -471,11 +471,13 @@ export function VehicleModal() {
                         handleUpdate("saleDate", undefined);
                       }
                     }}
-                    className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all ${activeVehicle?.status === "Sold" ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`w-full font-medium text-stone-700 bg-stone-50 outline-none border border-stone-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 px-4 transition-all ${activeVehicle?.status === "Sold" || (isVendedor && activeVehicle?.status !== "In Stock") ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    {Object.entries(VehicleStatusEnum).map(([key, value]) => (
-                      <option key={key} value={key}>{value}</option>
-                    ))}
+                    {Object.entries(VehicleStatusEnum)
+                      .filter(([key]) => !isVendedor || key === "In Stock" || key === "Sold")
+                      .map(([key, value]) => (
+                        <option key={key} value={key}>{value}</option>
+                      ))}
                   </select>
                 </div>
                 {draftVehicle.status === "Sold" && (
