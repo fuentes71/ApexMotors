@@ -20,6 +20,7 @@ export function ExpenseModal() {
   const [prevActiveExpense, setPrevActiveExpense] = useState<Expense | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedDueDay, setSelectedDueDay] = useState<string>('');
 
   if (activeExpense !== prevActiveExpense) {
     setPrevActiveExpense(activeExpense);
@@ -29,8 +30,18 @@ export function ExpenseModal() {
         draft.dueDate = draft.dueDate.split('T')[0];
       }
       setDraftExpense(draft);
+      // BAS-74: Derive selected day from existing dueDate for recurring expenses
+      if (draft.dueDate && draft.recurrence && draft.recurrence !== 'One-time') {
+        const dueDateParts = draft.dueDate.split('-');
+        if (dueDateParts.length >= 3) {
+          setSelectedDueDay(dueDateParts[2]);
+        }
+      } else {
+        setSelectedDueDay('');
+      }
     } else {
       setDraftExpense(null);
+      setSelectedDueDay('');
     }
   }
 
@@ -62,7 +73,7 @@ export function ExpenseModal() {
 
   const handleSave = async () => {
     if (!draftExpense) return;
-    
+
     // Validations (BAS-24)
     let hasError = false;
     if (!draftExpense.name?.trim()) {
@@ -88,9 +99,22 @@ export function ExpenseModal() {
     payload.value = Number(payload.value) || 0;
     payload.startDate = toISODate(payload.startDate);
     payload.endDate = toISODate(payload.endDate) || null;
-    if (payload.dueDate) {
+
+    // BAS-74: Handle due date for recurring expenses
+    if (payload.recurrence && payload.recurrence !== 'One-time' && selectedDueDay) {
+      // Calculate dueDate using the selected day and month/year from startDate
+      const startDateStr = payload.startDate ? payload.startDate.split('T')[0] : new Date().toISOString().split('T')[0];
+      const [year, month] = startDateStr.split('-');
+      payload.dueDate = toISODate(`${year}-${month}-${String(selectedDueDay).padStart(2, '0')}`);
+    } else if (payload.recurrence === 'One-time') {
+      // For one-time expenses, don't set dueDate
+      delete payload.dueDate;
+    } else if (payload.dueDate) {
       payload.dueDate = toISODate(payload.dueDate);
     }
+
+    // BAS-73: Remove isPaid from payload
+    delete payload.isPaid;
     if (isNew) delete payload.id;
 
     // Optimistic update: reflect the save in the expenses list immediately
@@ -241,24 +265,52 @@ export function ExpenseModal() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Data de Vencimento</label>
-                <DateInput 
-                  value={draftExpense.dueDate || ''}
-                  onChangeDate={val => setDraftExpense({...draftExpense, dueDate: val})}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                />
-              </div>
+            {draftExpense.recurrence && draftExpense.recurrence !== 'One-time' ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Dia do Vencimento</label>
+                  <select
+                    value={selectedDueDay}
+                    onChange={e => setSelectedDueDay(e.target.value)}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
+                  >
+                    <option value="">Selecionar dia...</option>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                      <option key={day} value={String(day).padStart(2, '0')}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
+                <div>
+                  <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Comprovante</label>
+                  <div className="relative overflow-hidden h-[46px]">
+                    <ImageUploader
+                      onImageUploaded={(base64) => setDraftExpense({...draftExpense, image: base64})}
+                    >
+                      {({ onClick, isUploading }) => (
+                        <button
+                          onClick={onClick}
+                          disabled={isUploading}
+                          className="w-full h-full px-4 flex items-center justify-center gap-2 bg-stone-50 border border-stone-200 text-stone-600 rounded-xl hover:bg-stone-100 hover:border-stone-300 transition-colors text-sm font-medium shadow-sm disabled:opacity-50"
+                        >
+                          {isUploading ? <Loader2 size={16} className="animate-spin" /> : (draftExpense.image ? 'Trocar Comprovante' : 'Anexar Comprovante')}
+                        </button>
+                      )}
+                    </ImageUploader>
+                  </div>
+                </div>
+              </div>
+            ) : (
               <div>
                 <label className="text-xs font-semibold text-stone-500 uppercase tracking-wider block mb-1.5">Comprovante</label>
                 <div className="relative overflow-hidden h-[46px]">
-                  <ImageUploader 
+                  <ImageUploader
                     onImageUploaded={(base64) => setDraftExpense({...draftExpense, image: base64})}
                   >
                     {({ onClick, isUploading }) => (
-                      <button 
+                      <button
                         onClick={onClick}
                         disabled={isUploading}
                         className="w-full h-full px-4 flex items-center justify-center gap-2 bg-stone-50 border border-stone-200 text-stone-600 rounded-xl hover:bg-stone-100 hover:border-stone-300 transition-colors text-sm font-medium shadow-sm disabled:opacity-50"
@@ -269,12 +321,12 @@ export function ExpenseModal() {
                   </ImageUploader>
                 </div>
               </div>
-            </div>
+            )}
 
             {draftExpense.image && (
               <div className="relative w-full h-32 bg-stone-100 rounded-xl overflow-hidden mt-1 group border border-stone-200 shadow-sm">
                 <Image src={draftExpense.image} alt="Comprovante" fill className="object-cover" unoptimized />
-                <button 
+                <button
                   onClick={() => setDraftExpense({...draftExpense, image: undefined})}
                   className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white p-1.5 rounded-lg lg:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500"
                   title="Remover comprovante"
@@ -283,18 +335,6 @@ export function ExpenseModal() {
                 </button>
               </div>
             )}
-            
-            <div className="pt-2">
-              <label className="flex items-center gap-3 p-3 bg-stone-50 border border-stone-200 rounded-xl cursor-pointer hover:bg-stone-100 transition-colors">
-                <input 
-                  type="checkbox" 
-                  checked={draftExpense.isPaid || false}
-                  onChange={e => setDraftExpense({...draftExpense, isPaid: e.target.checked})}
-                  className="w-5 h-5 text-blue-600 rounded border-stone-300 focus:ring-blue-500"
-                />
-                <span className="text-sm font-semibold text-stone-700">Despesa já está paga</span>
-              </label>
-            </div>
           </div>
         </div>
 
