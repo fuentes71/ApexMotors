@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Loader2, ArrowRight, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowRight, User, Eye, EyeOff, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useData } from "@/context/DataContext";
+import { useToast } from "@/context/ToastContext";
 import { authApi } from "@/services/api";
 import { getHomeRoute } from "@/utils/access";
 
 export default function LoginPage() {
   const router = useRouter();
   const { setCurrentUser, tenantId, tenantConfig, currentUser, isLoadingAuth, fetchData } = useData();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!isLoadingAuth && currentUser) {
@@ -23,7 +25,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  
+  // Turns both fields red and shows the inline banner on a failed login.
+  const [hasError, setHasError] = useState(false);
+
   if (isLoadingAuth) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
@@ -39,7 +43,8 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+    setHasError(false);
+
     try {
       const response = await authApi.post('/auth/login', {
         email,
@@ -62,7 +67,8 @@ export default function LoginPage() {
       router.push(getHomeRoute(user.role, tenantId));
     } catch (error) {
       console.error("Login failed:", error);
-      alert("Falha no login. Verifique suas credenciais.");
+      setHasError(true);
+      showToast("E-mail ou senha inválidos. Verifique e tente novamente.", "error");
       setIsLoading(false);
     }
   };
@@ -128,17 +134,24 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
+              {hasError && (
+                <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <AlertCircle size={18} className="text-rose-600 flex-shrink-0" />
+                  <p className="text-sm font-semibold leading-snug">E-mail ou senha inválidos. Verifique e tente novamente.</p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-bold text-stone-700 block ml-1">Endereço de e-mail</label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400 group-focus-within:text-indigo-600 transition-colors">
+                  <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors ${hasError ? "text-rose-400 group-focus-within:text-rose-600" : "text-stone-400 group-focus-within:text-indigo-600"}`}>
                     <Mail size={18} />
                   </div>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 outline-none transition-all placeholder:text-stone-400 font-medium text-stone-800 shadow-sm"
+                    onChange={(e) => { setEmail(e.target.value); if (hasError) setHasError(false); }}
+                    className={`w-full pl-11 pr-4 py-3.5 rounded-2xl outline-none transition-all placeholder:text-stone-400 font-medium text-stone-800 shadow-sm focus:bg-white focus:ring-4 ${hasError ? "bg-rose-50 border border-rose-300 focus:ring-rose-500/10 focus:border-rose-500" : "bg-stone-50 border border-stone-200 focus:ring-indigo-600/10 focus:border-indigo-600"}`}
                     placeholder="exemplo@apexmotors.com"
                     required
                   />
@@ -151,14 +164,14 @@ export default function LoginPage() {
                   <Link href={`/${tenantId}/forgot-password`} className="text-sm text-indigo-600 font-bold hover:text-indigo-800 transition-colors">Esqueceu a senha?</Link>
                 </div>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400 group-focus-within:text-indigo-600 transition-colors">
+                  <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors ${hasError ? "text-rose-400 group-focus-within:text-rose-600" : "text-stone-400 group-focus-within:text-indigo-600"}`}>
                     <Lock size={18} />
                   </div>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
+                  <input
+                    type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-11 pr-12 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600 outline-none transition-all placeholder:text-stone-400 font-medium text-stone-800 shadow-sm"
+                    onChange={(e) => { setPassword(e.target.value); if (hasError) setHasError(false); }}
+                    className={`w-full pl-11 pr-12 py-3.5 rounded-2xl outline-none transition-all placeholder:text-stone-400 font-medium text-stone-800 shadow-sm focus:bg-white focus:ring-4 ${hasError ? "bg-rose-50 border border-rose-300 focus:ring-rose-500/10 focus:border-rose-500" : "bg-stone-50 border border-stone-200 focus:ring-indigo-600/10 focus:border-indigo-600"}`}
                     placeholder="••••••••"
                     required
                   />
