@@ -4,6 +4,7 @@ import { createContext, useContext, useState, ReactNode, Dispatch, SetStateActio
 import { Vehicle, Expense, Client, WhatsAppTemplates, Employee } from "../types";
 import { TenantConfig } from "../utils/tenantConfig";
 import api, { authApi, setTenantSlug, logout } from "../services/api";
+import { io, Socket } from "socket.io-client";
 
 interface DataContextType {
   tenantId: string;
@@ -201,6 +202,73 @@ responsável a partir deste momento por quaisquer multas, impostos ou taxas.`;
       checkAuth();
     }
   }, [tenantConfig]);
+
+  // Real-time sync (BAS-40): while logged in, subscribe to this tenant's live
+  // vehicle/client changes so concurrent sellers don't overwrite each other.
+  // The socket connects DIRECTLY to the backend — WebSockets don't traverse the
+  // Vercel same-origin rewrite — authenticated by a short-lived ticket fetched
+  // over HTTP (the httpOnly cookie is sameSite=lax and wouldn't ride the
+  // cross-site handshake). Realtime stays off if NEXT_PUBLIC_WS_URL is unset.
+  useEffect(() => {
+    const WS_URL = process.env.NEXT_PUBLIC_WS_URL;
+    if (!WS_URL || !currentUser) return;
+
+    let cancelled = false;
+    let socket: Socket | null = null;
+
+    const getTicket = async (): Promise<string | null> => {
+      try {
+        const { data } = await api.get("/realtime/ticket");
+        return data?.ticket ?? null;
+      } catch {
+        return null;
+      }
+    };
+
+    (async () => {
+      const ticket = await getTicket();
+      if (cancelled || !ticket) return;
+      socket = io(WS_URL, { auth: { ticket }, transports: ["websocket"] });
+
+      // The ticket is short-lived; hand a fresh one to each reconnect attempt.
+      socket.io.on("reconnect_attempt", async () => {
+        const fresh = await getTicket();
+        if (fresh && socket) socket.auth = { ticket: fresh };
+      });
+
+      socket.on(
+        "vehicle_updated",
+        (p: { action: "upsert" | "delete"; id: string; data?: Vehicle }) => {
+          setVehicles((prev) => {
+            if (p.action === "delete") return prev.filter((v) => v.id !== p.id);
+            if (!p.data) return prev;
+            return prev.some((v) => v.id === p.id)
+              ? prev.map((v) => (v.id === p.id ? (p.data as Vehicle) : v))
+              : [p.data as Vehicle, ...prev];
+          });
+        },
+      );
+
+      socket.on(
+        "client_updated",
+        (p: { action: "upsert" | "delete"; id: string; data?: Client }) => {
+          setClients((prev) => {
+            if (p.action === "delete") return prev.filter((c) => c.id !== p.id);
+            if (!p.data) return prev;
+            return prev.some((c) => c.id === p.id)
+              ? prev.map((c) => (c.id === p.id ? (p.data as Client) : c))
+              : [p.data as Client, ...prev];
+          });
+        },
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+      socket?.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id, tenantId]);
 
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
