@@ -23,6 +23,7 @@ export function VehicleModal() {
     contractTemplate, currentUser, employees
   } = useData();
   const isVendedor = currentUser?.role === 'Seller';
+  const isAdmin = currentUser?.role === 'Admin';
 
   const { showToast } = useToast();
   const [draftVehicle, setDraftVehicle] = useState<Vehicle | null>(null);
@@ -534,9 +535,9 @@ export function VehicleModal() {
                         <label className="text-xs text-emerald-700 uppercase tracking-wider font-semibold mb-2 block">Vendedor (Opcional)</label>
                         <select
                           value={draftVehicle.soldById || ""}
-                          disabled={activeVehicle?.status === "Sold" || isVendedor}
+                          disabled={activeVehicle?.status === "Sold" && !isAdmin}
                           onChange={(e) => handleUpdate("soldById", e.target.value)}
-                          className={`w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all ${activeVehicle?.status === "Sold" || isVendedor ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                          className={`w-full font-medium text-stone-700 bg-white outline-none border border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl py-2 px-3 transition-all ${activeVehicle?.status === "Sold" && !isAdmin ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                           <option value="">Selecione um vendedor</option>
                           {employees.filter(emp => emp.role === 'Seller' || emp.role === 'Admin').map(emp => (
