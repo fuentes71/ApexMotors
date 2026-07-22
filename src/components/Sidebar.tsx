@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { logout } from "../services/api";
+import { RoleEnum } from "../utils";
 
 export function Sidebar() {
   const { isMobileMenuOpen, setIsMobileMenuOpen, tenantId, tenantConfig, currentUser, setCurrentUser } = useData();
@@ -75,8 +76,19 @@ export function Sidebar() {
         </nav>
         
         <div className="p-4 border-t border-stone-200/60 relative">
+          {currentUser && (
+            <div className="flex items-center gap-3 px-3 py-2 mb-2">
+              <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
+                {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?'}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-medium text-stone-900 truncate">{currentUser.name}</span>
+                <span className="text-xs text-stone-400 truncate">{RoleEnum[currentUser.role] || currentUser.role}</span>
+              </div>
+            </div>
+          )}
           {currentUser?.role === 'Admin' && (
-            <Link 
+            <Link
               href={`/${tenantId}/settings`}
               className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
             >
@@ -84,7 +96,7 @@ export function Sidebar() {
               Configurações
             </Link>
           )}
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-all mt-1"
           >
@@ -133,8 +145,19 @@ export function Sidebar() {
               })}
             </nav>
             <div className="p-4 border-t border-stone-200/60 relative">
+              {currentUser && (
+                <div className="flex items-center gap-3 px-3 py-2 mb-2">
+                  <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
+                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?'}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium text-stone-900 truncate">{currentUser.name}</span>
+                    <span className="text-xs text-stone-400 truncate">{RoleEnum[currentUser.role] || currentUser.role}</span>
+                  </div>
+                </div>
+              )}
               {currentUser?.role === 'Admin' && (
-                <Link 
+                <Link
                   href={`/${tenantId}/settings`}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-200/30 transition-all"
